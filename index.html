@@ -169,9 +169,18 @@ tbody tr:hover td{background:#faf9f6}
 <div id="auth" style="display:none">
   <div class="card">
     <div class="brand" style="padding-left:0"><i></i>Green Life</div>
-    <p style="color:var(--mute);font-size:14px;margin-bottom:18px">CRM отдела продаж<br><span style="font-size:13px">Доступ выдаёт администратор</span></p>
-    <div class="field"><label>Почта</label><input id="em" type="email" placeholder="you@company.kz"></div>
-    <div class="field"><label>Пароль</label><input id="pw" type="password" placeholder="••••••••"></div>
+    <p style="color:var(--mute);font-size:14px;margin-bottom:18px">CRM отдела продаж<br><span style="font-size:13px">Вход по номеру телефона. Доступ выдаёт администратор.</span></p>
+    <div class="field"><label>Телефон</label>
+      <input id="em" type="tel" inputmode="numeric" autocomplete="username"
+        placeholder="+7 777 123 45 67" onkeydown="if(event.key==='Enter')el('pw').focus()"></div>
+    <div class="field"><label>Пароль</label>
+      <div style="position:relative">
+        <input id="pw" type="password" autocomplete="current-password" placeholder="••••••••"
+          style="padding-right:44px" onkeydown="if(event.key==='Enter')signIn()">
+        <button type="button" id="pwEye" onclick="togglePw()" title="Показать пароль"
+          style="position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:6px 10px;
+                 color:var(--mute);font-size:13px">показать</button>
+      </div></div>
     <div class="row" style="margin-top:16px">
       <button class="btn" onclick="signIn()">Войти</button>
     </div>
@@ -230,9 +239,31 @@ async function boot(){
   el('auth').style.display='none'; el('app').style.display='grid';
   await loadAll(); renderNav(); go('dash'); live();
 }
+/* Телефон в любом виде → 11 цифр. 8(707)123-45-67 и +7 707 123 45 67 дадут одно и то же. */
+function normPhone(v){
+  let d = String(v||'').replace(/\D/g,'');
+  if(d.length===11 && d[0]==='8') d = '7'+d.slice(1);
+  if(d.length===10) d = '7'+d;
+  return d;
+}
+const phoneLogin = d => d + '@greenlife.local';
+const prettyPhone = d => d && d.length===11
+  ? `+${d[0]} ${d.slice(1,4)} ${d.slice(4,7)} ${d.slice(7,9)} ${d.slice(9)}` : (d||'');
+
+function togglePw(){
+  const i = el('pw'), b = el('pwEye');
+  const show = i.type === 'password';
+  i.type = show ? 'text' : 'password';
+  b.textContent = show ? 'скрыть' : 'показать';
+}
+
 async function signIn(){
-  const { error } = await sb.auth.signInWithPassword({ email:el('em').value.trim(), password:el('pw').value });
-  if(error) return el('authErr').textContent = 'Не удалось войти: ' + error.message;
+  const d = normPhone(el('em').value);
+  if(d.length !== 11) return el('authErr').textContent =
+    'Введите номер из 11 цифр, например +7 777 123 45 67';
+  const { error } = await sb.auth.signInWithPassword({ email: phoneLogin(d), password: el('pw').value });
+  if(error) return el('authErr').textContent = /Invalid login/i.test(error.message)
+    ? 'Неверный номер или пароль' : 'Не удалось войти: ' + error.message;
   location.reload();
 }
 async function signOut(){ await sb.auth.signOut(); location.reload(); }
@@ -255,7 +286,7 @@ async function loadAll(){
   S.sources=so.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
   S.customers=cu.data||[]; S.orders=or_.data||[];
   S.me = S.employees.find(e=>e.id===S.user.id) || { full_name:S.user.email, role:'sales' };
-  el('me').innerHTML = `<b>${esc(S.me.full_name)}</b>${esc(S.me.role)} ·
+  el('me').innerHTML = `<b>${esc(S.me.full_name)}</b>${({sales:'Менеджер',head:'Руководитель',admin:'Администратор'})[S.me.role]||S.me.role} ·
     <a href="#" onclick="signOut();return false" style="color:var(--mute)">выйти</a>`;
 }
 function live(){
@@ -741,7 +772,7 @@ function vTeam(){
     ${rows.map(r=>`<tr style="${r.e.active===false?'opacity:.45':''}">
       <td><span class="avatar" style="margin-right:8px">${ini(r.e.full_name)}</span><b>${esc(r.e.full_name)}</b>
         ${r.e.active===false?'<span class="tag" style="background:var(--line);color:var(--mute);margin-left:6px">отключён</span>':''}
-        ${r.e.phone?`<div style="font-size:12px;color:var(--mute);margin-left:34px">${esc(r.e.phone)}</div>`:''}</td>
+        ${(r.e.login_phone||r.e.phone)?`<div class="mono" style="font-size:12px;color:var(--mute);margin-left:34px">${esc(prettyPhone(r.e.login_phone)||r.e.phone)}</div>`:''}</td>
       <td style="color:var(--mute)">${esc(ROLE[r.e.role]||r.e.role)}</td>
       <td style="color:var(--mute)">${esc(S.departments.find(d=>d.id===r.e.department_id)?.name||'—')}</td>
       <td>${r.n}</td><td>${r.w}</td>
@@ -775,23 +806,24 @@ const roleOptions = sel => ['sales','head','admin'].map(v=>
 function newEmployee(){
   formModal('Новый сотрудник',`
     <div class="field"><label>Имя и фамилия</label><input id="n_name" placeholder="Айгерим Сатпаева"></div>
-    <div class="field"><label>Рабочая почта</label><input id="n_email" type="email" placeholder="name@company.kz"></div>
-    <div class="field"><label>Пароль для первого входа</label><input id="n_pw" placeholder="от 6 символов"></div>
+    <div class="field"><label>Телефон — это логин</label>
+      <input id="n_phone" type="tel" inputmode="numeric" placeholder="+7 777 123 45 67"></div>
+    <div class="field"><label>Пароль для первого входа</label>
+      <input id="n_pw" value="${Math.random().toString(36).slice(2,8)}"></div>
     <div class="field"><label>Роль</label><select id="n_role">${roleOptions('sales')}</select></div>
-    <div class="field"><label>Телефон</label><input id="n_phone" placeholder="+7"></div>
     <div class="field"><label>Отдел</label><select id="n_dep">${depOptions(null)}</select></div>
     <div class="field"><label>План на месяц, ₸</label><input id="n_plan" type="number" value="0"></div>`,
   async()=>{
-    const email = el('n_email').value.trim(), pw = el('n_pw').value;
-    if(!email) return el('formErr').textContent = 'Укажите почту';
+    const d = normPhone(el('n_phone').value), pw = el('n_pw').value;
+    if(d.length !== 11) return el('formErr').textContent = 'Телефон из 11 цифр, например +7 777 123 45 67';
     if(pw.length < 6) return el('formErr').textContent = 'Пароль должен быть от 6 символов';
     el('saveBtn').textContent = 'Создаю…'; el('saveBtn').disabled = true;
     try{
-      await callUserFn({ email, password:pw, full_name:el('n_name').value.trim(),
-        role:el('n_role').value, phone:el('n_phone').value.trim(),
-        department_id:+el('n_dep').value||null, plan_month:+el('n_plan').value||0 });
+      await callUserFn({ phone:d, password:pw, full_name:el('n_name').value.trim(),
+        role:el('n_role').value, department_id:+el('n_dep').value||null,
+        plan_month:+el('n_plan').value||0 });
       closeAll(); await loadAll(); go('team');
-      alert('Сотрудник добавлен.\n\nПередайте ему данные для входа:\nПочта: '+email+'\nПароль: '+pw);
+      alert('Сотрудник добавлен.\n\nДанные для входа:\nТелефон: '+prettyPhone(d)+'\nПароль: '+pw);
     }catch(e){
       el('formErr').textContent = e.message;
       el('saveBtn').textContent = 'Сохранить'; el('saveBtn').disabled = false;
@@ -806,7 +838,9 @@ function editEmployee(id){
     <div class="field"><label>Имя и фамилия</label><input id="e_name" value="${esc(e.full_name||'')}"></div>
     <div class="field"><label>Роль</label><select id="e_role" ${self?'disabled':''}>${roleOptions(e.role)}</select>
       ${self?'<div style="font-size:12px;color:var(--mute);margin-top:4px">Свою роль изменить нельзя</div>':''}</div>
-    <div class="field"><label>Телефон</label><input id="e_phone" value="${esc(e.phone||'')}"></div>
+    <div class="field"><label>Телефон (логин)</label>
+      <input value="${esc(prettyPhone(e.login_phone)||e.phone||'')}" disabled>
+      <div style="font-size:12px;color:var(--mute);margin-top:4px">Номер входа менять нельзя</div></div>
     <div class="field"><label>Отдел</label><select id="e_dep">${depOptions(e.department_id)}</select></div>
     <div class="field"><label>План на месяц, ₸</label><input id="e_plan" type="number" value="${e.plan_month||0}"></div>
     <div class="field"><label>Доступ в систему</label>
@@ -821,7 +855,7 @@ function editEmployee(id){
     ${self?'':`<button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert)"
       onclick="removeEmployee('${id}','${esc(e.full_name||'')}')">Удалить сотрудника</button>`}`,
   async()=>{
-    const patch = { full_name:el('e_name').value.trim(), phone:el('e_phone').value.trim(),
+    const patch = { full_name:el('e_name').value.trim(),
                     department_id:+el('e_dep').value||null, plan_month:+el('e_plan').value||0 };
     if(!self){ patch.role = el('e_role').value; patch.active = el('e_active').value==='1'; }
     const { error } = await sb.from('employees').update(patch).eq('id',id);

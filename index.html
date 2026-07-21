@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=5">
-<meta name="theme-color" content="#f7f6f3">
+<meta name="theme-color" content="#fbfaf7">
 <title>Green Life — CRM отдела продаж</title>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <script src="config.js"></script>
@@ -20,10 +20,13 @@
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
   --tabbar:64px;
+  --vh:100vh;            /* подменяется на 100dvh или пиксели из скрипта */
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--ink);color:var(--paper);font:15px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+html,body{overscroll-behavior-y:none}   /* без резинового отскока */
+body{background:var(--ink);color:var(--paper);font:15px/1.5 Inter,system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:var(--vh)}
 h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}
 .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
 button,input,select,textarea{font:inherit;color:inherit}
@@ -32,8 +35,9 @@ a{color:inherit}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
 
 /* ---------- shell ---------- */
-#app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
-aside{background:#fbfaf7;border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+#app{display:grid;grid-template-columns:232px 1fr;min-height:var(--vh)}
+aside{background:#fbfaf7;border-right:1px solid var(--line);padding:20px 14px;display:flex;
+  flex-direction:column;gap:4px;position:sticky;top:0;height:var(--vh)}
 .brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:20px;padding:0 10px 18px;display:flex;align-items:center;gap:9px;white-space:nowrap}
 .brand i{width:11px;height:11px;background:var(--signal);border-radius:3px;display:block}
 nav button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 11px;border-radius:10px;color:var(--mute);font-weight:500;text-align:left}
@@ -73,7 +77,8 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .kpi .sub{font-size:12px;color:var(--mute);margin-top:6px}
 
 /* ---------- плитки категорий ---------- */
-.tiles{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
+.tiles{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px;
+  -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;overscroll-behavior-x:contain}
 .tile{flex:0 0 auto;min-width:132px;background:var(--ink-2);border:1px solid var(--line);
   border-radius:12px;padding:12px 14px;text-align:left;scroll-snap-align:start}
 .tile .n{font-family:'Bricolage Grotesque';font-size:26px;font-weight:800;line-height:1}
@@ -127,12 +132,13 @@ tbody tr:hover td{background:#faf9f6}
 .crow .ttl{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .crow .sub{font-size:12.5px;color:var(--mute);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .crow .right{text-align:right;flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
-.sortbar{display:none;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:4px}
+.sortbar{display:none;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:4px;overscroll-behavior-x:contain}
 .sortbar button{flex:0 0 auto;border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:13px;color:var(--mute);background:var(--ink-2)}
 .sortbar button.on{border-color:var(--paper);color:var(--paper);font-weight:600}
 
 /* ---------- pipeline ---------- */
-.pipe{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;align-items:flex-start;-webkit-overflow-scrolling:touch}
+.pipe{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;align-items:flex-start;
+  -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 .col{min-width:262px;flex:1;background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:12px}
 .col>h3{font-size:14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 .col .cnt{font-size:12px;color:var(--mute)}
@@ -152,11 +158,14 @@ tbody tr:hover td{background:#faf9f6}
 
 /* ---------- drawer ---------- */
 .scrim{position:fixed;inset:0;background:#1a1d2455;backdrop-filter:blur(3px);z-index:40}
-.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--ink-2);border-left:1px solid var(--line);z-index:41;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:22px;animation:sl .22s cubic-bezier(.2,.8,.2,1)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--ink-2);
+  border-left:1px solid var(--line);z-index:41;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;padding:22px;animation:sl .22s cubic-bezier(.2,.8,.2,1)}
 @keyframes sl{from{transform:translateX(24px);opacity:0}}
 @keyframes su{from{transform:translateY(28px);opacity:0}}
 .modal{position:fixed;inset:0;display:grid;place-items:center;z-index:41;padding:20px}
-.modal .card{width:min(520px,100%);max-height:88vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal .card{width:min(520px,100%);max-height:88vh;overflow-y:auto;
+  -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .x{position:absolute;top:16px;right:18px;font-size:22px;color:var(--mute);width:38px;height:38px;border-radius:10px}
 .x:active{background:var(--ink)}
 
@@ -171,8 +180,9 @@ tbody tr:hover td{background:#faf9f6}
 .ev .b{font-size:14px;margin-top:2px}
 
 /* ---------- AI ---------- */
-.ai{display:flex;flex-direction:column;height:calc(100vh - 190px);min-height:400px}
-.msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:12px;padding-right:6px}
+.ai{display:flex;flex-direction:column;height:calc(var(--vh) - 190px);min-height:400px}
+.msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  display:flex;flex-direction:column;gap:12px;padding-right:6px}
 .msg{max-width:82%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
 .msg.u{align-self:flex-end;background:var(--paper);color:var(--ink);border-bottom-right-radius:4px}
 .msg.a{align-self:flex-start;background:#efece5;border-bottom-left-radius:4px}
@@ -184,7 +194,7 @@ tbody tr:hover td{background:#faf9f6}
 @keyframes bl{0%,60%,100%{opacity:.25}30%{opacity:1}}
 
 /* ---------- auth ---------- */
-#auth{min-height:100vh;display:grid;place-items:center;padding:20px}
+#auth{min-height:var(--vh);display:grid;place-items:center;padding:20px}
 #auth .card{width:min(400px,100%)}
 .err{color:var(--alert);font-size:13px;margin-top:10px}
 .empty{text-align:center;color:var(--mute);padding:44px 20px}
@@ -200,18 +210,19 @@ tbody tr:hover td{background:#faf9f6}
   .btn{padding:11px 16px;border-radius:12px;font-size:15px}
   .btn.sm{padding:8px 12px;font-size:14px}
 
-  #app{display:block;min-height:100vh}
+  #app{display:block;min-height:var(--vh)}
   aside{display:none}
 
   /* верхняя шапка */
   .mtop{display:flex;position:sticky;top:0;z-index:30;align-items:center;justify-content:space-between;
-    gap:10px;background:#fbfaf7ee;backdrop-filter:blur(10px);border-bottom:1px solid var(--line);
-    padding:calc(10px + var(--safe-t)) 14px 10px}
+    gap:10px;background:#fbfaf7;border-bottom:1px solid var(--line);
+    padding:calc(10px + var(--safe-t)) 14px 10px;transform:translateZ(0)}
   .mtop .brand{padding:0;font-size:18px}
   .mtop .u{display:flex;align-items:center;gap:8px}
   .mtop .u .avatar{width:34px;height:34px;border-radius:11px;font-size:12px;background:var(--paper);color:var(--ink)}
 
-  main{padding:14px 14px calc(var(--tabbar) + 26px + var(--safe-b));max-width:100%}
+  /* нижний отступ = высота панели + safe-area + запас */
+  main{padding:14px 14px calc(var(--tabbar) + var(--safe-b) + 34px);max-width:100%}
 
   .head{align-items:flex-start;gap:12px;margin-bottom:16px}
   .head h1{font-size:23px}
@@ -237,7 +248,8 @@ tbody tr:hover td{background:#faf9f6}
   .sortbar{display:flex}
 
   /* фильтры в строку с прокруткой */
-  .filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;-webkit-overflow-scrolling:touch}
+  .filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;
+    -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   .filters>*{flex:0 0 auto;width:auto!important}
   .filters .grow{flex:1 1 190px;min-width:170px}
   .filters .cnt{margin-left:0!important;align-self:center;white-space:nowrap}
@@ -246,31 +258,33 @@ tbody tr:hover td{background:#faf9f6}
   .pipe{gap:10px;scroll-snap-type:x mandatory;margin:0 -14px;padding:0 14px 8px}
   .col{min-width:min(84vw,320px);flex:0 0 auto;scroll-snap-align:center}
 
-  /* drawer / modal — снизу, почти на весь экран */
-  .drawer{top:auto;left:0;right:0;bottom:0;width:100%;height:92vh;border-left:0;
-    border-top:1px solid var(--line);border-radius:20px 20px 0 0;
+  /* drawer / modal — снизу, почти на весь экран, высота от реального вьюпорта */
+  .drawer{top:auto;left:0;right:0;bottom:0;width:100%;height:calc(var(--vh) * .92);
+    border-left:0;border-top:1px solid var(--line);border-radius:20px 20px 0 0;
     padding:20px 16px calc(24px + var(--safe-b));animation:su .24s cubic-bezier(.2,.8,.2,1)}
   .drawer:before{content:'';display:block;width:38px;height:4px;border-radius:99px;background:var(--line);
     margin:-6px auto 12px}
   .modal{place-items:end center;padding:0}
-  .modal .card{width:100%;max-height:92vh;border-radius:20px 20px 0 0;border-bottom:0;
+  .modal .card{width:100%;max-height:calc(var(--vh) * .92);border-radius:20px 20px 0 0;border-bottom:0;
     padding:20px 16px calc(24px + var(--safe-b));animation:su .24s cubic-bezier(.2,.8,.2,1)}
   .modal .card:before{content:'';display:block;width:38px;height:4px;border-radius:99px;background:var(--line);
     margin:-6px auto 12px}
   .modal .row .btn,.drawer .row .btn{flex:1;text-align:center}
 
   /* AI */
-  .ai{height:calc(100vh - var(--tabbar) - 200px);min-height:340px;padding:12px}
+  .ai{height:calc(var(--vh) - var(--tabbar) - var(--safe-b) - 210px);min-height:320px;padding:12px}
   .msg{max-width:92%}
-  .chips{gap:6px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;margin:10px 0}
+  .chips{gap:6px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;margin:10px 0;overscroll-behavior-x:contain}
   .chip{flex:0 0 auto;padding:8px 14px}
 
-  /* нижняя навигация */
+  /* нижняя навигация — фиксированная высота, свой слой, без прыжков */
   .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:35;
-    background:#fbfaf7f2;backdrop-filter:blur(12px);border-top:1px solid var(--line);
-    padding:6px 4px calc(6px + var(--safe-b))}
-  .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
-    padding:6px 2px;color:var(--mute);font-size:10.5px;font-weight:600;border-radius:12px}
+    height:calc(var(--tabbar) + var(--safe-b));
+    background:#fbfaf7;border-top:1px solid var(--line);
+    padding:6px 4px calc(6px + var(--safe-b));
+    transform:translateZ(0);will-change:transform}
+  .tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    padding:4px 2px;color:var(--mute);font-size:10.5px;font-weight:600;border-radius:12px}
   .tabbar button span.ic{font-size:19px;line-height:1}
   .tabbar button.on{color:var(--paper)}
   .tabbar button.on span.ic{color:var(--signal)}
@@ -278,6 +292,7 @@ tbody tr:hover td{background:#faf9f6}
   /* лист «Ещё» */
   .mmenu{display:block;position:fixed;left:0;right:0;bottom:0;z-index:42;background:var(--ink-2);
     border-radius:20px 20px 0 0;padding:18px 16px calc(20px + var(--safe-b));
+    max-height:calc(var(--vh) * .8);overflow-y:auto;overscroll-behavior:contain;
     animation:su .22s cubic-bezier(.2,.8,.2,1)}
   .mmenu:before{content:'';display:block;width:38px;height:4px;border-radius:99px;background:var(--line);margin:-6px auto 14px}
   .mmenu button{display:flex;align-items:center;gap:12px;width:100%;padding:14px 10px;
@@ -344,6 +359,21 @@ tbody tr:hover td{background:#faf9f6}
 </div>
 
 <script>
+/* ==========================================================
+   0. ВЫСОТА ВЬЮПОРТА — лечит «дрожание» и западание под панель браузера
+   ========================================================== */
+function fixVH(){
+  const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+  document.documentElement.style.setProperty('--vh', h + 'px');
+}
+if(window.CSS && CSS.supports && CSS.supports('height','100dvh')){
+  document.documentElement.style.setProperty('--vh','100dvh');
+}else{
+  fixVH();
+  window.visualViewport && window.visualViewport.addEventListener('resize', fixVH);
+  window.addEventListener('orientationchange', ()=>setTimeout(fixVH,300));
+}
+
 /* ==========================================================
    1. НАСТРОЙКА — ключи лежат в отдельном файле config.js
    ========================================================== */
@@ -1607,8 +1637,15 @@ async function aiOrder(id){
 
 /* закрытие шторок по кнопке «назад» на Android */
 window.addEventListener('popstate', ()=>{ if(document.querySelector('.scrim')) closeAll(); });
-/* при повороте экрана перерисовываем текущий раздел */
-let rzT; window.addEventListener('resize', ()=>{ clearTimeout(rzT); rzT=setTimeout(()=>{ if(S.me) go(S.tab); },250); });
+
+/* Перерисовка только при смене ШИРИНЫ. Изменение высоты (скрытие адресной
+   строки браузера, появление клавиатуры) игнорируем — иначе экран мигает. */
+let rzT, lastW = window.innerWidth;
+window.addEventListener('resize', ()=>{
+  if(window.innerWidth === lastW) return;
+  lastW = window.innerWidth;
+  clearTimeout(rzT); rzT = setTimeout(()=>{ if(S.me) go(S.tab); }, 250);
+});
 
 boot();
 </script>

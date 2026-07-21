@@ -50,6 +50,7 @@ main{padding:26px 30px 60px;max-width:1500px}
 .btn.ghost:hover{border-color:var(--mute)}
 .btn.sm{padding:6px 11px;font-size:13px;border-radius:8px}
 input,select,textarea{background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%;outline:none}
+input[type=checkbox]{width:16px;height:16px;padding:0;border-radius:4px;accent-color:var(--signal);flex:none}
 input:focus,select:focus,textarea:focus{border-color:var(--mute)}
 label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:500}
 .field{margin-bottom:12px}
@@ -183,7 +184,8 @@ const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.c
 
 /* ========================================================== */
 const S = { user:null, me:null, tab:'dash', statuses:[], employees:[], products:[],
-            orders:[], customers:[], sources:[], categories:[], departments:[], ai:[] };
+            orders:[], customers:[], sources:[], categories:[], departments:[], ai:[],
+            pFilter:{ cat:'', q:'', hidden:false } };
 const money = n => new Intl.NumberFormat('ru-RU').format(Math.round(n||0)) + ' ₸';
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ini = s => (s||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
@@ -492,18 +494,59 @@ function vCustomers(){
 /* ---------- ТОВАРЫ ---------- */
 function vProducts(){
   const isAdmin = S.me.role==='admin';
-  el('view').innerHTML = H('Товары', S.products.length+' позиций',
+  S.pFilter = S.pFilter || { cat:'', q:'', hidden:false };
+  el('view').innerHTML = H('Товары', S.products.length+' позиций в каталоге',
     isAdmin ? `<button class="btn" onclick="editProduct()">Добавить товар</button>` : '') +
-  `<div class="card" style="padding:14px">${ S.products.length ? `<table><thead><tr>
+  `<div class="row" style="margin-bottom:14px">
+     <input id="pq" placeholder="Название или артикул" style="width:240px"
+       value="${esc(S.pFilter.q)}" oninput="S.pFilter.q=this.value;drawProducts()">
+     <select id="pcat" style="width:auto" onchange="S.pFilter.cat=this.value;drawProducts()">
+       <option value="">Все категории</option>
+       ${S.categories.map(c=>`<option value="${c.id}" ${String(c.id)===S.pFilter.cat?'selected':''}>${esc(c.name)}</option>`).join('')}
+       <option value="none" ${S.pFilter.cat==='none'?'selected':''}>Без категории</option>
+     </select>
+     <label class="row" style="gap:6px;font-size:13px;color:var(--mute);cursor:pointer;margin:0">
+       <input type="checkbox" style="width:auto" ${S.pFilter.hidden?'checked':''}
+         onchange="S.pFilter.hidden=this.checked;drawProducts()">
+       Показывать снятые с продажи</label>
+     <span id="pcount" style="color:var(--mute);font-size:13px;margin-left:auto"></span>
+   </div>
+   <div class="card" style="padding:14px"><div id="ptbl"></div></div>`;
+  drawProducts();
+}
+
+function filteredProducts(){
+  const f = S.pFilter, q = f.q.trim().toLowerCase();
+  return S.products.filter(p=>{
+    if(!f.hidden && p.active===false) return false;
+    if(f.cat==='none' && p.category_id) return false;
+    if(f.cat && f.cat!=='none' && String(p.category_id)!==f.cat) return false;
+    if(q && !((p.name||'').toLowerCase().includes(q) || (p.sku||'').toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+
+function drawProducts(){
+  const isAdmin = S.me.role==='admin';
+  const rows = filteredProducts();
+  const sum = rows.reduce((a,p)=>a + (+p.price||0) * (+p.stock||0), 0);
+  const cnt = el('pcount');
+  if(cnt) cnt.textContent = rows.length
+    ? `${rows.length} поз. · склад на ${money(sum)}` : '';
+  el('ptbl').innerHTML = rows.length ? `<table><thead><tr>
     <th>Артикул</th><th>Название</th><th>Категория</th><th>Цена</th><th>Себестоимость</th><th>Остаток</th></tr></thead><tbody>
-    ${S.products.map(p=>`<tr ${isAdmin?`onclick="editProduct(${p.id})"`:'style="cursor:default"'}
+    ${rows.map(p=>`<tr ${isAdmin?`onclick="editProduct(${p.id})"`:'style="cursor:default"'}
       ${p.active===false?'style="opacity:.45"':''}>
       <td class="mono" style="color:var(--mute)">${esc(p.sku||'—')}</td>
-      <td style="font-weight:600">${esc(p.name)}</td>
+      <td style="font-weight:600">${esc(p.name)}
+        ${p.active===false?'<span class="tag" style="background:var(--line);color:var(--mute);margin-left:6px">снят</span>':''}</td>
       <td style="color:var(--mute)">${esc(S.categories.find(c=>c.id===p.category_id)?.name||'—')}</td>
       <td class="mono">${money(p.price)}</td><td class="mono" style="color:var(--mute)">${money(p.cost)}</td>
       <td class="mono ${p.stock>0?'':'down'}">${p.stock}</td></tr>`).join('')}
-    </tbody></table>` : `<div class="empty"><b>Каталог пуст</b>Добавьте первый товар</div>`}</div>`;
+    </tbody></table>`
+    : (S.products.length
+        ? `<div class="empty"><b>Ничего не нашлось</b>Измените фильтр или очистите поиск</div>`
+        : `<div class="empty"><b>Каталог пуст</b>Добавьте первый товар</div>`);
 }
 const catOptions = sel => '<option value="">— не указана —</option>' +
   S.categories.map(c=>`<option value="${c.id}" ${c.id===sel?'selected':''}>${esc(c.name)}</option>`).join('');

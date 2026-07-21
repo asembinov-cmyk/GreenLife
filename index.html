@@ -78,6 +78,10 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 /* ---------- table ---------- */
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);padding:0 12px 10px;font-weight:600;white-space:nowrap}
+th.sortable{cursor:pointer;user-select:none}
+th.sortable:hover{color:var(--paper)}
+th.sortable.on{color:var(--paper)}
+th .arw{display:inline-block;width:10px;margin-left:4px;font-size:10px}
 td{padding:11px 12px;border-top:1px solid var(--line);vertical-align:middle}
 tbody tr:hover{background:transparent}
 tbody tr{cursor:pointer}
@@ -195,7 +199,7 @@ const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.c
 /* ========================================================== */
 const S = { user:null, me:null, tab:'dash', statuses:[], employees:[], products:[],
             orders:[], customers:[], sources:[], categories:[], departments:[], ai:[],
-            pFilter:{ cat:'', q:'', hidden:false } };
+            pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 } };
 const money = n => new Intl.NumberFormat('ru-RU').format(Math.round(n||0)) + ' ₸';
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ini = s => (s||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
@@ -505,6 +509,7 @@ function vCustomers(){
 function vProducts(){
   const isAdmin = S.me.role==='admin';
   S.pFilter = S.pFilter || { cat:'', q:'', hidden:false };
+  S.pSort = S.pSort || { by:'name', dir:1 };
   el('view').innerHTML = H('Товары', S.products.length+' позиций в каталоге',
     isAdmin ? `<button class="btn" onclick="editProduct()">Добавить товар</button>` : '') +
   `<div id="ptiles"></div>
@@ -556,15 +561,54 @@ function filteredProducts(){
   });
 }
 
+function sortProducts(by){
+  const st = S.pSort;
+  st.dir = (st.by === by) ? -st.dir : 1;   // повторный клик разворачивает
+  st.by = by;
+  drawProducts();
+}
+
+function applySort(rows){
+  const { by, dir } = S.pSort;
+  const catName = p => S.categories.find(c=>c.id===p.category_id)?.name || '';
+  const key = {
+    sku:   p => p.sku || '',
+    name:  p => p.name || '',
+    cat:   catName,
+    price: p => +p.price || 0,
+    cost:  p => +p.cost  || 0,
+    stock: p => +p.stock || 0,
+  }[by] || (p => p.name || '');
+  const isText = ['sku','name','cat'].includes(by);
+  return [...rows].sort((a,b)=>{
+    const x = key(a), y = key(b);
+    // пустые значения всегда внизу, независимо от направления
+    if(isText){
+      if(!x && y) return 1;
+      if(x && !y) return -1;
+      return x.localeCompare(y, 'ru') * dir;
+    }
+    return (x - y) * dir;
+  });
+}
+
 function drawProducts(){
   drawTiles();
   const isAdmin = S.me.role==='admin';
-  const rows = filteredProducts();
+  const rows = applySort(filteredProducts());
   const sum = rows.reduce((a,p)=>a + (+p.price||0) * (+p.stock||0), 0);
   const cnt = el('pcount');
   if(cnt) cnt.textContent = rows.length ? `${rows.length} поз. · склад на ${money(sum)}` : '';
+
+  const th = (label, by, right) => {
+    const on = S.pSort.by === by;
+    return `<th class="sortable ${on?'on':''}" onclick="sortProducts('${by}')"
+      style="${right?'text-align:right':''}">${label}<span class="arw">${on ? (S.pSort.dir>0?'↑':'↓') : ''}</span></th>`;
+  };
+
   el('ptbl').innerHTML = rows.length ? `<table><thead><tr>
-    <th>Артикул</th><th>Название</th><th>Категория</th><th>Цена</th><th>Себестоимость</th><th>Остаток</th></tr></thead><tbody>
+    ${th('Артикул','sku')}${th('Название','name')}${th('Категория','cat')}
+    ${th('Цена','price')}${th('Себестоимость','cost')}${th('Остаток','stock')}</tr></thead><tbody>
     ${rows.map(p=>`<tr ${isAdmin?`onclick="editProduct(${p.id})"`:'style="cursor:default"'}
       ${p.active===false?'style="opacity:.45"':''}>
       <td class="mono" style="color:var(--mute)">${esc(p.sku||'—')}</td>

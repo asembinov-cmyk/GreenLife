@@ -73,6 +73,15 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
 .tile .s{font-size:11px;color:var(--mute);margin-top:3px;font-variant-numeric:tabular-nums}
 .tile.warn .n{color:var(--alert)}
+
+/* ---------- фото товара ---------- */
+.thumb{width:38px;height:38px;border-radius:8px;background:var(--ink);border:1px solid var(--line);
+  overflow:hidden;display:grid;place-items:center;flex:none}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-box{width:104px;height:104px;border-radius:12px;border:1px solid var(--line);background:var(--ink);
+  overflow:hidden;display:grid;place-items:center;flex:none;margin-right:14px}
+.photo-box img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-box span{font-size:12px;color:var(--mute)}
 .up{color:var(--signal)} .down{color:var(--alert)}
 
 /* ---------- table ---------- */
@@ -192,6 +201,7 @@ const FN = {
   whatsappSend: '/functions/v1/wa-send',    // отправка сообщения в WhatsApp
   callDial:     '/functions/v1/call-dial',  // клик-звонок через телефонию
   createUser:   '/functions/v1/create-user',// создание и правка сотрудников
+  ai:           '/functions/v1/ai',         // прокси к Anthropic для AI-помощника
 };
 
 const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.co', SUPABASE_ANON || 'placeholder');
@@ -490,7 +500,9 @@ async function waSend(orderId,phone){
 async function waDraft(orderId){
   const o = S.orders.find(x=>x.id===orderId);
   el('wa').value = 'Пишу текст…';
+  try{
   el('wa').value = await ask(`Напиши короткое сообщение в WhatsApp клиенту ${o.customers?.name}. Этап сделки: ${o.statuses?.name}. Сумма: ${money(o.amount)}. Комментарий менеджера: ${o.comment||'нет'}. Без приветственных штампов, по делу, до 40 слов, на русском.`, false);
+  }catch(e){ el('wa').value = ''; alert(e.message); }
 }
 
 /* ---------- КЛИЕНТЫ ---------- */
@@ -514,7 +526,7 @@ function vProducts(){
     isAdmin ? `<button class="btn" onclick="editProduct()">Добавить товар</button>` : '') +
   `<div id="ptiles"></div>
    <div class="row" style="margin-bottom:14px">
-     <input id="pq" placeholder="Название или артикул" style="width:240px"
+     <input id="pq" placeholder="Название, артикул или описание" style="width:240px"
        value="${esc(S.pFilter.q)}" oninput="S.pFilter.q=this.value;drawProducts()">
      <select style="width:auto" onchange="S.pFilter.cat=this.value;drawProducts()">
        <option value="">Все категории</option>
@@ -541,6 +553,8 @@ function drawTiles(){
     ...stat(S.products.filter(p=>vis(p) && p.category_id===c.id)) }));
   const noCat = S.products.filter(p=>vis(p) && !p.category_id);
   if(noCat.length) cards.push({ name:'Без категории', ...stat(noCat) });
+  // Самые наполненные категории — слева
+  cards.sort((a,b)=> b.n - a.n || a.name.localeCompare(b.name,'ru'));
 
   box.innerHTML = cards.length ? `<div class="tiles">${cards.map(c=>`
     <div class="tile ${c.n && c.zero===c.n ? 'warn':''}">
@@ -556,7 +570,8 @@ function filteredProducts(){
     if(!f.hidden && p.active===false) return false;
     if(f.cat==='none' && p.category_id) return false;
     if(f.cat && f.cat!=='none' && String(p.category_id)!==f.cat) return false;
-    if(q && !((p.name||'').toLowerCase().includes(q) || (p.sku||'').toLowerCase().includes(q))) return false;
+    if(q && !((p.name||'').toLowerCase().includes(q) || (p.sku||'').toLowerCase().includes(q)
+              || (p.description||'').toLowerCase().includes(q))) return false;
     return true;
   });
 }
@@ -607,13 +622,16 @@ function drawProducts(){
   };
 
   el('ptbl').innerHTML = rows.length ? `<table><thead><tr>
-    ${th('Артикул','sku')}${th('Название','name')}${th('Категория','cat')}
+    <th style="width:52px"></th>${th('Артикул','sku')}${th('Название','name')}${th('Категория','cat')}
     ${th('Цена','price')}${th('Себестоимость','cost')}${th('Остаток','stock')}</tr></thead><tbody>
     ${rows.map(p=>`<tr ${isAdmin?`onclick="editProduct(${p.id})"`:'style="cursor:default"'}
       ${p.active===false?'style="opacity:.45"':''}>
+      <td><div class="thumb">${p.photo_url?`<img src="${esc(p.photo_url)}" alt="" loading="lazy">`:''}</div></td>
       <td class="mono" style="color:var(--mute)">${esc(p.sku||'—')}</td>
       <td style="font-weight:600">${esc(p.name)}
-        ${p.active===false?'<span class="tag" style="background:var(--line);color:var(--mute);margin-left:6px">снят</span>':''}</td>
+        ${p.active===false?'<span class="tag" style="background:var(--line);color:var(--mute);margin-left:6px">снят</span>':''}
+        ${p.description?`<div style="font-size:12px;color:var(--mute);font-weight:400;margin-top:2px;
+          max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.description)}</div>`:''}</td>
       <td style="color:var(--mute)">${esc(S.categories.find(c=>c.id===p.category_id)?.name||'—')}</td>
       <td class="mono">${money(p.price)}</td><td class="mono" style="color:var(--mute)">${money(p.cost)}</td>
       <td class="mono ${p.stock>0?'':'down'}">${p.stock}</td></tr>`).join('')}
@@ -627,13 +645,30 @@ const catOptions = sel => '<option value="">— не указана —</option>
 
 function editProduct(id){
   const p = id ? S.products.find(x=>x.id===id) : null;
+  S.photoDraft = p ? (p.photo_url || '') : '';   // что покажем и сохраним
   formModal(p ? 'Товар: '+esc(p.name) : 'Новый товар',`
+    <div class="field"><label>Фото</label>
+      <div class="row" style="align-items:flex-start">
+        <div id="pPrev" class="photo-box">${photoPrev()}</div>
+        <div style="flex:1">
+          <input type="file" id="pFile" accept="image/*" style="display:none" onchange="uploadPhoto(this)">
+          <button class="btn sm ghost" onclick="el('pFile').click()">Выбрать файл</button>
+          <button class="btn sm ghost" id="pDel" onclick="clearPhoto()"
+            style="margin-left:6px;${S.photoDraft?'':'display:none'}">Убрать</button>
+          <div id="pHint" style="font-size:12px;color:var(--mute);margin-top:8px">JPG или PNG, до 5 МБ</div>
+        </div>
+      </div>
+    </div>
     <div class="field"><label>Артикул</label><input id="p_sku" value="${p?esc(p.sku||''):''}"></div>
     <div class="field"><label>Название</label><input id="p_name" value="${p?esc(p.name):''}"></div>
     <div class="field"><label>Категория</label><select id="p_cat">${catOptions(p?p.category_id:null)}</select></div>
-    <div class="field"><label>Цена, ₸</label><input id="p_price" type="number" value="${p?p.price:0}"></div>
-    <div class="field"><label>Себестоимость, ₸</label><input id="p_cost" type="number" value="${p?p.cost:0}"></div>
-    <div class="field"><label>Остаток</label><input id="p_stock" type="number" value="${p?p.stock:0}"></div>
+    <div class="field"><label>Описание</label>
+      <textarea id="p_desc" rows="3" placeholder="Состав, объём, особенности — то, что менеджер скажет клиенту">${p?esc(p.description||''):''}</textarea></div>
+    <div class="row" style="gap:10px">
+      <div class="field" style="flex:1"><label>Цена, ₸</label><input id="p_price" type="number" value="${p?p.price:0}"></div>
+      <div class="field" style="flex:1"><label>Себестоимость, ₸</label><input id="p_cost" type="number" value="${p?p.cost:0}"></div>
+      <div class="field" style="flex:1"><label>Остаток</label><input id="p_stock" type="number" value="${p?p.stock:0}"></div>
+    </div>
     <div class="field"><label>Статус</label><select id="p_active">
       <option value="1" ${!p||p.active!==false?'selected':''}>В продаже</option>
       <option value="0" ${p&&p.active===false?'selected':''}>Снят с продажи</option></select></div>
@@ -643,6 +678,7 @@ function editProduct(id){
     const name = el('p_name').value.trim();
     if(!name) return el('formErr').textContent = 'Укажите название';
     const patch = { sku:el('p_sku').value.trim()||null, name, category_id:+el('p_cat').value||null,
+      description: el('p_desc').value.trim() || null, photo_url: S.photoDraft || null,
       price:+el('p_price').value||0, cost:+el('p_cost').value||0, stock:+el('p_stock').value||0,
       active: el('p_active').value==='1' };
     const { error } = p ? await sb.from('products').update(patch).eq('id',p.id)
@@ -651,6 +687,34 @@ function editProduct(id){
       ? 'Товар с таким артикулом уже есть' : 'Не удалось сохранить: '+error.message;
     closeAll(); await loadAll(); go('products');
   });
+}
+
+const photoPrev = () => S.photoDraft
+  ? `<img src="${esc(S.photoDraft)}" alt="">`
+  : `<span>нет фото</span>`;
+
+async function uploadPhoto(input){
+  const f = input.files?.[0]; if(!f) return;
+  const hint = el('pHint');
+  if(!f.type.startsWith('image/')) return hint.textContent = 'Нужен файл изображения';
+  if(f.size > 5*1024*1024)        return hint.textContent = 'Файл больше 5 МБ';
+  hint.textContent = 'Загружаю…';
+  const ext = (f.name.split('.').pop() || 'jpg').toLowerCase();
+  const path = `p_${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+  const { error } = await sb.storage.from('products').upload(path, f, { upsert:false });
+  if(error){ hint.textContent = 'Не удалось загрузить: '+error.message; return; }
+  S.photoDraft = sb.storage.from('products').getPublicUrl(path).data.publicUrl;
+  el('pPrev').innerHTML = photoPrev();
+  el('pDel').style.display = '';
+  hint.textContent = 'Фото загружено';
+  input.value = '';
+}
+
+function clearPhoto(){
+  S.photoDraft = '';
+  el('pPrev').innerHTML = photoPrev();
+  el('pDel').style.display = 'none';
+  el('pHint').textContent = 'JPG или PNG, до 5 МБ';
 }
 
 async function delProduct(id,name){
@@ -1014,12 +1078,16 @@ const SYS = `Ты — аналитик и наставник в отделе п�
 async function ask(prompt, remember=true){
   const msgs = remember ? [...S.ai.map(m=>({role:m.r==='u'?'user':'assistant',content:m.t})),{role:'user',content:prompt}]
                         : [{role:'user',content:prompt}];
-  const r = await fetch('https://api.anthropic.com/v1/messages',{ method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1000,
-      system: SYS + '\n\nТекущие данные CRM:\n' + JSON.stringify(snapshot()), messages: msgs })});
-  const d = await r.json();
-  return (d.content||[]).map(c=>c.text||'').join('\n').trim() || 'Ответ не получен.';
+  const { data:{ session } } = await sb.auth.getSession();
+  const r = await fetch(SUPABASE_URL + FN.ai, { method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+session.access_token,
+              'apikey': SUPABASE_ANON },
+    body: JSON.stringify({
+      system: SYS + '\n\nТекущие данные CRM:\n' + JSON.stringify(snapshot()),
+      messages: msgs })});
+  let d = {}; try{ d = await r.json(); }catch{}
+  if(!r.ok) throw new Error(d.error || 'Помощник недоступен. Проверьте, что функция ai развёрнута и задан ключ ANTHROPIC_API_KEY.');
+  return d.text || 'Ответ не получен.';
 }
 function vAI(){
   el('view').innerHTML = H('AI-помощник','Разбор сделок, аналитика и тренировка скриптов') +

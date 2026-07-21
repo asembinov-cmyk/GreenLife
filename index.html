@@ -231,7 +231,8 @@ const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.c
 /* ========================================================== */
 const S = { user:null, me:null, tab:'dash', statuses:[], employees:[], products:[],
             orders:[], customers:[], sources:[], categories:[], departments:[], ai:[],
-            pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 } };
+            pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 },
+            eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 } };
 const money = n => new Intl.NumberFormat('ru-RU').format(Math.round(n||0)) + ' ₸';
 const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const ini = s => (s||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
@@ -814,36 +815,156 @@ function teamTiles(m0){
     </div>`;}).join('')}</div>`;
 }
 
+const ROLE_NAME = { sales:'Менеджер', head:'Руководитель', admin:'Администратор' };
+
 function vTeam(){
-  const m0=new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
   const isAdmin = S.me.role==='admin';
-  const rows = S.employees.map(e=>{
+  S.eFilter = S.eFilter || { dep:'', role:'', q:'', off:false };
+  S.eSort   = S.eSort   || { by:'rev', dir:-1 };
+  el('view').innerHTML = H('Сотрудники','Результаты с начала месяца',
+    isAdmin ? `<button class="btn" onclick="newEmployee()">Добавить сотрудника</button>` : '') +
+  `<div id="etiles"></div>
+   <div class="row" style="margin-bottom:14px">
+     <input id="eq" placeholder="Имя или телефон" style="width:220px"
+       value="${esc(S.eFilter.q)}" oninput="S.eFilter.q=this.value;drawTeam()">
+     <select style="width:auto" onchange="S.eFilter.dep=this.value;drawTeam()">
+       <option value="">Все отделы</option>
+       ${S.departments.map(d=>`<option value="${d.id}" ${String(d.id)===S.eFilter.dep?'selected':''}>${esc(d.name)}</option>`).join('')}
+       <option value="none" ${S.eFilter.dep==='none'?'selected':''}>Без отдела</option>
+     </select>
+     <select style="width:auto" onchange="S.eFilter.role=this.value;drawTeam()">
+       <option value="">Все роли</option>
+       ${Object.entries(ROLE_NAME).map(([k,v])=>
+         `<option value="${k}" ${k===S.eFilter.role?'selected':''}>${v}</option>`).join('')}
+     </select>
+     <label class="row" style="gap:6px;font-size:13px;color:var(--mute);cursor:pointer;margin:0">
+       <input type="checkbox" ${S.eFilter.off?'checked':''}
+         onchange="S.eFilter.off=this.checked;drawTeam()">
+       Показывать отключённых</label>
+     <span id="ecount" style="color:var(--mute);font-size:13px;margin-left:auto"></span>
+   </div>
+   <div class="card" style="padding:14px"><div id="etbl"></div></div>
+   ${isAdmin?`<p style="color:var(--mute);font-size:13px;margin-top:12px">
+     Менеджер видит только свои сделки. Руководитель видит отдел целиком. Администратор ещё и заводит сотрудников.</p>`:''}`;
+  drawTeam();
+}
+
+/* Плитки по отделам: сколько людей и как идут к плану */
+function teamTiles(m0){
+  const act = S.employees.filter(e=>S.eFilter.off || e.active!==false);
+  const revOf = list => S.orders
+    .filter(o=>list.some(e=>e.id===o.owner_id) && new Date(o.created_at)>=m0 && o.statuses?.code==='won')
+    .reduce((a,o)=>a + +o.amount, 0);
+
+  const cards = S.departments.map(d=>{
+    const list = act.filter(e=>e.department_id===d.id);
+    return { name:d.name, n:list.length, rev:revOf(list),
+             plan:list.reduce((a,e)=>a + (+e.plan_month||0), 0),
+             head:S.employees.find(e=>e.id===d.head_id)?.full_name || '' };
+  });
+  const noDep = act.filter(e=>!e.department_id);
+  if(noDep.length) cards.push({ name:'Без отдела', n:noDep.length, rev:revOf(noDep),
+                                plan:noDep.reduce((a,e)=>a + (+e.plan_month||0), 0), head:'' });
+
+  cards.sort((a,b)=> b.n - a.n || a.name.localeCompare(b.name,'ru'));
+  if(!cards.length) return '';
+
+  return `<div class="tiles">${cards.map(c=>{
+    const pct = c.plan ? Math.round(c.rev / c.plan * 100) : null;
+    return `<div class="tile ${c.n===0?'warn':''}" style="min-width:160px">
+      <div class="n">${c.n}</div>
+      <div class="t" title="${esc(c.name)}">${esc(c.name)}</div>
+      <div class="s">${
+        !c.n ? 'нет сотрудников'
+        : pct===null ? money(c.rev)
+        : `${money(c.rev)} · ${pct}% плана`}</div>
+      ${pct!==null && c.n ? `<div class="bar" style="margin-top:8px;height:5px">
+        <i style="width:${Math.min(100,pct)}%"></i></div>` : ''}
+      ${c.head ? `<div class="s" style="margin-top:6px">${esc(c.head)}</div>` : ''}
+    </div>`;}).join('')}</div>`;
+}
+
+function sortTeam(by){
+  const st = S.eSort;
+  st.dir = (st.by === by) ? -st.dir : (['name','role','dep'].includes(by) ? 1 : -1);
+  st.by = by;
+  drawTeam();
+}
+
+function drawTeam(){
+  const isAdmin = S.me.role==='admin';
+  const m0 = new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
+  el('etiles').innerHTML = teamTiles(m0);
+
+  const f = S.eFilter, q = f.q.trim().toLowerCase();
+  const depName = e => S.departments.find(d=>d.id===e.department_id)?.name || '';
+
+  let rows = S.employees.filter(e=>{
+    if(!f.off && e.active===false) return false;
+    if(f.dep==='none' && e.department_id) return false;
+    if(f.dep && f.dep!=='none' && String(e.department_id)!==f.dep) return false;
+    if(f.role && e.role!==f.role) return false;
+    if(q){
+      const qd = q.replace(/\D/g,'');   // цифры из запроса; пустая строка не должна совпадать со всем
+      const byName  = (e.full_name||'').toLowerCase().includes(q);
+      const byPhone = qd !== '' && ((e.login_phone||'')+(e.phone||'')).includes(qd);
+      if(!byName && !byPhone) return false;
+    }
+    return true;
+  }).map(e=>{
     const os = S.orders.filter(o=>o.owner_id===e.id && new Date(o.created_at)>=m0);
     const won = os.filter(o=>o.statuses?.code==='won');
     const rev = won.reduce((s,o)=>s+ +o.amount,0);
     return { e, n:os.length, w:won.length, rev, conv: os.length?won.length/os.length*100:0 };
-  }).sort((a,b)=>b.rev-a.rev);
-  const ROLE = { sales:'Менеджер', head:'Руководитель', admin:'Администратор' };
-  el('view').innerHTML = H('Сотрудники','Результаты с начала месяца',
-    isAdmin ? `<button class="btn" onclick="newEmployee()">Добавить сотрудника</button>` : '') +
-  teamTiles(m0) +
-  `<div class="card" style="padding:14px"><table><thead><tr>
-    <th>Менеджер</th><th>Роль</th><th>Отдел</th><th>Заказов</th><th>Оплачено</th><th>Конверсия</th><th>Выручка</th><th>План</th>${isAdmin?'<th></th>':''}</tr></thead><tbody>
+  });
+
+  const { by, dir } = S.eSort;
+  const key = {
+    name: r => r.e.full_name || '',
+    role: r => ROLE_NAME[r.e.role] || '',
+    dep:  r => depName(r.e),
+    n:    r => r.n,  w: r => r.w,  conv: r => r.conv,  rev: r => r.rev,
+    plan: r => +r.e.plan_month || 0,
+  }[by] || (r => r.rev);
+  const isText = ['name','role','dep'].includes(by);
+  rows.sort((a,b)=>{
+    const x = key(a), y = key(b);
+    if(isText){
+      if(!x && y) return 1;
+      if(x && !y) return -1;
+      return String(x).localeCompare(String(y),'ru') * dir;
+    }
+    return (x - y) * dir;
+  });
+
+  const totRev = rows.reduce((a,r)=>a+r.rev,0);
+  const cnt = el('ecount');
+  if(cnt) cnt.textContent = rows.length ? `${rows.length} чел. · выручка ${money(totRev)}` : '';
+
+  const th = (label, k) => {
+    const on = S.eSort.by === k;
+    return `<th class="sortable ${on?'on':''}" onclick="sortTeam('${k}')">${label}<span class="arw">${
+      on ? (S.eSort.dir>0?'↑':'↓') : ''}</span></th>`;
+  };
+
+  el('etbl').innerHTML = rows.length ? `<table><thead><tr>
+    ${th('Менеджер','name')}${th('Роль','role')}${th('Отдел','dep')}${th('Заказов','n')}
+    ${th('Оплачено','w')}${th('Конверсия','conv')}${th('Выручка','rev')}${th('План','plan')}
+    ${isAdmin?'<th></th>':''}</tr></thead><tbody>
     ${rows.map(r=>`<tr style="${r.e.active===false?'opacity:.45':''}">
       <td><span class="avatar" style="margin-right:8px">${ini(r.e.full_name)}</span><b>${esc(r.e.full_name)}</b>
         ${r.e.active===false?'<span class="tag" style="background:var(--line);color:var(--mute);margin-left:6px">отключён</span>':''}
         ${(r.e.login_phone||r.e.phone)?`<div class="mono" style="font-size:12px;color:var(--mute);margin-left:34px">${esc(prettyPhone(r.e.login_phone)||r.e.phone)}</div>`:''}</td>
-      <td style="color:var(--mute)">${esc(ROLE[r.e.role]||r.e.role)}</td>
-      <td style="color:var(--mute)">${esc(S.departments.find(d=>d.id===r.e.department_id)?.name||'—')}</td>
+      <td style="color:var(--mute)">${esc(ROLE_NAME[r.e.role]||r.e.role)}</td>
+      <td style="color:var(--mute)">${esc(depName(r.e)||'—')}</td>
       <td>${r.n}</td><td>${r.w}</td>
       <td class="${r.conv>=30?'up':''}">${r.conv.toFixed(0)}%</td>
       <td class="mono" style="font-weight:700">${money(r.rev)}</td>
       <td style="min-width:130px">${r.e.plan_month?`<div class="bar"><i style="width:${Math.min(100,r.rev/r.e.plan_month*100)}%"></i></div>
         <div style="font-size:11px;color:var(--mute);margin-top:4px">${money(r.e.plan_month)}</div>`:'<span style="color:var(--mute)">—</span>'}</td>
       ${isAdmin?`<td><button class="btn sm ghost" onclick="editEmployee('${r.e.id}')">Изменить</button></td>`:''}
-    </tr>`).join('')}</tbody></table></div>
-  ${isAdmin?`<p style="color:var(--mute);font-size:13px;margin-top:12px">
-    Менеджер видит только свои сделки. Руководитель видит отдел целиком. Администратор ещё и заводит сотрудников.</p>`:''}`;
+    </tr>`).join('')}</tbody></table>`
+    : `<div class="empty"><b>Никого не нашлось</b>Измените фильтр или очистите поиск</div>`;
 }
 
 /* ---------- УПРАВЛЕНИЕ СОТРУДНИКАМИ ---------- */

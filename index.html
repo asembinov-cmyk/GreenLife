@@ -778,6 +778,42 @@ async function delProduct(id,name){
   closeAll(); await loadAll(); go('products');
 }
 /* ---------- КОМАНДА ---------- */
+/* Плитки по отделам: сколько людей и как идут к плану */
+function teamTiles(m0){
+  const act = S.employees.filter(e=>e.active!==false);
+  const revOf = list => S.orders
+    .filter(o=>list.some(e=>e.id===o.owner_id) && new Date(o.created_at)>=m0 && o.statuses?.code==='won')
+    .reduce((a,o)=>a + +o.amount, 0);
+
+  const cards = S.departments.map(d=>{
+    const list = act.filter(e=>e.department_id===d.id);
+    return { name:d.name, n:list.length, rev:revOf(list),
+             plan:list.reduce((a,e)=>a + (+e.plan_month||0), 0),
+             head:S.employees.find(e=>e.id===d.head_id)?.full_name || '' };
+  });
+  const noDep = act.filter(e=>!e.department_id);
+  if(noDep.length) cards.push({ name:'Без отдела', n:noDep.length, rev:revOf(noDep),
+                                plan:noDep.reduce((a,e)=>a + (+e.plan_month||0), 0), head:'' });
+
+  // Самые крупные отделы — слева
+  cards.sort((a,b)=> b.n - a.n || a.name.localeCompare(b.name,'ru'));
+  if(!cards.length) return '';
+
+  return `<div class="tiles">${cards.map(c=>{
+    const pct = c.plan ? Math.round(c.rev / c.plan * 100) : null;
+    return `<div class="tile ${c.n===0?'warn':''}" style="min-width:160px">
+      <div class="n">${c.n}</div>
+      <div class="t" title="${esc(c.name)}">${esc(c.name)}</div>
+      <div class="s">${
+        !c.n ? 'нет сотрудников'
+        : pct===null ? money(c.rev)
+        : `${money(c.rev)} · ${pct}% плана`}</div>
+      ${pct!==null && c.n ? `<div class="bar" style="margin-top:8px;height:5px">
+        <i style="width:${Math.min(100,pct)}%"></i></div>` : ''}
+      ${c.head ? `<div class="s" style="margin-top:6px">${esc(c.head)}</div>` : ''}
+    </div>`;}).join('')}</div>`;
+}
+
 function vTeam(){
   const m0=new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
   const isAdmin = S.me.role==='admin';
@@ -790,6 +826,7 @@ function vTeam(){
   const ROLE = { sales:'Менеджер', head:'Руководитель', admin:'Администратор' };
   el('view').innerHTML = H('Сотрудники','Результаты с начала месяца',
     isAdmin ? `<button class="btn" onclick="newEmployee()">Добавить сотрудника</button>` : '') +
+  teamTiles(m0) +
   `<div class="card" style="padding:14px"><table><thead><tr>
     <th>Менеджер</th><th>Роль</th><th>Отдел</th><th>Заказов</th><th>Оплачено</th><th>Конверсия</th><th>Выручка</th><th>План</th>${isAdmin?'<th></th>':''}</tr></thead><tbody>
     ${rows.map(r=>`<tr style="${r.e.active===false?'opacity:.45':''}">

@@ -144,12 +144,11 @@ tbody tr:hover td{background:#faf9f6}
 <div id="auth" style="display:none">
   <div class="card">
     <div class="brand" style="padding-left:0"><i></i>Пульт</div>
-    <p style="color:var(--mute);font-size:14px;margin-bottom:18px">CRM отдела продаж</p>
+    <p style="color:var(--mute);font-size:14px;margin-bottom:18px">CRM отдела продаж<br><span style="font-size:13px">Доступ выдаёт администратор</span></p>
     <div class="field"><label>Почта</label><input id="em" type="email" placeholder="you@company.kz"></div>
     <div class="field"><label>Пароль</label><input id="pw" type="password" placeholder="••••••••"></div>
     <div class="row" style="margin-top:16px">
       <button class="btn" onclick="signIn()">Войти</button>
-      <button class="btn ghost" onclick="signUp()">Создать аккаунт</button>
     </div>
     <div class="err" id="authErr"></div>
   </div>
@@ -170,11 +169,12 @@ tbody tr:hover td{background:#faf9f6}
    ========================================================== */
 const SUPABASE_URL  = 'https://ngudcdkijsintsofvsyh.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ndWRjZGtpanNpbnRzb2Z2c3loIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2MjgwMzIsImV4cCI6MjEwMDIwNDAzMn0.Tcs-qODMd0jPgiIeYKHONAKFtew9jpZMJVhRmbG46sw';
-  
+
 // Edge Functions, которые вы разворачиваете у себя (см. инструкцию)
 const FN = {
-  whatsappSend: '/functions/v1/wa-send',   // отправка сообщения в WhatsApp
-  callDial:     '/functions/v1/call-dial', // клик-звонок через телефонию
+  whatsappSend: '/functions/v1/wa-send',    // отправка сообщения в WhatsApp
+  callDial:     '/functions/v1/call-dial',  // клик-звонок через телефонию
+  createUser:   '/functions/v1/create-user',// создание и правка сотрудников
 };
 
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
@@ -201,13 +201,6 @@ async function signIn(){
   const { error } = await sb.auth.signInWithPassword({ email:el('em').value.trim(), password:el('pw').value });
   if(error) return el('authErr').textContent = 'Не удалось войти: ' + error.message;
   location.reload();
-}
-async function signUp(){
-  const email = el('em').value.trim();
-  const { data, error } = await sb.auth.signUp({ email, password:el('pw').value });
-  if(error) return el('authErr').textContent = 'Не удалось создать аккаунт: ' + error.message;
-  if(data.user) await sb.from('employees').insert({ id:data.user.id, full_name:email.split('@')[0], role:'sales' });
-  el('authErr').textContent = 'Аккаунт создан. Подтвердите почту, если включена проверка, и войдите.';
 }
 async function signOut(){ await sb.auth.signOut(); location.reload(); }
 
@@ -503,24 +496,123 @@ function vProducts(){
 /* ---------- КОМАНДА ---------- */
 function vTeam(){
   const m0=new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
+  const isAdmin = S.me.role==='admin';
   const rows = S.employees.map(e=>{
     const os = S.orders.filter(o=>o.owner_id===e.id && new Date(o.created_at)>=m0);
     const won = os.filter(o=>o.statuses?.code==='won');
     const rev = won.reduce((s,o)=>s+ +o.amount,0);
     return { e, n:os.length, w:won.length, rev, conv: os.length?won.length/os.length*100:0 };
   }).sort((a,b)=>b.rev-a.rev);
-  el('view').innerHTML = H('Сотрудники','Результаты с начала месяца') +
+  const ROLE = { sales:'Менеджер', head:'Руководитель', admin:'Администратор' };
+  el('view').innerHTML = H('Сотрудники','Результаты с начала месяца',
+    isAdmin ? `<button class="btn" onclick="newEmployee()">Добавить сотрудника</button>` : '') +
   `<div class="card" style="padding:14px"><table><thead><tr>
-    <th>Менеджер</th><th>Роль</th><th>Заказов</th><th>Оплачено</th><th>Конверсия</th><th>Выручка</th><th>План</th></tr></thead><tbody>
-    ${rows.map(r=>`<tr>
-      <td><span class="avatar" style="margin-right:8px">${ini(r.e.full_name)}</span><b>${esc(r.e.full_name)}</b></td>
-      <td style="color:var(--mute)">${esc(r.e.role)}</td><td>${r.n}</td><td>${r.w}</td>
+    <th>Менеджер</th><th>Роль</th><th>Заказов</th><th>Оплачено</th><th>Конверсия</th><th>Выручка</th><th>План</th>${isAdmin?'<th></th>':''}</tr></thead><tbody>
+    ${rows.map(r=>`<tr style="${r.e.active===false?'opacity:.45':''}">
+      <td><span class="avatar" style="margin-right:8px">${ini(r.e.full_name)}</span><b>${esc(r.e.full_name)}</b>
+        ${r.e.active===false?'<span class="tag" style="background:var(--line);color:var(--mute);margin-left:6px">отключён</span>':''}
+        ${r.e.phone?`<div style="font-size:12px;color:var(--mute);margin-left:34px">${esc(r.e.phone)}</div>`:''}</td>
+      <td style="color:var(--mute)">${esc(ROLE[r.e.role]||r.e.role)}</td><td>${r.n}</td><td>${r.w}</td>
       <td class="${r.conv>=30?'up':''}">${r.conv.toFixed(0)}%</td>
       <td class="mono" style="font-weight:700">${money(r.rev)}</td>
       <td style="min-width:130px">${r.e.plan_month?`<div class="bar"><i style="width:${Math.min(100,r.rev/r.e.plan_month*100)}%"></i></div>
         <div style="font-size:11px;color:var(--mute);margin-top:4px">${money(r.e.plan_month)}</div>`:'<span style="color:var(--mute)">—</span>'}</td>
-    </tr>`).join('')}</tbody></table></div>`;
+      ${isAdmin?`<td><button class="btn sm ghost" onclick="editEmployee('${r.e.id}')">Изменить</button></td>`:''}
+    </tr>`).join('')}</tbody></table></div>
+  ${isAdmin?`<p style="color:var(--mute);font-size:13px;margin-top:12px">
+    Менеджер видит только свои сделки. Руководитель видит отдел целиком. Администратор ещё и заводит сотрудников.</p>`:''}`;
 }
+
+/* ---------- УПРАВЛЕНИЕ СОТРУДНИКАМИ ---------- */
+async function callUserFn(payload){
+  const { data:{ session } } = await sb.auth.getSession();
+  const r = await fetch(SUPABASE_URL + FN.createUser, { method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+session.access_token,
+              'apikey': SUPABASE_ANON },
+    body: JSON.stringify(payload) });
+  let d = {}; try{ d = await r.json(); }catch{}
+  if(!r.ok) throw new Error(d.error || 'Сервис недоступен. Проверьте, что функция create-user развёрнута.');
+  return d;
+}
+const roleOptions = sel => ['sales','head','admin'].map(v=>
+  `<option value="${v}" ${v===sel?'selected':''}>${{sales:'Менеджер',head:'Руководитель',admin:'Администратор'}[v]}</option>`).join('');
+
+function newEmployee(){
+  formModal('Новый сотрудник',`
+    <div class="field"><label>Имя и фамилия</label><input id="n_name" placeholder="Айгерим Сатпаева"></div>
+    <div class="field"><label>Рабочая почта</label><input id="n_email" type="email" placeholder="name@company.kz"></div>
+    <div class="field"><label>Пароль для первого входа</label><input id="n_pw" placeholder="от 6 символов"></div>
+    <div class="field"><label>Роль</label><select id="n_role">${roleOptions('sales')}</select></div>
+    <div class="field"><label>Телефон</label><input id="n_phone" placeholder="+7"></div>
+    <div class="field"><label>Отдел</label><input id="n_dep" placeholder="Холодные звонки"></div>
+    <div class="field"><label>План на месяц, ₸</label><input id="n_plan" type="number" value="0"></div>`,
+  async()=>{
+    const email = el('n_email').value.trim(), pw = el('n_pw').value;
+    if(!email) return el('formErr').textContent = 'Укажите почту';
+    if(pw.length < 6) return el('formErr').textContent = 'Пароль должен быть от 6 символов';
+    el('saveBtn').textContent = 'Создаю…'; el('saveBtn').disabled = true;
+    try{
+      await callUserFn({ email, password:pw, full_name:el('n_name').value.trim(),
+        role:el('n_role').value, phone:el('n_phone').value.trim(),
+        department:el('n_dep').value.trim(), plan_month:+el('n_plan').value||0 });
+      closeAll(); await loadAll(); go('team');
+      alert('Сотрудник добавлен.\n\nПередайте ему данные для входа:\nПочта: '+email+'\nПароль: '+pw);
+    }catch(e){
+      el('formErr').textContent = e.message;
+      el('saveBtn').textContent = 'Сохранить'; el('saveBtn').disabled = false;
+    }
+  });
+}
+
+function editEmployee(id){
+  const e = S.employees.find(x=>x.id===id); if(!e) return;
+  const self = id === S.user.id;
+  formModal('Сотрудник: '+esc(e.full_name||''),`
+    <div class="field"><label>Имя и фамилия</label><input id="e_name" value="${esc(e.full_name||'')}"></div>
+    <div class="field"><label>Роль</label><select id="e_role" ${self?'disabled':''}>${roleOptions(e.role)}</select>
+      ${self?'<div style="font-size:12px;color:var(--mute);margin-top:4px">Свою роль изменить нельзя</div>':''}</div>
+    <div class="field"><label>Телефон</label><input id="e_phone" value="${esc(e.phone||'')}"></div>
+    <div class="field"><label>Отдел</label><input id="e_dep" value="${esc(e.department||'')}"></div>
+    <div class="field"><label>План на месяц, ₸</label><input id="e_plan" type="number" value="${e.plan_month||0}"></div>
+    <div class="field"><label>Доступ в систему</label>
+      <select id="e_active" ${self?'disabled':''}>
+        <option value="1" ${e.active!==false?'selected':''}>Открыт</option>
+        <option value="0" ${e.active===false?'selected':''}>Закрыт</option></select></div>
+    <div style="border-top:1px solid var(--line);margin:16px 0 12px;padding-top:14px">
+      <label>Новый пароль</label>
+      <div class="row"><input id="e_pw" placeholder="оставьте пустым, если не меняете" style="flex:1">
+        <button class="btn sm ghost" onclick="resetPw('${id}')">Сменить</button></div>
+    </div>
+    ${self?'':`<button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert)"
+      onclick="removeEmployee('${id}','${esc(e.full_name||'')}')">Удалить сотрудника</button>`}`,
+  async()=>{
+    const patch = { full_name:el('e_name').value.trim(), phone:el('e_phone').value.trim(),
+                    department:el('e_dep').value.trim(), plan_month:+el('e_plan').value||0 };
+    if(!self){ patch.role = el('e_role').value; patch.active = el('e_active').value==='1'; }
+    const { error } = await sb.from('employees').update(patch).eq('id',id);
+    if(error) return el('formErr').textContent = 'Не удалось сохранить: '+error.message;
+    closeAll(); await loadAll(); go('team');
+  });
+}
+
+async function resetPw(id){
+  const pw = el('e_pw').value;
+  if(pw.length < 6) return el('formErr').textContent = 'Пароль должен быть от 6 символов';
+  try{
+    await callUserFn({ action:'password', id, password:pw });
+    el('formErr').style.color = 'var(--signal)';
+    el('formErr').textContent = 'Пароль изменён. Передайте его сотруднику.';
+  }catch(e){ el('formErr').textContent = e.message; }
+}
+
+async function removeEmployee(id,name){
+  if(!confirm('Удалить '+name+'? Доступ пропадёт сразу, заказы останутся в системе без владельца.')) return;
+  try{
+    await callUserFn({ action:'delete', id });
+    closeAll(); await loadAll(); go('team');
+  }catch(e){ el('formErr').textContent = e.message; }
+}
+
 /* ---------- АНАЛИТИКА ---------- */
 function vAnalytics(){
   const os = S.orders;

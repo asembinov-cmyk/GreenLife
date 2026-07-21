@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Пульт — CRM отдела продаж</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --ink:#12151c; --ink-2:#1b1f29; --line:#2b3040;
+  --paper:#f2f0eb; --mute:#8b93a7;
+  --signal:#00e5a0;      /* деньги / выигрыш */
+  --alert:#ff5c4d;       /* просрочка / отказ */
+  --amber:#ffb02e;       /* в работе */
+  --violet:#a78bfa;      /* коммуникации */
+  --r:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--ink);color:var(--paper);font:15px/1.5 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}
+.mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+a{color:inherit}
+::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+
+/* ---------- shell ---------- */
+#app{display:grid;grid-template-columns:232px 1fr;min-height:100vh}
+aside{background:var(--ink-2);border-right:1px solid var(--line);padding:20px 14px;display:flex;flex-direction:column;gap:4px;position:sticky;top:0;height:100vh}
+.brand{font-family:'Bricolage Grotesque';font-weight:800;font-size:22px;padding:0 10px 18px;display:flex;align-items:center;gap:9px}
+.brand i{width:11px;height:11px;background:var(--signal);border-radius:3px;display:block;box-shadow:0 0 14px var(--signal)}
+nav button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 11px;border-radius:10px;color:var(--mute);font-weight:500;text-align:left}
+nav button:hover{background:#232838;color:var(--paper)}
+nav button.on{background:var(--paper);color:var(--ink);font-weight:600}
+nav .grp{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#5b6377;padding:16px 11px 6px;font-weight:600}
+.me{margin-top:auto;border-top:1px solid var(--line);padding-top:14px;font-size:13px;color:var(--mute)}
+.me b{display:block;color:var(--paper);font-size:14px}
+
+main{padding:26px 30px 60px;max-width:1500px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
+.head h1{font-size:30px;font-weight:700}
+.head p{color:var(--mute);font-size:14px;margin-top:3px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+.btn{background:var(--paper);color:var(--ink);padding:9px 16px;border-radius:10px;font-weight:600;font-size:14px}
+.btn:hover{opacity:.88}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--paper)}
+.btn.ghost:hover{border-color:var(--mute)}
+.btn.sm{padding:6px 11px;font-size:13px;border-radius:8px}
+input,select,textarea{background:var(--ink-2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;width:100%;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--mute)}
+label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:500}
+.field{margin-bottom:12px}
+
+.card{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.grid{display:grid;gap:14px}
+
+/* ---------- KPI ---------- */
+.kpis{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.kpi .lbl{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.kpi .val{font-family:'Bricolage Grotesque';font-size:34px;font-weight:800;margin-top:6px;line-height:1}
+.kpi .sub{font-size:12px;color:var(--mute);margin-top:6px}
+.up{color:var(--signal)} .down{color:var(--alert)}
+
+/* ---------- table ---------- */
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);padding:0 12px 10px;font-weight:600;white-space:nowrap}
+td{padding:11px 12px;border-top:1px solid var(--line);vertical-align:middle}
+tbody tr:hover{background:#20253200}
+tbody tr{cursor:pointer}
+tbody tr:hover td{background:#232838}
+.tag{display:inline-block;padding:3px 9px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.avatar{width:26px;height:26px;border-radius:8px;background:var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--paper)}
+
+/* ---------- pipeline ---------- */
+.pipe{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;align-items:flex-start}
+.col{min-width:262px;flex:1;background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.col>h3{font-size:14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.col .cnt{font-size:12px;color:var(--mute)}
+.deal{background:#232838;border-radius:11px;padding:11px;margin-bottom:8px;cursor:grab;border-left:3px solid transparent}
+.deal:active{cursor:grabbing}
+.deal .nm{font-weight:600;font-size:14px}
+.deal .amt{font-family:'JetBrains Mono';font-weight:700;font-size:15px;margin-top:4px}
+.deal .meta{font-size:12px;color:var(--mute);margin-top:6px;display:flex;justify-content:space-between}
+.col.over{outline:2px dashed var(--mute)}
+
+/* ---------- bars ---------- */
+.bar{height:9px;background:var(--line);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--signal);border-radius:99px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.spark{display:flex;align-items:flex-end;gap:3px;height:52px}
+.spark i{flex:1;background:var(--line);border-radius:3px 3px 0 0;min-height:2px;transition:height .5s}
+.spark i.hot{background:var(--signal)}
+
+/* ---------- drawer ---------- */
+.scrim{position:fixed;inset:0;background:#0009;backdrop-filter:blur(3px);z-index:40}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--ink-2);border-left:1px solid var(--line);z-index:41;overflow-y:auto;padding:22px;animation:sl .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes sl{from{transform:translateX(24px);opacity:0}}
+.modal{position:fixed;inset:0;display:grid;place-items:center;z-index:41;padding:20px}
+.modal .card{width:min(520px,100%);max-height:88vh;overflow-y:auto}
+.x{position:absolute;top:16px;right:18px;font-size:22px;color:var(--mute)}
+
+/* ---------- timeline ---------- */
+.tl{position:relative;padding-left:22px;margin-top:8px}
+.tl:before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:1px;background:var(--line)}
+.ev{position:relative;padding:9px 0}
+.ev:before{content:'';position:absolute;left:-19px;top:15px;width:9px;height:9px;border-radius:99px;background:var(--line);border:2px solid var(--ink-2)}
+.ev.call:before{background:var(--amber)} .ev.whatsapp:before{background:var(--signal)}
+.ev.note:before{background:var(--violet)} .ev.status:before{background:var(--mute)}
+.ev .t{font-size:11px;color:var(--mute);font-family:'JetBrains Mono'}
+.ev .b{font-size:14px;margin-top:2px}
+
+/* ---------- AI ---------- */
+.ai{display:flex;flex-direction:column;height:calc(100vh - 190px);min-height:400px}
+.msgs{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:12px;padding-right:6px}
+.msg{max-width:82%;padding:11px 14px;border-radius:14px;font-size:14px;line-height:1.55;white-space:pre-wrap}
+.msg.u{align-self:flex-end;background:var(--paper);color:var(--ink);border-bottom-right-radius:4px}
+.msg.a{align-self:flex-start;background:#232838;border-bottom-left-radius:4px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.chip{border:1px solid var(--line);border-radius:99px;padding:6px 13px;font-size:13px;color:var(--mute)}
+.chip:hover{border-color:var(--signal);color:var(--signal)}
+.dots i{display:inline-block;width:6px;height:6px;background:var(--mute);border-radius:99px;margin-right:4px;animation:bl 1.2s infinite}
+.dots i:nth-child(2){animation-delay:.2s} .dots i:nth-child(3){animation-delay:.4s}
+@keyframes bl{0%,60%,100%{opacity:.25}30%{opacity:1}}
+
+/* ---------- auth ---------- */
+#auth{min-height:100vh;display:grid;place-items:center;padding:20px}
+#auth .card{width:min(400px,100%)}
+.err{color:var(--alert);font-size:13px;margin-top:10px}
+.empty{text-align:center;color:var(--mute);padding:44px 20px}
+.empty b{display:block;color:var(--paper);font-family:'Bricolage Grotesque';font-size:18px;margin-bottom:6px}
+@media(max-width:860px){
+  #app{grid-template-columns:1fr}
+  aside{position:static;height:auto;flex-direction:row;overflow-x:auto;padding:12px}
+  aside .grp,.me{display:none} .brand{padding:0 12px 0 4px}
+  nav{display:flex;gap:4px} nav button{white-space:nowrap}
+  main{padding:18px 14px 50px}
+}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div id="auth" style="display:none">
+  <div class="card">
+    <div class="brand" style="padding-left:0"><i></i>Пульт</div>
+    <p style="color:var(--mute);font-size:14px;margin-bottom:18px">CRM отдела продаж</p>
+    <div class="field"><label>Почта</label><input id="em" type="email" placeholder="you@company.kz"></div>
+    <div class="field"><label>Пароль</label><input id="pw" type="password" placeholder="••••••••"></div>
+    <div class="row" style="margin-top:16px">
+      <button class="btn" onclick="signIn()">Войти</button>
+      <button class="btn ghost" onclick="signUp()">Создать аккаунт</button>
+    </div>
+    <div class="err" id="authErr"></div>
+  </div>
+</div>
+
+<div id="app" style="display:none">
+  <aside>
+    <div class="brand"><i></i>Пульт</div>
+    <nav id="nav"></nav>
+    <div class="me" id="me"></div>
+  </aside>
+  <main id="view"></main>
+</div>
+
+<script>
+/* ==========================================================
+   1. НАСТРОЙКА — впишите свои ключи
+   ========================================================== */
+const SUPABASE_URL  = 'https://ВАШ-ПРОЕКТ.supabase.co';
+const SUPABASE_ANON = 'ВАШ-ANON-KEY';
+
+// Edge Functions, которые вы разворачиваете у себя (см. инструкцию)
+const FN = {
+  whatsappSend: '/functions/v1/wa-send',   // отправка сообщения в WhatsApp
+  callDial:     '/functions/v1/call-dial', // клик-звонок через телефонию
+};
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+
+/* ========================================================== */
+const S = { user:null, me:null, tab:'dash', statuses:[], employees:[], products:[],
+            orders:[], customers:[], sources:[], categories:[], ai:[] };
+const money = n => new Intl.NumberFormat('ru-RU').format(Math.round(n||0)) + ' ₸';
+const esc = s => String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ini = s => (s||'?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+const el = id => document.getElementById(id);
+const dt = s => s ? new Date(s).toLocaleString('ru-RU',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
+const days = (a,b=Date.now()) => Math.floor((b - new Date(a))/864e5);
+
+/* ---------- AUTH ---------- */
+async function boot(){
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ el('auth').style.display='grid'; return; }
+  S.user = session.user;
+  el('auth').style.display='none'; el('app').style.display='grid';
+  await loadAll(); renderNav(); go('dash'); live();
+}
+async function signIn(){
+  const { error } = await sb.auth.signInWithPassword({ email:el('em').value.trim(), password:el('pw').value });
+  if(error) return el('authErr').textContent = 'Не удалось войти: ' + error.message;
+  location.reload();
+}
+async function signUp(){
+  const email = el('em').value.trim();
+  const { data, error } = await sb.auth.signUp({ email, password:el('pw').value });
+  if(error) return el('authErr').textContent = 'Не удалось создать аккаунт: ' + error.message;
+  if(data.user) await sb.from('employees').insert({ id:data.user.id, full_name:email.split('@')[0], role:'sales' });
+  el('authErr').textContent = 'Аккаунт создан. Подтвердите почту, если включена проверка, и войдите.';
+}
+async function signOut(){ await sb.auth.signOut(); location.reload(); }
+
+/* ---------- DATA ---------- */
+async function loadAll(){
+  const q = [
+    sb.from('statuses').select('*').order('sort'),
+    sb.from('employees').select('*'),
+    sb.from('products').select('*').order('name'),
+    sb.from('sources').select('*'),
+    sb.from('categories').select('*'),
+    sb.from('customers').select('*').order('created_at',{ascending:false}).limit(500),
+    sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color)')
+      .order('created_at',{ascending:false}).limit(600),
+  ];
+  const [st,em,pr,so,ca,cu,or_] = await Promise.all(q);
+  S.statuses=st.data||[]; S.employees=em.data||[]; S.products=pr.data||[];
+  S.sources=so.data||[]; S.categories=ca.data||[]; S.customers=cu.data||[]; S.orders=or_.data||[];
+  S.me = S.employees.find(e=>e.id===S.user.id) || { full_name:S.user.email, role:'sales' };
+  el('me').innerHTML = `<b>${esc(S.me.full_name)}</b>${esc(S.me.role)} ·
+    <a href="#" onclick="signOut();return false" style="color:var(--mute)">выйти</a>`;
+}
+function live(){
+  sb.channel('crm')
+    .on('postgres_changes',{event:'*',schema:'public',table:'orders'}, async()=>{ await loadAll(); go(S.tab); })
+    .on('postgres_changes',{event:'INSERT',schema:'public',table:'activities'}, p=>{
+      if(S.openOrder && p.new.order_id===S.openOrder) openOrder(S.openOrder);
+    }).subscribe();
+}
+
+/* ---------- NAV ---------- */
+const TABS = [
+  ['Работа',[['dash','Дашборд','◧'],['pipe','Воронка','▤'],['orders','Заказы','▦'],['ai','AI-помощник','✦']]],
+  ['База',  [['customers','Клиенты','◉'],['products','Товары','▩'],['team','Сотрудники','◍']]],
+  ['Ещё',   [['analytics','Аналитика','◪'],['refs','Справочники','⚙']]],
+];
+function renderNav(){
+  el('nav').innerHTML = TABS.map(([g,items])=>
+    `<div class="grp">${g}</div>` + items.map(([k,n,i])=>
+      `<button data-k="${k}" onclick="go('${k}')"><span style="width:16px;opacity:.7">${i}</span>${n}</button>`).join('')
+  ).join('');
+}
+function go(k){
+  S.tab=k; document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+  ({dash:vDash,pipe:vPipe,orders:vOrders,customers:vCustomers,products:vProducts,
+    team:vTeam,analytics:vAnalytics,refs:vRefs,ai:vAI})[k]();
+  window.scrollTo(0,0);
+}
+const H = (t,s,r='') => `<div class="head"><div><h1>${t}</h1><p>${s}</p></div><div class="row">${r}</div></div>`;
+
+/* ---------- ДАШБОРД ---------- */
+function myOrders(){ return S.me.role==='sales' ? S.orders.filter(o=>o.owner_id===S.user.id) : S.orders; }
+function vDash(){
+  const os = myOrders(), m0 = new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
+  const mth = os.filter(o=>new Date(o.created_at)>=m0);
+  const won = mth.filter(o=>o.statuses?.code==='won');
+  const rev = won.reduce((s,o)=>s+ +o.amount,0);
+  const conv = mth.length ? (won.length/mth.length*100).toFixed(1) : '0.0';
+  const avg = won.length ? rev/won.length : 0;
+  const plan = S.me.plan_month || 0;
+  const stale = os.filter(o=>!['won','lost'].includes(o.statuses?.code) && days(o.created_at)>3);
+
+  // 14 дней активности
+  const buckets = Array.from({length:14},(_,i)=>{
+    const d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate()-13+i);
+    const n = os.filter(o=>{ const t=new Date(o.created_at); return t>=d && t<new Date(+d+864e5); }).length;
+    return {d,n};
+  });
+  const mx = Math.max(1,...buckets.map(b=>b.n));
+
+  el('view').innerHTML = H('Дашборд', `Сегодня ${new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'long'})}`,
+    `<button class="btn" onclick="newOrder()">Новый заказ</button>`) +
+  `<div class="grid kpis" style="margin-bottom:14px">
+    <div class="card kpi"><div class="lbl">Выручка за месяц</div><div class="val up">${money(rev)}</div>
+      ${plan?`<div class="bar" style="margin-top:10px"><i style="width:${Math.min(100,rev/plan*100)}%"></i></div>
+      <div class="sub">${(rev/plan*100).toFixed(0)}% от плана ${money(plan)}</div>`:'<div class="sub">План не задан</div>'}</div>
+    <div class="card kpi"><div class="lbl">Заказов в месяц</div><div class="val">${mth.length}</div>
+      <div class="sub">${won.length} оплачено</div></div>
+    <div class="card kpi"><div class="lbl">Конверсия</div><div class="val">${conv}%</div>
+      <div class="sub">из заказа в оплату</div></div>
+    <div class="card kpi"><div class="lbl">Средний чек</div><div class="val">${money(avg)}</div>
+      <div class="sub">по оплаченным</div></div>
+  </div>
+
+  <div class="grid" style="grid-template-columns:1.4fr 1fr">
+    <div class="card">
+      <h3 style="font-size:16px;margin-bottom:14px">Поток заказов, 14 дней</h3>
+      <div class="spark">${buckets.map(b=>`<i class="${b.n>=mx*.7&&b.n>0?'hot':''}" style="height:${b.n/mx*100}%" title="${b.d.toLocaleDateString('ru-RU')}: ${b.n}"></i>`).join('')}</div>
+      <div class="row" style="justify-content:space-between;color:var(--mute);font-size:12px;margin-top:8px">
+        <span>${buckets[0].d.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})}</span><span>сегодня</span></div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px;margin-bottom:6px">Требуют внимания</h3>
+      <p style="color:var(--mute);font-size:13px;margin-bottom:12px">Без движения больше 3 дней</p>
+      ${stale.length ? stale.slice(0,6).map(o=>`
+        <div class="row" style="justify-content:space-between;padding:9px 0;border-top:1px solid var(--line);cursor:pointer" onclick="openOrder(${o.id})">
+          <div><div style="font-weight:600;font-size:14px">${esc(o.customers?.name||'Без имени')}</div>
+          <div style="font-size:12px;color:var(--mute)">${esc(o.statuses?.name||'')} · ${days(o.created_at)} дн.</div></div>
+          <div class="mono" style="font-weight:700">${money(o.amount)}</div></div>`).join('')
+        : `<div class="empty" style="padding:20px"><b>Всё в движении</b>Просроченных заказов нет</div>`}
+    </div>
+  </div>`;
+}
+
+/* ---------- ВОРОНКА ---------- */
+function vPipe(){
+  const os = myOrders();
+  el('view').innerHTML = H('Воронка','Перетащите карточку, чтобы сменить этап',
+    `<button class="btn" onclick="newOrder()">Новый заказ</button>`) +
+  `<div class="pipe">${S.statuses.map(st=>{
+    const list = os.filter(o=>o.status_id===st.id);
+    const sum = list.reduce((s,o)=>s+ +o.amount,0);
+    return `<div class="col" data-st="${st.id}" ondragover="event.preventDefault();this.classList.add('over')"
+        ondragleave="this.classList.remove('over')" ondrop="drop(event,${st.id})">
+      <h3><span style="color:${st.color}">${esc(st.name)}</span><span class="cnt">${list.length}</span></h3>
+      <div class="mono" style="font-size:13px;color:var(--mute);margin-bottom:10px">${money(sum)}</div>
+      ${list.map(o=>`<div class="deal" draggable="true" ondragstart="event.dataTransfer.setData('id',${o.id})"
+          onclick="openOrder(${o.id})" style="border-left-color:${st.color}">
+        <div class="nm">${esc(o.customers?.name||'Без имени')}</div>
+        <div class="amt">${money(o.amount)}</div>
+        <div class="meta"><span>${esc(o.employees?.full_name||'—')}</span><span>${days(o.created_at)} дн.</span></div>
+      </div>`).join('')}
+    </div>`;}).join('')}</div>`;
+}
+async function drop(e,statusId){
+  e.preventDefault(); document.querySelectorAll('.col').forEach(c=>c.classList.remove('over'));
+  const id = +e.dataTransfer.getData('id'); if(!id) return;
+  const st = S.statuses.find(s=>s.id===statusId);
+  await sb.from('orders').update({ status_id:statusId, closed_at: ['won','lost'].includes(st.code)?new Date():null }).eq('id',id);
+  await sb.from('activities').insert({ order_id:id, employee_id:S.user.id, type:'status', body:'Этап: '+st.name });
+  await loadAll(); go('pipe');
+}
+
+/* ---------- ЗАКАЗЫ ---------- */
+function vOrders(){
+  el('view').innerHTML = H('Заказы','Все сделки и заявки',
+    `<input id="q" placeholder="Поиск по клиенту или номеру" style="width:250px" oninput="drawOrders()">
+     <button class="btn" onclick="newOrder()">Новый заказ</button>`) +
+  `<div class="card" style="padding:14px"><div id="tbl"></div></div>`;
+  drawOrders();
+}
+function drawOrders(){
+  const q = (el('q')?.value||'').toLowerCase();
+  const rows = myOrders().filter(o=>!q || (o.customers?.name||'').toLowerCase().includes(q) || (o.number||'').toLowerCase().includes(q));
+  el('tbl').innerHTML = rows.length ? `<table><thead><tr>
+    <th>Номер</th><th>Клиент</th><th>Сумма</th><th>Этап</th><th>Менеджер</th><th>Создан</th></tr></thead><tbody>
+    ${rows.map(o=>`<tr onclick="openOrder(${o.id})">
+      <td class="mono" style="color:var(--mute)">${esc(o.number||o.id)}</td>
+      <td><div style="font-weight:600">${esc(o.customers?.name||'Без имени')}</div>
+          <div style="font-size:12px;color:var(--mute)">${esc(o.customers?.phone||'')}</div></td>
+      <td class="mono" style="font-weight:700">${money(o.amount)}</td>
+      <td><span class="tag" style="background:${o.statuses?.color}22;color:${o.statuses?.color}">${esc(o.statuses?.name||'—')}</span></td>
+      <td><span class="avatar">${ini(o.employees?.full_name)}</span></td>
+      <td style="color:var(--mute);font-size:13px">${dt(o.created_at)}</td></tr>`).join('')}
+    </tbody></table>`
+    : `<div class="empty"><b>Заказов пока нет</b>Создайте первый или подключите приём заявок по API</div>`;
+}
+
+/* ---------- КАРТОЧКА ЗАКАЗА ---------- */
+async function openOrder(id){
+  S.openOrder = id;
+  const o = S.orders.find(x=>x.id===id); if(!o) return;
+  const [{data:acts},{data:items}] = await Promise.all([
+    sb.from('activities').select('*, employees(full_name)').eq('order_id',id).order('created_at',{ascending:false}),
+    sb.from('order_items').select('*, products(name,sku)').eq('order_id',id),
+  ]);
+  closeAll();
+  document.body.insertAdjacentHTML('beforeend', `
+  <div class="scrim" onclick="closeAll()"></div>
+  <div class="drawer">
+    <button class="x" onclick="closeAll()">×</button>
+    <div class="mono" style="color:var(--mute);font-size:12px">${esc(o.number||o.id)}</div>
+    <h2 style="font-size:24px;margin:4px 0 3px">${esc(o.customers?.name||'Без имени')}</h2>
+    <div style="color:var(--mute);font-size:14px">${esc(o.customers?.phone||'телефон не указан')}</div>
+    <div class="mono" style="font-size:28px;font-weight:700;margin:14px 0">${money(o.amount)}</div>
+
+    <div class="row" style="margin-bottom:16px">
+      <select style="width:auto" onchange="setStatus(${id},this.value)">
+        ${S.statuses.map(s=>`<option value="${s.id}" ${s.id===o.status_id?'selected':''}>${esc(s.name)}</option>`).join('')}
+      </select>
+      <button class="btn ghost sm" onclick="dial('${esc(o.customers?.phone||'')}',${id})">Позвонить</button>
+      <button class="btn ghost sm" onclick="waPrompt(${id},'${esc(o.customers?.phone||'')}')">WhatsApp</button>
+      <button class="btn ghost sm" onclick="aiOrder(${id})">Разбор от AI</button>
+    </div>
+
+    ${items?.length?`<div class="card" style="padding:12px;margin-bottom:16px">
+      <h3 style="font-size:14px;margin-bottom:8px">Состав заказа</h3>
+      ${items.map(i=>`<div class="row" style="justify-content:space-between;font-size:14px;padding:4px 0">
+        <span>${esc(i.products?.name||'—')} × ${i.qty}</span><span class="mono">${money(i.qty*i.price)}</span></div>`).join('')}
+    </div>`:''}
+
+    <div class="field"><label>Добавить заметку</label>
+      <textarea id="note" rows="2" placeholder="Что обсудили, что дальше"></textarea>
+      <button class="btn sm" style="margin-top:8px" onclick="addNote(${id})">Сохранить заметку</button></div>
+
+    <h3 style="font-size:15px;margin:20px 0 0">История</h3>
+    <div class="tl">${(acts||[]).map(a=>`<div class="ev ${a.type}">
+      <div class="t">${dt(a.created_at)} · ${esc(a.employees?.full_name||'система')}</div>
+      <div class="b">${a.type==='call'?'📞 ':a.type==='whatsapp'?'💬 ':''}${esc(a.body||'')}${a.duration?` <span style="color:var(--mute)">(${a.duration} с)</span>`:''}</div>
+      ${a.recording_url?`<audio controls src="${esc(a.recording_url)}" style="width:100%;margin-top:6px;height:32px"></audio>`:''}
+    </div>`).join('') || '<div class="ev"><div class="b" style="color:var(--mute)">Пока пусто</div></div>'}</div>
+  </div>`);
+}
+function closeAll(){ document.querySelectorAll('.scrim,.drawer,.modal').forEach(n=>n.remove()); S.openOrder=null; }
+async function setStatus(id,sid){
+  const st=S.statuses.find(s=>s.id==sid);
+  await sb.from('orders').update({status_id:+sid, closed_at:['won','lost'].includes(st.code)?new Date():null}).eq('id',id);
+  await sb.from('activities').insert({order_id:id,employee_id:S.user.id,type:'status',body:'Этап: '+st.name});
+  await loadAll(); openOrder(id);
+}
+async function addNote(id){
+  const v = el('note').value.trim(); if(!v) return;
+  await sb.from('activities').insert({order_id:id,employee_id:S.user.id,type:'note',body:v});
+  openOrder(id);
+}
+
+/* ---------- ЗВОНКИ ---------- */
+async function dial(phone,orderId){
+  if(!phone) return alert('У клиента не указан телефон');
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    const r = await fetch(SUPABASE_URL + FN.callDial, { method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+      body: JSON.stringify({ phone, order_id:orderId }) });
+    if(!r.ok) throw 0;
+    await sb.from('activities').insert({order_id:orderId,employee_id:S.user.id,type:'call',direction:'out',body:'Исходящий звонок на '+phone});
+    openOrder(orderId);
+  }catch{ 
+    const d = prompt('Телефония не отвечает. Записать звонок вручную — что обсудили?');
+    if(d){ await sb.from('activities').insert({order_id:orderId,employee_id:S.user.id,type:'call',direction:'out',body:d}); openOrder(orderId); }
+  }
+}
+/* ---------- WHATSAPP ---------- */
+function waPrompt(orderId,phone){
+  if(!phone) return alert('У клиента не указан телефон');
+  closeAll();
+  document.body.insertAdjacentHTML('beforeend',`
+  <div class="scrim" onclick="closeAll();openOrder(${orderId})"></div>
+  <div class="modal"><div class="card" style="position:relative">
+    <button class="x" onclick="closeAll();openOrder(${orderId})">×</button>
+    <h2 style="font-size:20px;margin-bottom:4px">Сообщение в WhatsApp</h2>
+    <p style="color:var(--mute);font-size:13px;margin-bottom:14px">${esc(phone)}</p>
+    <textarea id="wa" rows="5" placeholder="Текст сообщения"></textarea>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" onclick="waSend(${orderId},'${esc(phone)}')">Отправить</button>
+      <button class="btn ghost" onclick="waDraft(${orderId})">Написать за меня</button>
+    </div>
+  </div></div>`);
+}
+async function waSend(orderId,phone){
+  const text = el('wa').value.trim(); if(!text) return;
+  const { data:{ session } } = await sb.auth.getSession();
+  try{
+    const r = await fetch(SUPABASE_URL + FN.whatsappSend, { method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token},
+      body: JSON.stringify({ phone, text, order_id:orderId }) });
+    if(!r.ok) throw new Error(await r.text());
+  }catch(e){ alert('Отправить не удалось: '+e.message+'\nСообщение сохранено в историю.'); }
+  await sb.from('activities').insert({order_id:orderId,employee_id:S.user.id,type:'whatsapp',direction:'out',body:text});
+  closeAll(); openOrder(orderId);
+}
+async function waDraft(orderId){
+  const o = S.orders.find(x=>x.id===orderId);
+  el('wa').value = 'Пишу текст…';
+  el('wa').value = await ask(`Напиши короткое сообщение в WhatsApp клиенту ${o.customers?.name}. Этап сделки: ${o.statuses?.name}. Сумма: ${money(o.amount)}. Комментарий менеджера: ${o.comment||'нет'}. Без приветственных штампов, по делу, до 40 слов, на русском.`, false);
+}
+
+/* ---------- КЛИЕНТЫ ---------- */
+function vCustomers(){
+  el('view').innerHTML = H('Клиенты', S.customers.length+' записей в базе',
+    `<button class="btn" onclick="newCustomer()">Добавить клиента</button>`) +
+  `<div class="card" style="padding:14px">${ S.customers.length ? `<table><thead><tr>
+    <th>Имя</th><th>Телефон</th><th>Компания</th><th>Заказов</th><th>Сумма</th></tr></thead><tbody>
+    ${S.customers.map(c=>{ const os=S.orders.filter(o=>o.customer_id===c.id);
+      return `<tr><td style="font-weight:600">${esc(c.name)}</td><td class="mono">${esc(c.phone||'—')}</td>
+      <td style="color:var(--mute)">${esc(c.company||'—')}</td><td>${os.length}</td>
+      <td class="mono">${money(os.reduce((s,o)=>s+ +o.amount,0))}</td></tr>`;}).join('')}
+    </tbody></table>` : `<div class="empty"><b>Клиентов пока нет</b>Добавьте вручную или загрузите через API</div>`}</div>`;
+}
+/* ---------- ТОВАРЫ ---------- */
+function vProducts(){
+  el('view').innerHTML = H('Товары', S.products.length+' позиций',
+    `<button class="btn" onclick="newProduct()">Добавить товар</button>`) +
+  `<div class="card" style="padding:14px">${ S.products.length ? `<table><thead><tr>
+    <th>Артикул</th><th>Название</th><th>Категория</th><th>Цена</th><th>Себестоимость</th><th>Остаток</th></tr></thead><tbody>
+    ${S.products.map(p=>`<tr><td class="mono" style="color:var(--mute)">${esc(p.sku||'—')}</td>
+      <td style="font-weight:600">${esc(p.name)}</td>
+      <td style="color:var(--mute)">${esc(S.categories.find(c=>c.id===p.category_id)?.name||'—')}</td>
+      <td class="mono">${money(p.price)}</td><td class="mono" style="color:var(--mute)">${money(p.cost)}</td>
+      <td class="mono ${p.stock>0?'':'down'}">${p.stock}</td></tr>`).join('')}
+    </tbody></table>` : `<div class="empty"><b>Каталог пуст</b>Добавьте первый товар</div>`}</div>`;
+}
+/* ---------- КОМАНДА ---------- */
+function vTeam(){
+  const m0=new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
+  const rows = S.employees.map(e=>{
+    const os = S.orders.filter(o=>o.owner_id===e.id && new Date(o.created_at)>=m0);
+    const won = os.filter(o=>o.statuses?.code==='won');
+    const rev = won.reduce((s,o)=>s+ +o.amount,0);
+    return { e, n:os.length, w:won.length, rev, conv: os.length?won.length/os.length*100:0 };
+  }).sort((a,b)=>b.rev-a.rev);
+  el('view').innerHTML = H('Сотрудники','Результаты с начала месяца') +
+  `<div class="card" style="padding:14px"><table><thead><tr>
+    <th>Менеджер</th><th>Роль</th><th>Заказов</th><th>Оплачено</th><th>Конверсия</th><th>Выручка</th><th>План</th></tr></thead><tbody>
+    ${rows.map(r=>`<tr>
+      <td><span class="avatar" style="margin-right:8px">${ini(r.e.full_name)}</span><b>${esc(r.e.full_name)}</b></td>
+      <td style="color:var(--mute)">${esc(r.e.role)}</td><td>${r.n}</td><td>${r.w}</td>
+      <td class="${r.conv>=30?'up':''}">${r.conv.toFixed(0)}%</td>
+      <td class="mono" style="font-weight:700">${money(r.rev)}</td>
+      <td style="min-width:130px">${r.e.plan_month?`<div class="bar"><i style="width:${Math.min(100,r.rev/r.e.plan_month*100)}%"></i></div>
+        <div style="font-size:11px;color:var(--mute);margin-top:4px">${money(r.e.plan_month)}</div>`:'<span style="color:var(--mute)">—</span>'}</td>
+    </tr>`).join('')}</tbody></table></div>`;
+}
+/* ---------- АНАЛИТИКА ---------- */
+function vAnalytics(){
+  const os = S.orders;
+  const funnel = S.statuses.map(s=>({ s, n:os.filter(o=>o.status_id===s.id).length,
+                                      sum:os.filter(o=>o.status_id===s.id).reduce((a,o)=>a+ +o.amount,0) }));
+  const mxF = Math.max(1,...funnel.map(f=>f.n));
+  const bySrc = S.sources.map(s=>{
+    const l = os.filter(o=>o.source_id===s.id), w = l.filter(o=>o.statuses?.code==='won');
+    return { name:s.name, n:l.length, rev:w.reduce((a,o)=>a+ +o.amount,0), conv:l.length?w.length/l.length*100:0 };
+  }).sort((a,b)=>b.rev-a.rev);
+  // выручка по месяцам
+  const mons = {}; os.filter(o=>o.statuses?.code==='won').forEach(o=>{
+    const k = new Date(o.closed_at||o.created_at).toLocaleDateString('ru-RU',{month:'short',year:'2-digit'});
+    mons[k]=(mons[k]||0)+ +o.amount; });
+  const mEnt = Object.entries(mons).slice(-8), mxM = Math.max(1,...mEnt.map(m=>m[1]));
+
+  el('view').innerHTML = H('Аналитика','Вся команда', `<button class="btn ghost" onclick="aiReport()">Отчёт от AI</button>`) +
+  `<div class="grid" style="grid-template-columns:1fr 1fr">
+    <div class="card"><h3 style="font-size:16px;margin-bottom:14px">Воронка</h3>
+      ${funnel.map(f=>`<div style="margin-bottom:12px">
+        <div class="row" style="justify-content:space-between;font-size:13px;margin-bottom:5px">
+          <span>${esc(f.s.name)}</span><span class="mono" style="color:var(--mute)">${f.n} · ${money(f.sum)}</span></div>
+        <div class="bar"><i style="width:${f.n/mxF*100}%;background:${f.s.color}"></i></div></div>`).join('')}</div>
+    <div class="card"><h3 style="font-size:16px;margin-bottom:14px">Выручка по месяцам</h3>
+      <div class="spark" style="height:130px">${mEnt.map(([k,v])=>`<i class="hot" style="height:${v/mxM*100}%" title="${k}: ${money(v)}"></i>`).join('')}</div>
+      <div class="row" style="justify-content:space-between;color:var(--mute);font-size:11px;margin-top:8px">
+        ${mEnt.map(([k])=>`<span>${k}</span>`).join('')}</div></div>
+  </div>
+  <div class="card" style="margin-top:14px"><h3 style="font-size:16px;margin-bottom:12px">Источники заявок</h3>
+    ${bySrc.length?`<table><thead><tr><th>Источник</th><th>Заявок</th><th>Конверсия</th><th>Выручка</th></tr></thead><tbody>
+    ${bySrc.map(s=>`<tr><td style="font-weight:600">${esc(s.name)}</td><td>${s.n}</td>
+      <td class="${s.conv>=25?'up':''}">${s.conv.toFixed(0)}%</td><td class="mono">${money(s.rev)}</td></tr>`).join('')}
+    </tbody></table>`:'<div class="empty" style="padding:20px">Источники не заполнены</div>'}</div>`;
+}
+/* ---------- СПРАВОЧНИКИ ---------- */
+function vRefs(){
+  const blk = (title,rows,table,fields)=>`<div class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:12px">
+      <h3 style="font-size:16px">${title}</h3>
+      <button class="btn sm" onclick="addRef('${table}',${JSON.stringify(fields).replace(/"/g,'&quot;')})">Добавить</button></div>
+    ${rows.length?rows.map(r=>`<div class="row" style="justify-content:space-between;padding:8px 0;border-top:1px solid var(--line)">
+      <span>${esc(r.name)}</span>
+      <button class="btn sm ghost" onclick="delRef('${table}',${r.id})">Удалить</button></div>`).join('')
+      :'<div style="color:var(--mute);font-size:13px;padding:8px 0">Пусто</div>'}</div>`;
+  el('view').innerHTML = H('Справочники','Этапы, источники и категории') +
+  `<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+    ${blk('Этапы воронки',S.statuses,'statuses',['name','code','color'])}
+    ${blk('Источники',S.sources,'sources',['name'])}
+    ${blk('Категории товаров',S.categories,'categories',['name'])}
+  </div>`;
+}
+async function addRef(t,f){
+  const v = {}; for(const k of f){ const x = prompt('Значение поля «'+k+'»'); if(x===null) return; v[k]=x; }
+  const { error } = await sb.from(t).insert(v);
+  if(error) return alert('Не удалось сохранить: '+error.message);
+  await loadAll(); go('refs');
+}
+async function delRef(t,id){ if(!confirm('Удалить запись?'))return; await sb.from(t).delete().eq('id',id); await loadAll(); go('refs'); }
+
+/* ---------- ФОРМЫ ---------- */
+function formModal(title,html,onSave){
+  closeAll();
+  document.body.insertAdjacentHTML('beforeend',`<div class="scrim" onclick="closeAll()"></div>
+  <div class="modal"><div class="card" style="position:relative"><button class="x" onclick="closeAll()">×</button>
+    <h2 style="font-size:20px;margin-bottom:16px">${title}</h2>${html}
+    <div class="row" style="margin-top:8px"><button class="btn" id="saveBtn">Сохранить</button>
+    <button class="btn ghost" onclick="closeAll()">Отмена</button></div>
+    <div class="err" id="formErr"></div></div></div>`);
+  el('saveBtn').onclick = onSave;
+}
+function newOrder(){
+  formModal('Новый заказ',`
+    <div class="field"><label>Имя клиента</label><input id="f_name"></div>
+    <div class="field"><label>Телефон</label><input id="f_phone" placeholder="+7"></div>
+    <div class="field"><label>Сумма</label><input id="f_amount" type="number" value="0"></div>
+    <div class="field"><label>Источник</label><select id="f_src"><option value="">—</option>
+      ${S.sources.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></div>
+    <div class="field"><label>Комментарий</label><textarea id="f_comment" rows="2"></textarea></div>`,
+  async()=>{
+    const name=el('f_name').value.trim(); if(!name) return el('formErr').textContent='Укажите имя клиента';
+    const phone=el('f_phone').value.trim();
+    let cust = phone ? S.customers.find(c=>c.phone===phone) : null;
+    if(!cust){ const {data} = await sb.from('customers').insert({name,phone,owner_id:S.user.id,
+      source_id:+el('f_src').value||null}).select().single(); cust=data; }
+    const { error } = await sb.from('orders').insert({ number:'ORD-'+Date.now(), customer_id:cust.id,
+      owner_id:S.user.id, status_id:S.statuses[0]?.id, amount:+el('f_amount').value||0,
+      source_id:+el('f_src').value||null, comment:el('f_comment').value.trim() });
+    if(error) return el('formErr').textContent='Не удалось сохранить: '+error.message;
+    closeAll(); await loadAll(); go(S.tab);
+  });
+}
+function newCustomer(){
+  formModal('Новый клиент',`
+    <div class="field"><label>Имя</label><input id="c_name"></div>
+    <div class="field"><label>Телефон</label><input id="c_phone"></div>
+    <div class="field"><label>Компания</label><input id="c_comp"></div>
+    <div class="field"><label>Почта</label><input id="c_mail"></div>`,
+  async()=>{
+    const name=el('c_name').value.trim(); if(!name) return el('formErr').textContent='Укажите имя';
+    const { error } = await sb.from('customers').insert({ name, phone:el('c_phone').value.trim(),
+      company:el('c_comp').value.trim(), email:el('c_mail').value.trim(), owner_id:S.user.id });
+    if(error) return el('formErr').textContent='Не удалось сохранить: '+error.message;
+    closeAll(); await loadAll(); go('customers');
+  });
+}
+function newProduct(){
+  formModal('Новый товар',`
+    <div class="field"><label>Артикул</label><input id="p_sku"></div>
+    <div class="field"><label>Название</label><input id="p_name"></div>
+    <div class="field"><label>Категория</label><select id="p_cat"><option value="">—</option>
+      ${S.categories.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></div>
+    <div class="field"><label>Цена</label><input id="p_price" type="number" value="0"></div>
+    <div class="field"><label>Себестоимость</label><input id="p_cost" type="number" value="0"></div>
+    <div class="field"><label>Остаток</label><input id="p_stock" type="number" value="0"></div>`,
+  async()=>{
+    const name=el('p_name').value.trim(); if(!name) return el('formErr').textContent='Укажите название';
+    const { error } = await sb.from('products').insert({ sku:el('p_sku').value.trim()||null, name,
+      category_id:+el('p_cat').value||null, price:+el('p_price').value, cost:+el('p_cost').value, stock:+el('p_stock').value });
+    if(error) return el('formErr').textContent='Не удалось сохранить: '+error.message;
+    closeAll(); await loadAll(); go('products');
+  });
+}
+
+/* ==========================================================
+   AI-АГЕНТ
+   ========================================================== */
+function snapshot(){
+  const m0=new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
+  const os = myOrders(), mth = os.filter(o=>new Date(o.created_at)>=m0);
+  const won = mth.filter(o=>o.statuses?.code==='won');
+  return {
+    роль: S.me.role, менеджер: S.me.full_name,
+    заказов_за_месяц: mth.length, оплачено: won.length,
+    выручка: won.reduce((s,o)=>s+ +o.amount,0),
+    план: S.me.plan_month,
+    конверсия: mth.length?(won.length/mth.length*100).toFixed(1)+'%':'—',
+    по_этапам: S.statuses.map(s=>({этап:s.name, шт:os.filter(o=>o.status_id===s.id).length,
+      сумма:os.filter(o=>o.status_id===s.id).reduce((a,o)=>a+ +o.amount,0)})),
+    зависшие: os.filter(o=>!['won','lost'].includes(o.statuses?.code)&&days(o.created_at)>3)
+      .slice(0,10).map(o=>({клиент:o.customers?.name, этап:o.statuses?.name, дней:days(o.created_at), сумма:+o.amount})),
+    команда: S.me.role!=='sales' ? S.employees.map(e=>{
+      const l=S.orders.filter(o=>o.owner_id===e.id&&new Date(o.created_at)>=m0);
+      const w=l.filter(o=>o.statuses?.code==='won');
+      return {имя:e.full_name, заказов:l.length, оплачено:w.length, выручка:w.reduce((s,o)=>s+ +o.amount,0)};
+    }) : undefined,
+    товары_топ: S.products.slice(0,15).map(p=>({название:p.name, цена:+p.price, остаток:+p.stock})),
+  };
+}
+const SYS = `Ты — аналитик и наставник в отделе продаж торговой компании (холодные звонки, Казахстан, валюта тенге).
+Отвечай по-русски, коротко и по делу, без вступлений и общих слов.
+Опирайся только на переданные данные CRM. Если данных не хватает — скажи, каких именно.
+Когда даёшь рекомендации — они должны быть конкретными действиями с именами клиентов и цифрами, а не советами вроде «улучшить работу с возражениями».
+Для скриптов и сообщений пиши готовый текст, который менеджер может произнести или отправить.`;
+
+async function ask(prompt, remember=true){
+  const msgs = remember ? [...S.ai.map(m=>({role:m.r==='u'?'user':'assistant',content:m.t})),{role:'user',content:prompt}]
+                        : [{role:'user',content:prompt}];
+  const r = await fetch('https://api.anthropic.com/v1/messages',{ method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:1000,
+      system: SYS + '\n\nТекущие данные CRM:\n' + JSON.stringify(snapshot()), messages: msgs })});
+  const d = await r.json();
+  return (d.content||[]).map(c=>c.text||'').join('\n').trim() || 'Ответ не получен.';
+}
+function vAI(){
+  el('view').innerHTML = H('AI-помощник','Разбор сделок, аналитика и тренировка скриптов') +
+  `<div class="card ai">
+    <div class="msgs" id="msgs">${S.ai.length?'':`<div class="empty"><b>Спросите что угодно про ваши продажи</b>
+      Помощник видит ваши заказы, этапы, план и команду</div>`}</div>
+    <div class="chips">
+      <button class="chip" onclick="aiSay('Что у меня сейчас горит? Дай список из 3 сделок и что сделать по каждой')">Что горит</button>
+      <button class="chip" onclick="aiSay('Разбери мою воронку: где я теряю больше всего и почему')">Разбор воронки</button>
+      <button class="chip" onclick="aiSay('Составь скрипт холодного звонка под наш товар')">Скрипт звонка</button>
+      <button class="chip" onclick="aiSay('Разбери типовые возражения по нашим сделкам и дай ответы')">Возражения</button>
+      <button class="chip" onclick="aiSay('Дай прогноз выручки до конца месяца и что нужно закрыть, чтобы выйти на план')">Прогноз</button>
+    </div>
+    <div class="row" style="margin-top:4px">
+      <input id="aiq" placeholder="Спросите про сделки, клиентов или скрипты" style="flex:1"
+        onkeydown="if(event.key==='Enter')aiSay(this.value)">
+      <button class="btn" onclick="aiSay(el('aiq').value)">Отправить</button>
+    </div>
+  </div>`;
+  drawAI();
+}
+function drawAI(){
+  const m = el('msgs'); if(!m) return;
+  m.innerHTML = S.ai.map(x=>`<div class="msg ${x.r}">${esc(x.t)}</div>`).join('');
+  m.scrollTop = m.scrollHeight;
+}
+async function aiSay(text){
+  text = (text||'').trim(); if(!text) return;
+  if(S.tab!=='ai'){ go('ai'); }
+  el('aiq') && (el('aiq').value='');
+  S.ai.push({r:'u',t:text}); drawAI();
+  el('msgs').insertAdjacentHTML('beforeend','<div class="msg a" id="tp"><span class="dots"><i></i><i></i><i></i></span></div>');
+  el('msgs').scrollTop = el('msgs').scrollHeight;
+  let out; try{ out = await ask(text); }catch(e){ out = 'Не удалось получить ответ: ' + e.message; }
+  el('tp')?.remove(); S.ai.push({r:'a',t:out}); drawAI();
+}
+function aiReport(){ go('ai'); aiSay('Сделай отчёт для руководителя: главные цифры, кто из менеджеров проседает и по какой причине, три решения на следующую неделю.'); }
+async function aiOrder(id){
+  const o = S.orders.find(x=>x.id===id);
+  const { data:acts } = await sb.from('activities').select('type,body,created_at').eq('order_id',id).order('created_at');
+  closeAll(); go('ai');
+  aiSay(`Разбери сделку. Клиент: ${o.customers?.name}. Сумма: ${money(o.amount)}. Этап: ${o.statuses?.name}. В работе ${days(o.created_at)} дней. Комментарий: ${o.comment||'нет'}. История: ${JSON.stringify(acts||[])}.
+Дай: 1) причину, почему сделка стоит; 2) следующее действие; 3) готовый текст сообщения клиенту.`);
+}
+
+boot();
+</script>
+</body>
+</html>

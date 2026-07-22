@@ -95,6 +95,19 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
 .tile .s{font-size:11px;color:var(--mute);margin-top:3px;font-variant-numeric:tabular-nums}
 .tile.warn .n{color:var(--alert)}
+.tile.clickable{cursor:pointer;transition:border-color .12s,box-shadow .12s,transform .08s}
+.tile.clickable:hover{border-color:var(--mute)}
+.tile.clickable:active{transform:scale(.98)}
+.tile.active{border-color:var(--paper);box-shadow:0 2px 8px rgba(26,29,36,.1)}
+.tile-detail{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;
+  margin-bottom:16px;overflow:hidden}
+.tile-detail .td-head{display:flex;align-items:center;justify-content:space-between;
+  padding:11px 14px;font-weight:600;font-size:14px;border-bottom:1px solid var(--line);background:var(--tint)}
+.tile-detail .td-close{font-size:12px;color:var(--mute);font-weight:500}
+.tile-detail .td-row{display:flex;align-items:center;gap:11px;padding:9px 14px;
+  border-top:1px solid var(--line);cursor:pointer}
+.tile-detail .td-row:first-of-type{border-top:none}
+.tile-detail .td-row:hover{background:var(--tint)}
 .num{color:var(--mute);font-family:'JetBrains Mono',monospace;font-size:12px;
   font-variant-numeric:tabular-nums;text-align:right;width:34px;padding-right:4px}
 .thumb{width:38px;height:38px;border-radius:8px;background:var(--tint);border:1px solid var(--line);
@@ -383,8 +396,8 @@ const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.c
 
 const S = { user:null, me:null, tab:'dash', statuses:[], deliveryStatuses:[], deliveryTypes:[], employees:[], products:[],
             orders:[], customers:[], sources:[], categories:[], departments:[], ai:[],
-            pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 },
-            eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 },
+            pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 }, pOpenCat:null,
+            eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 }, eOpenDep:null,
             orderItems:[] };
 
 const isMobile = () => window.matchMedia('(max-width:900px)').matches;
@@ -1014,18 +1027,48 @@ function drawTiles(){
   const vis = p => S.pFilter.hidden || p.active!==false;
   const stat = list => ({ n:list.length, sum:list.reduce((a,p)=>a+(+p.price||0)*(+p.stock||0),0),
                           zero:list.filter(p=>!(+p.stock)).length });
-  const cards = S.categories.map(c=>({ name:c.name,
+  const cards = S.categories.map(c=>({ key:String(c.id), name:c.name,
     ...stat(S.products.filter(p=>vis(p) && p.category_id===c.id)) }));
   const noCat = S.products.filter(p=>vis(p) && !p.category_id);
-  if(noCat.length) cards.push({ name:'Без категории', ...stat(noCat) });
+  if(noCat.length) cards.push({ key:'none', name:'Без категории', ...stat(noCat) });
   cards.sort((a,b)=> b.n - a.n || a.name.localeCompare(b.name,'ru'));
 
   box.innerHTML = cards.length ? `<div class="tiles">${cards.map(c=>`
-    <div class="tile ${c.n && c.zero===c.n ? 'warn':''}">
+    <div class="tile ${c.n && c.zero===c.n ? 'warn':''} ${c.n?'clickable':''} ${S.pOpenCat===c.key?'active':''}"
+      ${c.n?`onclick="toggleCatTile('${c.key}')"`:''}>
       <div class="n">${c.n}</div>
       <div class="t" title="${esc(c.name)}">${esc(c.name)}</div>
       <div class="s">${!c.n ? 'нет позиций' : c.zero ? c.zero+' без остатка' : M(c.sum)}</div>
-    </div>`).join('')}</div>` : '';
+    </div>`).join('')}</div>
+    <div id="catDetail"></div>` : '';
+  drawCatDetail();
+}
+function toggleCatTile(key){
+  S.pOpenCat = (S.pOpenCat === key) ? null : key;
+  drawTiles();
+}
+function drawCatDetail(){
+  const box = el('catDetail'); if(!box) return;
+  const key = S.pOpenCat;
+  if(!key){ box.innerHTML=''; return; }
+  const vis = p => S.pFilter.hidden || p.active!==false;
+  const cat = key==='none' ? null : S.categories.find(c=>String(c.id)===key);
+  const name = cat ? cat.name : 'Без категории';
+  const list = S.products.filter(p=>vis(p) && (key==='none' ? !p.category_id : String(p.category_id)===key))
+    .sort((a,b)=>(a.name||'').localeCompare(b.name||'','ru'));
+  const isAdmin = S.me.role==='admin';
+  box.innerHTML = `<div class="tile-detail">
+    <div class="td-head"><span>${esc(name)} · ${list.length} поз.</span>
+      <button class="td-close" onclick="toggleCatTile('${key}')">Свернуть ✕</button></div>
+    ${list.map(p=>`<div class="td-row" ${isAdmin?`onclick="editProduct(${p.id})"`:''} ${p.active===false?'style="opacity:.5"':''}>
+      <div class="thumb" style="width:34px;height:34px">${p.photo_url?`<img src="${esc(p.photo_url)}" alt="" loading="lazy">`:''}</div>
+      <div style="min-width:0;flex:1">
+        <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.name)}</div>
+        <div style="font-size:12px;color:var(--mute)">${esc(p.sku||'')}${p.sku?' · ':''}ост. ${p.stock}</div>
+      </div>
+      <div class="mono" style="font-weight:700;white-space:nowrap">${money(p.price)}</div>
+    </div>`).join('')}
+  </div>`;
 }
 
 function filteredProducts(){
@@ -1233,24 +1276,58 @@ function teamTiles(m0){
     .reduce((a,o)=>a + +o.amount, 0);
   const cards = S.departments.map(d=>{
     const list = act.filter(e=>e.department_id===d.id);
-    return { name:d.name, n:list.length, rev:revOf(list),
+    return { key:String(d.id), name:d.name, n:list.length, rev:revOf(list),
              plan:list.reduce((a,e)=>a + (+e.plan_month||0), 0),
              head:S.employees.find(e=>e.id===d.head_id)?.full_name || '' };
   });
   const noDep = act.filter(e=>!e.department_id);
-  if(noDep.length) cards.push({ name:'Без отдела', n:noDep.length, rev:revOf(noDep),
+  if(noDep.length) cards.push({ key:'none', name:'Без отдела', n:noDep.length, rev:revOf(noDep),
                                 plan:noDep.reduce((a,e)=>a + (+e.plan_month||0), 0), head:'' });
   cards.sort((a,b)=> b.n - a.n || a.name.localeCompare(b.name,'ru'));
   if(!cards.length) return '';
   return `<div class="tiles">${cards.map(c=>{
     const pct = c.plan ? Math.round(c.rev / c.plan * 100) : null;
-    return `<div class="tile ${c.n===0?'warn':''}" style="min-width:160px">
+    return `<div class="tile ${c.n===0?'warn':''} ${c.n?'clickable':''} ${S.eOpenDep===c.key?'active':''}" style="min-width:160px"
+      ${c.n?`onclick="toggleDepTile('${c.key}')"`:''}>
       <div class="n">${c.n}</div>
       <div class="t" title="${esc(c.name)}">${esc(c.name)}</div>
       <div class="s">${!c.n ? 'нет сотрудников' : pct===null ? M(c.rev) : `${M(c.rev)} · ${pct}% плана`}</div>
       ${pct!==null && c.n ? `<div class="bar" style="margin-top:8px;height:5px"><i style="width:${Math.min(100,pct)}%"></i></div>` : ''}
       ${c.head ? `<div class="s" style="margin-top:6px">${esc(c.head)}</div>` : ''}
-    </div>`;}).join('')}</div>`;
+    </div>`;}).join('')}</div>
+    <div id="depDetail"></div>`;
+}
+function toggleDepTile(key){
+  S.eOpenDep = (S.eOpenDep === key) ? null : key;
+  drawTeam();
+}
+function drawDepDetail(m0){
+  const box = el('depDetail'); if(!box) return;
+  const key = S.eOpenDep;
+  if(!key){ box.innerHTML=''; return; }
+  const dep = key==='none' ? null : S.departments.find(d=>String(d.id)===key);
+  const name = dep ? dep.name : 'Без отдела';
+  const isAdmin = S.me.role==='admin';
+  const list = S.employees.filter(e=>(S.eFilter.off || e.active!==false)
+      && (key==='none' ? !e.department_id : String(e.department_id)===key))
+    .map(e=>{
+      const os = S.orders.filter(o=>o.owner_id===e.id && new Date(o.created_at)>=m0);
+      const won = os.filter(o=>o.statuses?.code==='won');
+      return { e, rev:won.reduce((s,o)=>s+ +o.amount,0), w:won.length, n:os.length };
+    }).sort((a,b)=> b.rev - a.rev);
+  box.innerHTML = `<div class="tile-detail">
+    <div class="td-head"><span>${esc(name)} · ${list.length} чел.</span>
+      <button class="td-close" onclick="toggleDepTile('${key}')">Свернуть ✕</button></div>
+    ${list.map(r=>`<div class="td-row" ${isAdmin?`onclick="editEmployee('${r.e.id}')"`:''} ${r.e.active===false?'style="opacity:.5"':''}>
+      <span class="avatar" style="width:34px;height:34px;border-radius:11px;font-size:12px">${ini(r.e.full_name)}</span>
+      <div style="min-width:0;flex:1">
+        <div style="font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.e.full_name)}
+          ${dep && r.e.id===dep.head_id?'<span class="tag" style="background:var(--tint-2);color:var(--paper);margin-left:6px">рук.</span>':''}</div>
+        <div style="font-size:12px;color:var(--mute)">${esc(ROLE_NAME[r.e.role]||r.e.role)} · ${r.n} зак. · ${r.w} опл.</div>
+      </div>
+      <div class="mono" style="font-weight:700;white-space:nowrap">${moneyShort(r.rev)}</div>
+    </div>`).join('')}
+  </div>`;
 }
 function sortTeam(by){
   const st = S.eSort;
@@ -1262,6 +1339,7 @@ function drawTeam(){
   const isAdmin = S.me.role==='admin';
   const m0 = new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
   el('etiles').innerHTML = teamTiles(m0);
+  drawDepDetail(m0);
   const f = S.eFilter, q = f.q.trim().toLowerCase();
   const depName = e => S.departments.find(d=>d.id===e.department_id)?.name || '';
   let rows = S.employees.filter(e=>{

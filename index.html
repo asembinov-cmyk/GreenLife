@@ -1624,6 +1624,7 @@ function newOrder(){
     }
     S.orderItems = [];
     closeAll(); await loadAll(); go(S.tab);
+    openOrder(ord.id);
   });
   renderOI();
 }

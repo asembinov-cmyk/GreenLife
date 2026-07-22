@@ -126,6 +126,16 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .ometa .box{background:var(--tint);border:1px solid var(--line);border-radius:11px;padding:11px 12px}
 .ometa .k{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
 .ometa .v{font-weight:600;font-size:14px;margin-top:4px;display:flex;align-items:center;gap:8px}
+.cust-head{margin:4px 0 3px;padding-right:44px}
+.cust-name{font-size:23px;font-weight:700;width:100%;border:none;background:transparent;padding:2px 0;
+  color:var(--paper);outline:none;border-bottom:1px solid transparent}
+.cust-name:focus{border-bottom-color:var(--line)}
+.cust-name::placeholder{color:var(--mute);font-weight:600}
+.cust-phone{display:flex;align-items:center;gap:8px;margin-top:2px}
+.cust-phone input{font-size:14px;color:var(--mute);border:none;background:transparent;padding:2px 0;
+  outline:none;border-bottom:1px solid transparent;flex:1;min-width:0}
+.cust-phone input:focus{border-bottom-color:var(--line)}
+.cust-phone .cust-call{color:var(--signal);text-decoration:none;font-size:17px;flex:none}
 .addr{background:var(--tint);border:1px solid var(--line);border-radius:12px;margin-bottom:16px;overflow:hidden}
 .addr>summary{list-style:none;cursor:pointer;padding:13px 14px;display:flex;align-items:center;gap:10px;
   font-weight:600;font-size:15px;user-select:none}
@@ -669,8 +679,15 @@ async function openOrder(id){
   <div class="drawer">
     <button class="x" onclick="closeAll()">×</button>
     <div class="mono" style="color:var(--mute);font-size:12px">${esc(o.number||o.id)}</div>
-    <h2 style="font-size:23px;margin:4px 0 3px;padding-right:44px">${esc(o.customers?.name||'Без имени')}</h2>
-    <div style="color:var(--mute);font-size:14px">${phone?`<a href="tel:+${esc(phone.replace(/\D/g,''))}" class="mono">${esc(phone)}</a>`:'телефон не указан'}</div>
+    <div class="cust-head">
+      <input id="oc_name" class="cust-name" value="${esc(o.customers?.name||'')}" placeholder="Имя клиента"
+        onchange="saveCustomer(${id})">
+      <div class="cust-phone">
+        <input id="oc_phone" class="mono" type="tel" inputmode="tel" value="${esc(phone)}"
+          placeholder="Телефон" onchange="saveCustomer(${id})">
+        ${phone?`<a href="tel:+${esc(phone.replace(/\D/g,''))}" class="cust-call" title="Позвонить">☏</a>`:''}
+      </div>
+    </div>
     <div class="mono" style="font-size:26px;font-weight:700;margin:14px 0">${money(o.amount)}</div>
 
     <div class="ometa">
@@ -789,6 +806,15 @@ const addrFilled = o => ADDR_FIELDS.some(k=>o['addr_'+k]);
 function addrShort(o){
   return [o.addr_city, o.addr_street, o.addr_house].filter(Boolean).join(', ')
     || [o.addr_region, o.addr_district].filter(Boolean).join(', ');
+}
+async function saveCustomer(orderId){
+  const o = S.orders.find(x=>x.id===orderId); if(!o || !o.customer_id) return;
+  const name  = el('oc_name').value.trim();
+  const phone = el('oc_phone').value.trim();
+  if(!name) return;
+  const { error } = await sb.from('customers').update({ name, phone }).eq('id', o.customer_id);
+  if(error) return alert('Не удалось сохранить клиента: '+error.message);
+  await loadAll(); openOrder(orderId);
 }
 async function saveAddress(id){
   const patch = {
@@ -1579,30 +1605,16 @@ function formModal(title,html,onSave){
     <div class="err" id="formErr"></div></div></div>`);
   el('saveBtn').onclick = onSave;
 }
-function newOrder(){
-  formModal('Новый заказ',`
-    <p style="color:var(--mute);font-size:13px;margin-bottom:14px">
-      Укажите клиента — остальное (товары, сумма, доставку, адрес) заполните в карточке заказа.</p>
-    <div class="field"><label>Имя клиента</label><input id="f_name"></div>
-    <div class="field"><label>Телефон</label><input id="f_phone" type="tel" inputmode="tel" placeholder="+7"></div>
-    <div class="field"><label>Источник</label><select id="f_src"><option value="">—</option>
-      ${S.sources.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></div>`,
-  async()=>{
-    const name=el('f_name').value.trim(); if(!name) return el('formErr').textContent='Укажите имя клиента';
-    const phone=el('f_phone').value.trim();
-
-    let cust = phone ? S.customers.find(c=>c.phone===phone) : null;
-    if(!cust){ const {data} = await sb.from('customers').insert({name,phone,owner_id:S.user.id,
-      source_id:+el('f_src').value||null}).select().single(); cust=data; }
-
-    const { data:ord, error } = await sb.from('orders').insert({ number:'ORD-'+Date.now(), customer_id:cust.id,
-      owner_id:S.user.id, status_id:S.statuses[0]?.id, amount:0,
-      source_id:+el('f_src').value||null }).select().single();
-    if(error) return el('formErr').textContent='Не удалось сохранить: '+error.message;
-
-    closeAll(); await loadAll(); go(S.tab);
-    openOrder(ord.id);
-  });
+async function newOrder(){
+  const { data:cust, error:e1 } = await sb.from('customers')
+    .insert({ name:'Новый клиент', owner_id:S.user.id }).select().single();
+  if(e1) return alert('Не удалось создать заказ: '+e1.message);
+  const { data:ord, error:e2 } = await sb.from('orders').insert({
+    number:'ORD-'+Date.now(), customer_id:cust.id, owner_id:S.user.id,
+    status_id:S.statuses[0]?.id, amount:0 }).select().single();
+  if(e2) return alert('Не удалось создать заказ: '+e2.message);
+  await loadAll(); go(S.tab);
+  openOrder(ord.id);
 }
 function newCustomer(){
   formModal('Новый клиент',`

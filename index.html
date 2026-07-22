@@ -371,7 +371,7 @@ const FN = {
 
 const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.co', SUPABASE_ANON || 'placeholder');
 
-const S = { user:null, me:null, tab:'dash', statuses:[], deliveryStatuses:[], employees:[], products:[],
+const S = { user:null, me:null, tab:'dash', statuses:[], deliveryStatuses:[], deliveryTypes:[], employees:[], products:[],
             orders:[], customers:[], sources:[], categories:[], departments:[], ai:[],
             pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 },
             eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 },
@@ -456,11 +456,12 @@ async function loadAll(){
     sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color), delivery_statuses(name,color)')
       .order('created_at',{ascending:false}).limit(600),
     sb.from('delivery_statuses').select('*').order('sort'),
+    sb.from('delivery_types').select('*').order('sort'),
   ];
-  const [st,em,pr,so,ca,dp,cu,or_,ds] = await Promise.all(q);
+  const [st,em,pr,so,ca,dp,cu,or_,ds,dtp] = await Promise.all(q);
   S.statuses=st.data||[]; S.employees=em.data||[]; S.products=pr.data||[];
   S.sources=so.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
-  S.customers=cu.data||[]; S.orders=or_.data||[]; S.deliveryStatuses=ds.data||[];
+  S.customers=cu.data||[]; S.orders=or_.data||[]; S.deliveryStatuses=ds.data||[]; S.deliveryTypes=dtp.data||[];
   S.me = S.employees.find(e=>e.id===S.user.id) || { full_name:S.user.email, role:'sales' };
   el('me').innerHTML = `<b>${esc(S.me.full_name)}</b>${({sales:'Менеджер',head:'Руководитель',admin:'Администратор'})[S.me.role]||S.me.role} ·
     <a href="#" onclick="signOut();return false" style="color:var(--mute)">выйти</a>`;
@@ -690,6 +691,12 @@ async function openOrder(id){
         ${S.deliveryStatuses.map(s=>`<option value="${s.id}" ${s.id===o.delivery_status_id?'selected':''}>${esc(s.name)}</option>`).join('')}
       </select></div>
 
+    <div class="field"><label>Тип доставки</label>
+      <select onchange="setDeliveryType(${id},this.value)">
+        <option value="">— не задан —</option>
+        ${S.deliveryTypes.map(t=>`<option value="${t.id}" ${t.id===o.delivery_type_id?'selected':''}>${esc(t.name)}</option>`).join('')}
+      </select></div>
+
     <div class="row" style="margin-bottom:16px">
       <button class="btn ghost sm" onclick="dial('${esc(phone)}',${id})">Позвонить</button>
       <button class="btn ghost sm" onclick="waPrompt(${id},'${esc(phone)}')">WhatsApp</button>
@@ -768,6 +775,13 @@ async function setDeliveryStatus(id,sid){
   await sb.from('orders').update({ delivery_status_id: sid ? +sid : null }).eq('id',id);
   await sb.from('activities').insert({order_id:id,employee_id:S.user.id,type:'status',
     body:'Доставка: '+(st?st.name:'не задан')});
+  await loadAll(); openOrder(id);
+}
+async function setDeliveryType(id,tid){
+  const t = S.deliveryTypes.find(x=>x.id==tid);
+  await sb.from('orders').update({ delivery_type_id: tid ? +tid : null }).eq('id',id);
+  await sb.from('activities').insert({order_id:id,employee_id:S.user.id,type:'status',
+    body:'Тип доставки: '+(t?t.name:'не задан')});
   await loadAll(); openOrder(id);
 }
 const ADDR_FIELDS = ['zip','region','district','city','street','house'];
@@ -1475,6 +1489,7 @@ function vRefs(){
     ${richBlk('Категории товаров', S.categories, 'cat')}
     ${blk('Этапы воронки', S.statuses, 'statuses')}
     ${blk('Статусы доставки', S.deliveryStatuses, 'delivery_statuses')}
+    ${blk('Типы доставки', S.deliveryTypes, 'delivery_types')}
     ${blk('Источники заявок', S.sources, 'sources')}
   </div>`;
 }
@@ -1525,12 +1540,13 @@ async function delRefCard(kind, id, name){
   closeAll(); await loadAll(); go('refs');
 }
 async function addRef(t){
-  const titles = { statuses:'этапа воронки', sources:'источника заявок', delivery_statuses:'статуса доставки' };
+  const titles = { statuses:'этапа воронки', sources:'источника заявок', delivery_statuses:'статуса доставки', delivery_types:'типа доставки' };
   const name = prompt('Название '+(titles[t]||'записи'));
   if(!name || !name.trim()) return;
   const v = { name: name.trim() };
   if(t==='statuses'){ v.code = 'st_' + Date.now(); v.color = '#6f7687'; v.sort = (S.statuses.at(-1)?.sort || 0) + 1; }
   if(t==='delivery_statuses'){ v.color = '#6f7687'; v.sort = (S.deliveryStatuses.at(-1)?.sort || 0) + 1; }
+  if(t==='delivery_types'){ v.sort = (S.deliveryTypes.at(-1)?.sort || 0) + 1; }
   const { error } = await sb.from(t).insert(v);
   if(error) return alert('Не удалось сохранить: '+error.message);
   await loadAll(); go('refs');
@@ -1543,6 +1559,10 @@ async function delRef(t,id){
   if(t==='delivery_statuses'){
     const used = S.orders.filter(o=>o.delivery_status_id===id).length;
     if(used) return alert('Нельзя удалить: этот статус доставки указан в '+used+' заказ(ах). Сначала смените его в заказах.');
+  }
+  if(t==='delivery_types'){
+    const used = S.orders.filter(o=>o.delivery_type_id===id).length;
+    if(used) return alert('Нельзя удалить: этот тип доставки указан в '+used+' заказ(ах). Сначала смените его в заказах.');
   }
   if(!confirm('Удалить запись?')) return;
   const { error } = await sb.from(t).delete().eq('id',id);

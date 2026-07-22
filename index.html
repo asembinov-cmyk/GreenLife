@@ -12,23 +12,22 @@
 :root{
   --ink:#f7f6f3; --ink-2:#ffffff; --line:#e3e0d9;
   --paper:#1a1d24; --mute:#6f7687;
-  --signal:#0a8f5f;      /* деньги / выигрыш */
-  --alert:#d93d2e;       /* просрочка / отказ */
-  --amber:#c47800;       /* в работе */
-  --violet:#6d4fd4;      /* коммуникации */
+  --signal:#0a8f5f;
+  --alert:#d93d2e;
+  --amber:#c47800;
+  --violet:#6d4fd4;
   --r:14px;
   --safe-b:env(safe-area-inset-bottom,0px);
   --safe-t:env(safe-area-inset-top,0px);
   --tabbar:64px;
-  --vh:100vh;            /* подменяется на 100dvh или пиксели из скрипта */
-  /* фон текущего раздела — переключается скриптом */
+  --vh:100vh;
   --tint:#f7f6f3;
   --tint-2:#f2f0ec;
-  --panel:#fbfaf7;       /* сайдбар и мобильные панели */
+  --panel:#fbfaf7;
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-html,body{overscroll-behavior-y:none}   /* без резинового отскока */
+html,body{overscroll-behavior-y:none}
 body{color:var(--paper);font:15px/1.5 Inter,system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;overflow-x:hidden;min-height:var(--vh);
   background:var(--tint);
@@ -37,8 +36,6 @@ body{color:var(--paper);font:15px/1.5 Inter,system-ui,sans-serif;
     radial-gradient(900px 500px at 95% 5%, var(--tint-2) 0%, transparent 55%);
   background-attachment:fixed;
   transition:background-color .45s ease}
-
-/* ---------- палитра разделов ---------- */
 body[data-tab="dash"]     {--tint:#f6f7f4; --tint-2:#e8f0ea; --panel:#fbfcfa}
 body[data-tab="pipe"]     {--tint:#f4f7f5; --tint-2:#dfeee6; --panel:#f9fcfa}
 body[data-tab="orders"]   {--tint:#f7f6f2; --tint-2:#f0ead9; --panel:#fcfbf6}
@@ -48,15 +45,12 @@ body[data-tab="products"] {--tint:#f8f6f3; --tint-2:#f2e8dd; --panel:#fdfbf8}
 body[data-tab="team"]     {--tint:#f7f5f6; --tint-2:#f0e4ea; --panel:#fdfafb}
 body[data-tab="analytics"]{--tint:#f4f6f9; --tint-2:#e3eaf6; --panel:#f9fbfd}
 body[data-tab="refs"]     {--tint:#f6f6f6; --tint-2:#eaeaea; --panel:#fbfbfb}
-
 h1,h2,h3,.disp{font-family:'Bricolage Grotesque',sans-serif;letter-spacing:-.02em}
 .mono{font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none;-webkit-tap-highlight-color:transparent}
 a{color:inherit}
 ::-webkit-scrollbar{width:8px;height:8px}::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
-
-/* ---------- shell ---------- */
 #app{display:grid;grid-template-columns:232px 1fr;min-height:var(--vh)}
 aside{background:var(--panel);border-right:1px solid var(--line);padding:20px 14px;display:flex;
   flex-direction:column;gap:4px;position:sticky;top:0;height:var(--vh);transition:background-color .45s ease}
@@ -68,16 +62,12 @@ nav button.on{background:var(--paper);color:var(--ink);font-weight:600}
 nav .grp{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#5b6377;padding:16px 11px 6px;font-weight:600}
 .me{margin-top:auto;border-top:1px solid var(--line);padding-top:14px;font-size:13px;color:var(--mute)}
 .me b{display:block;color:var(--paper);font-size:14px}
-
-/* мобильные элементы — по умолчанию скрыты */
 .mtop,.tabbar,.mmenu{display:none}
-
 main{padding:26px 30px 60px;max-width:1500px;min-width:0}
 .head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap}
 .head h1{font-size:30px;font-weight:700}
 .head p{color:var(--mute);font-size:14px;margin-top:3px}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-
 .btn{background:var(--paper);color:var(--ink);padding:9px 16px;border-radius:10px;font-weight:600;font-size:14px}
 .btn:hover{opacity:.88}
 .btn.ghost{background:#ffffffaa;border:1px solid var(--line);color:var(--paper)}
@@ -88,18 +78,13 @@ input[type=checkbox]{width:16px;height:16px;padding:0;border-radius:4px;accent-c
 input:focus,select:focus,textarea:focus{border-color:var(--mute)}
 label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:500}
 .field{margin-bottom:12px}
-
 .card{background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);padding:18px;
   box-shadow:0 1px 2px rgba(26,29,36,.04), 0 8px 24px rgba(26,29,36,.03)}
 .grid{display:grid;gap:14px}
-
-/* ---------- KPI ---------- */
 .kpis{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
 .kpi .lbl{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;font-weight:600}
 .kpi .val{font-family:'Bricolage Grotesque';font-size:34px;font-weight:800;margin-top:6px;line-height:1}
 .kpi .sub{font-size:12px;color:var(--mute);margin-top:6px}
-
-/* ---------- плитки категорий ---------- */
 .tiles{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:16px;
   -webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;overscroll-behavior-x:contain}
 .tile{flex:0 0 auto;min-width:132px;background:var(--ink-2);border:1px solid var(--line);
@@ -110,8 +95,6 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px}
 .tile .s{font-size:11px;color:var(--mute);margin-top:3px;font-variant-numeric:tabular-nums}
 .tile.warn .n{color:var(--alert)}
-
-/* ---------- фото товара ---------- */
 .num{color:var(--mute);font-family:'JetBrains Mono',monospace;font-size:12px;
   font-variant-numeric:tabular-nums;text-align:right;width:34px;padding-right:4px}
 .thumb{width:38px;height:38px;border-radius:8px;background:var(--tint);border:1px solid var(--line);
@@ -121,8 +104,6 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
   overflow:hidden;display:grid;place-items:center;flex:none;margin-right:14px}
 .photo-box img{width:100%;height:100%;object-fit:cover;display:block}
 .photo-box span{font-size:12px;color:var(--mute)}
-
-/* ---------- телефон с префиксом ---------- */
 .tel{display:flex;align-items:stretch;background:var(--ink-2);border:1px solid var(--line);
   border-radius:10px;overflow:hidden}
 .tel:focus-within{border-color:var(--mute)}
@@ -133,8 +114,6 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
   letter-spacing:.04em}
 .tel input:focus{border:0}
 .up{color:var(--signal)} .down{color:var(--alert)}
-
-/* ---------- строки состава заказа в форме ---------- */
 .oi-row{display:flex;gap:8px;align-items:center;margin-bottom:8px}
 .oi-row select{flex:1 1 auto;min-width:0}
 .oi-row .qty{width:70px;flex:none}
@@ -143,14 +122,19 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .oi-row .del:active{background:var(--tint)}
 .oi-sum{display:flex;justify-content:space-between;align-items:center;margin-top:6px;
   padding-top:10px;border-top:1px solid var(--line);font-weight:600}
-
-/* карточка заказа: мета-строка менеджер/руководитель */
 .ometa{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
 .ometa .box{background:var(--tint);border:1px solid var(--line);border-radius:11px;padding:11px 12px}
 .ometa .k{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
 .ometa .v{font-weight:600;font-size:14px;margin-top:4px;display:flex;align-items:center;gap:8px}
-
-/* ---------- table ---------- */
+.addr{background:var(--tint);border:1px solid var(--line);border-radius:12px;margin-bottom:16px;overflow:hidden}
+.addr>summary{list-style:none;cursor:pointer;padding:13px 14px;display:flex;align-items:center;gap:10px;
+  font-weight:600;font-size:15px;user-select:none}
+.addr>summary::-webkit-details-marker{display:none}
+.addr>summary:before{content:'▸';color:var(--mute);font-size:12px;transition:transform .15s}
+.addr[open]>summary:before{transform:rotate(90deg)}
+.addr .addr-sub{margin-left:auto;font-weight:400;font-size:12px;color:var(--mute);
+  max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.addr .addr-body{padding:2px 14px 14px}
 .tw{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);padding:0 12px 10px;font-weight:600;white-space:nowrap}
@@ -163,8 +147,6 @@ tbody tr{cursor:pointer}
 tbody tr:hover td{background:var(--tint)}
 .tag{display:inline-block;padding:3px 9px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
 .avatar{width:26px;height:26px;border-radius:8px;background:var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--paper)}
-
-/* карточный список — только для мобильного */
 .clist{display:none}
 .crow{border-top:1px solid var(--line);padding:12px 2px;display:flex;gap:12px;align-items:flex-start}
 .crow:first-child{border-top:0}
@@ -175,8 +157,6 @@ tbody tr:hover td{background:var(--tint)}
 .sortbar{display:none;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:4px;overscroll-behavior-x:contain}
 .sortbar button{flex:0 0 auto;border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:13px;color:var(--mute);background:var(--ink-2)}
 .sortbar button.on{border-color:var(--paper);color:var(--paper);font-weight:600}
-
-/* ---------- pipeline ---------- */
 .pipe{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;align-items:flex-start;
   -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 .col{min-width:262px;flex:1;background:var(--ink-2);border:1px solid var(--line);border-radius:var(--r);
@@ -189,15 +169,11 @@ tbody tr:hover td{background:var(--tint)}
 .deal .amt{font-family:'JetBrains Mono';font-weight:700;font-size:15px;margin-top:4px}
 .deal .meta{font-size:12px;color:var(--mute);margin-top:6px;display:flex;justify-content:space-between}
 .col.over{outline:2px dashed var(--mute)}
-
-/* ---------- bars ---------- */
 .bar{height:9px;background:var(--line);border-radius:99px;overflow:hidden}
 .bar i{display:block;height:100%;background:var(--signal);border-radius:99px;transition:width .6s cubic-bezier(.2,.8,.2,1)}
 .spark{display:flex;align-items:flex-end;gap:3px;height:52px}
 .spark i{flex:1;background:var(--line);border-radius:3px 3px 0 0;min-height:2px;transition:height .5s}
 .spark i.hot{background:var(--signal)}
-
-/* ---------- drawer ---------- */
 .scrim{position:fixed;inset:0;background:#1a1d2455;backdrop-filter:blur(3px);z-index:40}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--ink-2);
   border-left:1px solid var(--line);z-index:41;overflow-y:auto;-webkit-overflow-scrolling:touch;
@@ -209,8 +185,6 @@ tbody tr:hover td{background:var(--tint)}
   -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .x{position:absolute;top:16px;right:18px;font-size:22px;color:var(--mute);width:38px;height:38px;border-radius:10px}
 .x:active{background:var(--tint)}
-
-/* ---------- timeline ---------- */
 .tl{position:relative;padding-left:22px;margin-top:8px}
 .tl:before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:1px;background:var(--line)}
 .ev{position:relative;padding:9px 0}
@@ -219,8 +193,6 @@ tbody tr:hover td{background:var(--tint)}
 .ev.note:before{background:var(--violet)} .ev.status:before{background:var(--mute)}
 .ev .t{font-size:11px;color:var(--mute);font-family:'JetBrains Mono'}
 .ev .b{font-size:14px;margin-top:2px}
-
-/* ---------- AI ---------- */
 .ai{display:flex;flex-direction:column;height:calc(var(--vh) - 190px);min-height:400px}
 .msgs{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;
   display:flex;flex-direction:column;gap:12px;padding-right:6px}
@@ -233,26 +205,18 @@ tbody tr:hover td{background:var(--tint)}
 .dots i{display:inline-block;width:6px;height:6px;background:var(--mute);border-radius:99px;margin-right:4px;animation:bl 1.2s infinite}
 .dots i:nth-child(2){animation-delay:.2s} .dots i:nth-child(3){animation-delay:.4s}
 @keyframes bl{0%,60%,100%{opacity:.25}30%{opacity:1}}
-
-/* ---------- auth ---------- */
 #auth{min-height:var(--vh);display:grid;place-items:center;padding:20px}
 #auth .card{width:min(400px,100%)}
 .err{color:var(--alert);font-size:13px;margin-top:10px}
 .empty{text-align:center;color:var(--mute);padding:44px 20px}
 .empty b{display:block;color:var(--paper);font-family:'Bricolage Grotesque';font-size:18px;margin-bottom:6px}
-
-/* ==========================================================
-   МОБИЛЬНАЯ ВЕРСИЯ
-   ========================================================== */
 @media(max-width:900px){
   input,select,textarea{font-size:16px;padding:12px 13px;border-radius:12px}
   input[type=checkbox]{width:20px;height:20px}
   .btn{padding:11px 16px;border-radius:12px;font-size:15px}
   .btn.sm{padding:8px 12px;font-size:14px}
-
   #app{display:block;min-height:var(--vh)}
   aside{display:none}
-
   .mtop{display:flex;position:sticky;top:0;z-index:30;align-items:center;justify-content:space-between;
     gap:10px;background:var(--panel);border-bottom:1px solid var(--line);
     padding:calc(10px + var(--safe-t)) 14px 10px;transform:translateZ(0);
@@ -260,38 +224,30 @@ tbody tr:hover td{background:var(--tint)}
   .mtop .brand{padding:0;font-size:18px}
   .mtop .u{display:flex;align-items:center;gap:8px}
   .mtop .u .avatar{width:34px;height:34px;border-radius:11px;font-size:12px;background:var(--paper);color:var(--ink)}
-
   main{padding:14px 14px calc(var(--tabbar) + var(--safe-b) + 34px);max-width:100%}
-
   .head{align-items:flex-start;gap:12px;margin-bottom:16px}
   .head h1{font-size:23px}
   .head p{font-size:13px}
   .head .row{width:100%}
   .head .row .btn{flex:1;text-align:center}
   .head .row input{width:100%!important;flex:1 1 100%}
-
   .kpis{grid-template-columns:1fr 1fr;gap:10px}
   .card{padding:14px;border-radius:14px}
   .kpi .val{font-size:24px}
   .kpi .lbl{font-size:10.5px;letter-spacing:.04em}
   .kpi .sub{font-size:11px}
-
   .grid[style*="1.4fr"],.grid[style*="1fr 1fr"]{grid-template-columns:1fr!important}
   .grid{grid-template-columns:1fr!important}
-
   .tw{display:none}
   .clist{display:block}
   .sortbar{display:flex}
-
   .filters{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;margin-bottom:10px;
     -webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
   .filters>*{flex:0 0 auto;width:auto!important}
   .filters .grow{flex:1 1 190px;min-width:170px}
   .filters .cnt{margin-left:0!important;align-self:center;white-space:nowrap}
-
   .pipe{gap:10px;scroll-snap-type:x mandatory;margin:0 -14px;padding:0 14px 8px}
   .col{min-width:min(84vw,320px);flex:0 0 auto;scroll-snap-align:center}
-
   .drawer{top:auto;left:0;right:0;bottom:0;width:100%;height:calc(var(--vh) * .92);
     border-left:0;border-top:1px solid var(--line);border-radius:20px 20px 0 0;
     padding:20px 16px calc(24px + var(--safe-b));animation:su .24s cubic-bezier(.2,.8,.2,1)}
@@ -303,12 +259,10 @@ tbody tr:hover td{background:var(--tint)}
   .modal .card:before{content:'';display:block;width:38px;height:4px;border-radius:99px;background:var(--line);
     margin:-6px auto 12px}
   .modal .row .btn,.drawer .row .btn{flex:1;text-align:center}
-
   .ai{height:calc(var(--vh) - var(--tabbar) - var(--safe-b) - 210px);min-height:320px;padding:12px}
   .msg{max-width:92%}
   .chips{gap:6px;overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px;margin:10px 0;overscroll-behavior-x:contain}
   .chip{flex:0 0 auto;padding:8px 14px}
-
   .tabbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:35;
     height:calc(var(--tabbar) + var(--safe-b));
     background:var(--panel);border-top:1px solid var(--line);
@@ -320,7 +274,6 @@ tbody tr:hover td{background:var(--tint)}
   .tabbar button span.ic{font-size:19px;line-height:1}
   .tabbar button.on{color:var(--paper)}
   .tabbar button.on span.ic{color:var(--signal)}
-
   .mmenu{display:block;position:fixed;left:0;right:0;bottom:0;z-index:42;background:var(--ink-2);
     border-radius:20px 20px 0 0;padding:18px 16px calc(20px + var(--safe-b));
     max-height:calc(var(--vh) * .8);overflow-y:auto;overscroll-behavior:contain;
@@ -331,7 +284,6 @@ tbody tr:hover td{background:var(--tint)}
   .mmenu button:first-of-type{border-top:0}
   .mmenu .mm-me{font-size:13px;color:var(--mute);padding:0 10px 10px}
   .mmenu .mm-me b{display:block;color:var(--paper);font-size:16px;font-family:'Bricolage Grotesque'}
-
   .empty{padding:32px 14px}
   .tiles{margin:0 -14px 14px;padding:0 14px 6px}
   .tl{padding-left:20px}
@@ -391,9 +343,6 @@ tbody tr:hover td{background:var(--tint)}
 </div>
 
 <script>
-/* ==========================================================
-   0. ВЫСОТА ВЬЮПОРТА
-   ========================================================== */
 function fixVH(){
   const h = window.visualViewport ? window.visualViewport.height : window.innerHeight;
   document.documentElement.style.setProperty('--vh', h + 'px');
@@ -409,9 +358,6 @@ if(window.CSS && CSS.supports && CSS.supports('height','100dvh')){
 const TAB_THEME = { dash:'#f6f7f4', pipe:'#f4f7f5', orders:'#f7f6f2', ai:'#f6f5f9',
   customers:'#f4f6f8', products:'#f8f6f3', team:'#f7f5f6', analytics:'#f4f6f9', refs:'#f6f6f6' };
 
-/* ==========================================================
-   1. НАСТРОЙКА
-   ========================================================== */
 const CFG = window.CRM_CONFIG || {};
 const SUPABASE_URL  = CFG.url  || '';
 const SUPABASE_ANON = CFG.anon || '';
@@ -425,12 +371,11 @@ const FN = {
 
 const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.co', SUPABASE_ANON || 'placeholder');
 
-/* ========================================================== */
-const S = { user:null, me:null, tab:'dash', statuses:[], employees:[], products:[],
+const S = { user:null, me:null, tab:'dash', statuses:[], deliveryStatuses:[], employees:[], products:[],
             orders:[], customers:[], sources:[], categories:[], departments:[], ai:[],
             pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 },
             eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 },
-            orderItems:[] };   // черновик состава при создании заказа
+            orderItems:[] };
 
 const isMobile = () => window.matchMedia('(max-width:900px)').matches;
 const money = n => new Intl.NumberFormat('ru-RU').format(Math.round(n||0)) + ' ₸';
@@ -445,7 +390,6 @@ const el = id => document.getElementById(id);
 const dt = s => s ? new Date(s).toLocaleString('ru-RU',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}) : '—';
 const days = (a,b=Date.now()) => Math.floor((b - new Date(a))/864e5);
 
-/* руководитель менеджера: через его отдел -> head_id */
 function headOf(employeeId){
   const emp = S.employees.find(e=>e.id===employeeId);
   if(!emp || !emp.department_id) return null;
@@ -454,7 +398,6 @@ function headOf(employeeId){
   return S.employees.find(e=>e.id===dep.head_id) || null;
 }
 
-/* ---------- AUTH ---------- */
 async function boot(){
   if(!SUPABASE_URL || !SUPABASE_ANON){
     el('auth').style.display='grid';
@@ -501,7 +444,6 @@ async function signIn(){
 }
 async function signOut(){ await sb.auth.signOut(); location.reload(); }
 
-/* ---------- DATA ---------- */
 async function loadAll(){
   const q = [
     sb.from('statuses').select('*').order('sort'),
@@ -511,13 +453,14 @@ async function loadAll(){
     sb.from('categories').select('*'),
     sb.from('departments').select('*').order('name'),
     sb.from('customers').select('*').order('created_at',{ascending:false}).limit(500),
-    sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color)')
+    sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color), delivery_statuses(name,color)')
       .order('created_at',{ascending:false}).limit(600),
+    sb.from('delivery_statuses').select('*').order('sort'),
   ];
-  const [st,em,pr,so,ca,dp,cu,or_] = await Promise.all(q);
+  const [st,em,pr,so,ca,dp,cu,or_,ds] = await Promise.all(q);
   S.statuses=st.data||[]; S.employees=em.data||[]; S.products=pr.data||[];
   S.sources=so.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
-  S.customers=cu.data||[]; S.orders=or_.data||[];
+  S.customers=cu.data||[]; S.orders=or_.data||[]; S.deliveryStatuses=ds.data||[];
   S.me = S.employees.find(e=>e.id===S.user.id) || { full_name:S.user.email, role:'sales' };
   el('me').innerHTML = `<b>${esc(S.me.full_name)}</b>${({sales:'Менеджер',head:'Руководитель',admin:'Администратор'})[S.me.role]||S.me.role} ·
     <a href="#" onclick="signOut();return false" style="color:var(--mute)">выйти</a>`;
@@ -531,7 +474,6 @@ function live(){
     }).subscribe();
 }
 
-/* ---------- NAV ---------- */
 const TABS = [
   ['Работа',[['dash','Дашборд','◧'],['pipe','Воронка','▤'],['orders','Заказы','▦'],['ai','AI-помощник','✦']]],
   ['База',  [['customers','Клиенты','◉'],['products','Товары','▩'],['team','Сотрудники','◍']]],
@@ -584,7 +526,6 @@ function go(k){
 }
 const H = (t,s,r='') => `<div class="head"><div><h1>${t}</h1><p>${s}</p></div><div class="row">${r}</div></div>`;
 
-/* ---------- ДАШБОРД ---------- */
 function myOrders(){ return S.me.role==='sales' ? S.orders.filter(o=>o.owner_id===S.user.id) : S.orders; }
 function vDash(){
   const os = myOrders(), m0 = new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
@@ -637,7 +578,6 @@ function vDash(){
   </div>`;
 }
 
-/* ---------- ВОРОНКА ---------- */
 function vPipe(){
   const os = myOrders();
   el('view').innerHTML = H('Воронка', isMobile()?'Нажмите на сделку, чтобы сменить этап':'Перетащите карточку, чтобы сменить этап',
@@ -666,7 +606,6 @@ async function drop(e,statusId){
   await loadAll(); go('pipe');
 }
 
-/* ---------- ЗАКАЗЫ ---------- */
 function vOrders(){
   el('view').innerHTML = H('Заказы','Все сделки и заявки',
     `<input id="q" placeholder="Поиск по клиенту или номеру" style="width:250px" oninput="drawOrders()">
@@ -710,7 +649,6 @@ function drawOrders(){
     </div>`).join('')}</div>`;
 }
 
-/* ---------- КАРТОЧКА ЗАКАЗА ---------- */
 async function openOrder(id){
   S.openOrder = id;
   const o = S.orders.find(x=>x.id===id); if(!o) return;
@@ -746,6 +684,12 @@ async function openOrder(id){
         ${S.statuses.map(s=>`<option value="${s.id}" ${s.id===o.status_id?'selected':''}>${esc(s.name)}</option>`).join('')}
       </select></div>
 
+    <div class="field"><label>Статус доставки</label>
+      <select onchange="setDeliveryStatus(${id},this.value)">
+        <option value="">— не задан —</option>
+        ${S.deliveryStatuses.map(s=>`<option value="${s.id}" ${s.id===o.delivery_status_id?'selected':''}>${esc(s.name)}</option>`).join('')}
+      </select></div>
+
     <div class="row" style="margin-bottom:16px">
       <button class="btn ghost sm" onclick="dial('${esc(phone)}',${id})">Позвонить</button>
       <button class="btn ghost sm" onclick="waPrompt(${id},'${esc(phone)}')">WhatsApp</button>
@@ -772,6 +716,34 @@ async function openOrder(id){
         : `<div style="color:var(--mute);font-size:13px;padding:6px 0">Состав не заполнен. Сумма заказа введена вручную: ${money(o.amount)}.</div>`}
     </div>
 
+    <details class="addr" ${addrFilled(o)?'open':''}>
+      <summary>
+        <span>Адрес доставки</span>
+        <span class="addr-sub">${addrFilled(o)?esc(addrShort(o)):'не заполнен'}</span>
+      </summary>
+      <div class="addr-body">
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1 1 100px"><label>Индекс</label>
+            <input id="a_zip" inputmode="numeric" value="${esc(o.addr_zip||'')}"></div>
+          <div class="field" style="flex:2 1 160px"><label>Область</label>
+            <input id="a_region" value="${esc(o.addr_region||'')}"></div>
+        </div>
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1 1 140px"><label>Район</label>
+            <input id="a_district" value="${esc(o.addr_district||'')}"></div>
+          <div class="field" style="flex:1 1 140px"><label>Населённый пункт</label>
+            <input id="a_city" value="${esc(o.addr_city||'')}"></div>
+        </div>
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:2 1 160px"><label>Улица</label>
+            <input id="a_street" value="${esc(o.addr_street||'')}"></div>
+          <div class="field" style="flex:1 1 90px"><label>Дом</label>
+            <input id="a_house" value="${esc(o.addr_house||'')}"></div>
+        </div>
+        <button class="btn sm" onclick="saveAddress(${id})">Сохранить адрес</button>
+      </div>
+    </details>
+
     <div class="field"><label>Добавить заметку</label>
       <textarea id="note" rows="3" placeholder="Что обсудили, что дальше"></textarea>
       <button class="btn sm" style="margin-top:8px" onclick="addNote(${id})">Сохранить заметку</button></div>
@@ -791,6 +763,32 @@ async function setStatus(id,sid){
   await sb.from('activities').insert({order_id:id,employee_id:S.user.id,type:'status',body:'Этап: '+st.name});
   await loadAll(); openOrder(id);
 }
+async function setDeliveryStatus(id,sid){
+  const st = S.deliveryStatuses.find(s=>s.id==sid);
+  await sb.from('orders').update({ delivery_status_id: sid ? +sid : null }).eq('id',id);
+  await sb.from('activities').insert({order_id:id,employee_id:S.user.id,type:'status',
+    body:'Доставка: '+(st?st.name:'не задан')});
+  await loadAll(); openOrder(id);
+}
+const ADDR_FIELDS = ['zip','region','district','city','street','house'];
+const addrFilled = o => ADDR_FIELDS.some(k=>o['addr_'+k]);
+function addrShort(o){
+  return [o.addr_city, o.addr_street, o.addr_house].filter(Boolean).join(', ')
+    || [o.addr_region, o.addr_district].filter(Boolean).join(', ');
+}
+async function saveAddress(id){
+  const patch = {
+    addr_zip:      el('a_zip').value.trim()      || null,
+    addr_region:   el('a_region').value.trim()   || null,
+    addr_district: el('a_district').value.trim() || null,
+    addr_city:     el('a_city').value.trim()     || null,
+    addr_street:   el('a_street').value.trim()   || null,
+    addr_house:    el('a_house').value.trim()    || null,
+  };
+  const { error } = await sb.from('orders').update(patch).eq('id',id);
+  if(error) return alert('Не удалось сохранить адрес: '+error.message);
+  await loadAll(); openOrder(id);
+}
 async function addNote(id){
   const v = el('note').value.trim(); if(!v) return;
   await sb.from('activities').insert({order_id:id,employee_id:S.user.id,type:'note',body:v});
@@ -801,17 +799,14 @@ async function syncOrderAmount(id, sum){
   await loadAll(); openOrder(id);
 }
 
-/* ---------- РЕДАКТИРОВАНИЕ СОСТАВА СУЩЕСТВУЮЩЕГО ЗАКАЗА ---------- */
 async function editOrderItems(orderId){
   const { data:items } = await sb.from('order_items').select('*').eq('order_id',orderId);
   S.orderItems = (items||[]).map(i=>({ product_id:i.product_id, qty:+i.qty||1, price:+i.price||0 }));
   if(!S.orderItems.length) S.orderItems = [];
   formModal('Состав заказа', oiFormHtml(), async()=>{
-    // валидация
     const clean = S.orderItems.filter(r=>r.product_id);
     if(!clean.length && !confirm('Список пуст — очистить состав заказа?')) return;
     const sum = clean.reduce((a,r)=>a + r.qty*r.price, 0);
-    // перезаписываем позиции
     await sb.from('order_items').delete().eq('order_id',orderId);
     if(clean.length){
       await sb.from('order_items').insert(clean.map(r=>({ order_id:orderId,
@@ -839,7 +834,7 @@ function delOI(idx){ S.orderItems.splice(idx,1); renderOI(); }
 function setOIProduct(idx, pid){
   const p = S.products.find(x=>x.id==pid);
   S.orderItems[idx].product_id = pid ? +pid : null;
-  if(p) S.orderItems[idx].price = +p.price || 0;   // подставляем цену из каталога
+  if(p) S.orderItems[idx].price = +p.price || 0;
   renderOI();
 }
 function setOIQty(idx, v){ S.orderItems[idx].qty = Math.max(1, +v||1); renderOI(); }
@@ -859,8 +854,6 @@ function renderOI(){
   const sum = S.orderItems.reduce((a,r)=>a + (r.qty||0)*(r.price||0), 0);
   if(el('oiSum')) el('oiSum').textContent = money(sum);
 }
-
-/* ---------- ЗВОНКИ ---------- */
 async function dial(phone,orderId){
   if(!phone) return alert('У клиента не указан телефон');
   try{
@@ -884,7 +877,6 @@ async function dial(phone,orderId){
     if(d){ await sb.from('activities').insert({order_id:orderId,employee_id:S.user.id,type:'call',direction:'out',body:d}); openOrder(orderId); }
   }
 }
-/* ---------- WHATSAPP ---------- */
 function waPrompt(orderId,phone){
   if(!phone) return alert('У клиента не указан телефон');
   closeAll();
@@ -926,7 +918,6 @@ async function waDraft(orderId){
   }catch(e){ el('wa').value = ''; alert(e.message); }
 }
 
-/* ---------- КЛИЕНТЫ ---------- */
 function vCustomers(){
   const rows = S.customers.map(c=>{ const os=S.orders.filter(o=>o.customer_id===c.id);
     return { c, n:os.length, sum:os.reduce((s,o)=>s+ +o.amount,0) }; });
@@ -953,7 +944,6 @@ function vCustomers(){
       </div>`).join('')}</div>`
     : `<div class="empty"><b>Клиентов пока нет</b>Добавьте вручную или загрузите через API</div>`}</div>`;
 }
-/* ---------- ТОВАРЫ ---------- */
 function vProducts(){
   const isAdmin = S.me.role==='admin';
   S.pFilter = S.pFilter || { cat:'', q:'', hidden:false };
@@ -1163,7 +1153,6 @@ async function delProduct(id,name){
   if(error) return el('formErr').textContent = 'Не удалось удалить: '+error.message;
   closeAll(); await loadAll(); go('products');
 }
-/* ---------- КОМАНДА ---------- */
 const ROLE_NAME = { sales:'Менеджер', head:'Руководитель', admin:'Администратор' };
 
 function vTeam(){
@@ -1319,7 +1308,6 @@ function drawTeam(){
     </div>`).join('')}</div>`;
 }
 
-/* ---------- УПРАВЛЕНИЕ СОТРУДНИКАМИ ---------- */
 async function callUserFn(payload){
   const { data:{ session } } = await sb.auth.getSession();
   const r = await fetch(SUPABASE_URL + FN.createUser, { method:'POST',
@@ -1415,8 +1403,6 @@ async function removeEmployee(id,name){
     closeAll(); await loadAll(); go('team');
   }catch(e){ el('formErr').textContent = e.message; }
 }
-
-/* ---------- АНАЛИТИКА ---------- */
 function vAnalytics(){
   const os = S.orders;
   const funnel = S.statuses.map(s=>({ s, n:os.filter(o=>o.status_id===s.id).length,
@@ -1457,7 +1443,6 @@ function vAnalytics(){
       </div>`).join('')}</div>`
     :'<div class="empty" style="padding:20px">Источники не заполнены</div>'}</div>`;
 }
-/* ---------- СПРАВОЧНИКИ ---------- */
 function vRefs(){
   const isAdmin = S.me.role==='admin';
   const blk = (title,rows,table)=>`<div class="card">
@@ -1489,6 +1474,7 @@ function vRefs(){
     ${richBlk('Отделы', S.departments, 'dep')}
     ${richBlk('Категории товаров', S.categories, 'cat')}
     ${blk('Этапы воронки', S.statuses, 'statuses')}
+    ${blk('Статусы доставки', S.deliveryStatuses, 'delivery_statuses')}
     ${blk('Источники заявок', S.sources, 'sources')}
   </div>`;
 }
@@ -1539,11 +1525,12 @@ async function delRefCard(kind, id, name){
   closeAll(); await loadAll(); go('refs');
 }
 async function addRef(t){
-  const titles = { statuses:'этапа воронки', sources:'источника заявок' };
+  const titles = { statuses:'этапа воронки', sources:'источника заявок', delivery_statuses:'статуса доставки' };
   const name = prompt('Название '+(titles[t]||'записи'));
   if(!name || !name.trim()) return;
   const v = { name: name.trim() };
   if(t==='statuses'){ v.code = 'st_' + Date.now(); v.color = '#6f7687'; v.sort = (S.statuses.at(-1)?.sort || 0) + 1; }
+  if(t==='delivery_statuses'){ v.color = '#6f7687'; v.sort = (S.deliveryStatuses.at(-1)?.sort || 0) + 1; }
   const { error } = await sb.from(t).insert(v);
   if(error) return alert('Не удалось сохранить: '+error.message);
   await loadAll(); go('refs');
@@ -1553,12 +1540,15 @@ async function delRef(t,id){
     const used = S.orders.filter(o=>o.status_id===id).length;
     if(used) return alert('Нельзя удалить: на этом этапе '+used+' заказ(ов). Сначала переведите их в другой этап.');
   }
+  if(t==='delivery_statuses'){
+    const used = S.orders.filter(o=>o.delivery_status_id===id).length;
+    if(used) return alert('Нельзя удалить: этот статус доставки указан в '+used+' заказ(ах). Сначала смените его в заказах.');
+  }
   if(!confirm('Удалить запись?')) return;
   const { error } = await sb.from(t).delete().eq('id',id);
   if(error) return alert('Не удалось удалить: '+error.message);
   await loadAll(); go('refs');
 }
-/* ---------- ФОРМЫ ---------- */
 function formModal(title,html,onSave){
   closeAll();
   document.body.insertAdjacentHTML('beforeend',`<div class="scrim" onclick="closeAll()"></div>
@@ -1570,7 +1560,7 @@ function formModal(title,html,onSave){
   el('saveBtn').onclick = onSave;
 }
 function newOrder(){
-  S.orderItems = [];   // чистим черновик состава
+  S.orderItems = [];
   formModal('Новый заказ',`
     <div class="field"><label>Имя клиента</label><input id="f_name"></div>
     <div class="field"><label>Телефон</label><input id="f_phone" type="tel" inputmode="tel" placeholder="+7"></div>
@@ -1595,7 +1585,6 @@ function newOrder(){
     const phone=el('f_phone').value.trim();
     const clean = S.orderItems.filter(r=>r.product_id);
     const itemsSum = clean.reduce((a,r)=>a + r.qty*r.price, 0);
-    // если сумма товаров есть — она главная; иначе берём введённую вручную
     const manual = +el('f_amount').value||0;
     const amount = itemsSum > 0 ? itemsSum : manual;
 
@@ -1608,7 +1597,6 @@ function newOrder(){
       source_id:+el('f_src').value||null, comment:el('f_comment').value.trim() }).select().single();
     if(error) return el('formErr').textContent='Не удалось сохранить: '+error.message;
 
-    // сохраняем состав
     if(clean.length){
       const { error:e2 } = await sb.from('order_items').insert(clean.map(r=>({
         order_id:ord.id, product_id:r.product_id, qty:r.qty, price:r.price })));
@@ -1617,7 +1605,7 @@ function newOrder(){
     S.orderItems = [];
     closeAll(); await loadAll(); go(S.tab);
   });
-  renderOI();   // отрисовать пустой список
+  renderOI();
 }
 function newCustomer(){
   formModal('Новый клиент',`
@@ -1633,9 +1621,6 @@ function newCustomer(){
     closeAll(); await loadAll(); go('customers');
   });
 }
-/* ==========================================================
-   AI-АГЕНТ
-   ========================================================== */
 function snapshot(){
   const m0=new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
   const os = myOrders(), mth = os.filter(o=>new Date(o.created_at)>=m0);

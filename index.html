@@ -354,6 +354,86 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
   .scr-opts .btn{flex:1;text-align:center}
   .scr-grid{grid-template-columns:1fr}
 }
+.ocard{position:fixed;z-index:86;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(1400px,92vw);height:min(900px,88vh);background:var(--tint);border-radius:16px;
+  display:flex;flex-direction:column;overflow-y:auto;box-shadow:0 24px 70px rgba(26,29,36,.3)}
+.oc-top{display:flex;align-items:flex-start;gap:14px;padding:16px 20px 14px;
+  border-bottom:1px solid var(--line);background:var(--ink-2);flex:none;
+  border-radius:16px 16px 0 0;position:sticky;top:0;z-index:2}
+.oc-who{flex:1;min-width:0}
+.oc-name{font-family:'Bricolage Grotesque';font-size:22px;font-weight:800;width:100%;border:none;
+  background:transparent;padding:0;color:var(--paper);outline:none;letter-spacing:-.02em;
+  border-bottom:1px solid transparent}
+.oc-name:focus{border-bottom-color:var(--line)}
+.oc-sub{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:5px;font-size:12px;color:var(--mute)}
+.oc-stale{color:var(--alert);font-weight:700}
+.oc-amt{font-family:'Bricolage Grotesque';font-size:26px;font-weight:800;color:var(--paper);flex:none}
+.oc-x{font-size:17px;color:var(--mute);padding:2px 6px;flex:none}
+.oc-body{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1fr) minmax(0,1.3fr);
+  gap:11px;padding:14px 20px;align-items:start}
+.oc-col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.oc-box{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px 13px}
+.oc-box.grow{display:flex;flex-direction:column}
+.oc-box.warn{background:#FAEEDA;border-color:#EF9F27}
+.oc-box.up{background:#E1F5EE;border-color:#5DCAA5}
+.oc-lbl{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--mute);margin-bottom:8px}
+.oc-phone input{width:100%;font-size:14px;border:none;background:transparent;padding:2px 0;
+  color:var(--mute);outline:none;border-bottom:1px solid transparent}
+.oc-phone input:focus{border-bottom-color:var(--line)}
+.oc-btns{display:flex;gap:6px;margin-top:9px}
+.oc-btns.col{flex-direction:column}
+.oc-btns .btn{flex:1;text-align:center;white-space:nowrap}
+.oc-nums{display:flex;gap:14px}
+.oc-nums div{min-width:0}
+.oc-nums b{display:block;font-family:'Bricolage Grotesque';font-size:18px;font-weight:800;line-height:1.1}
+.oc-nums span{font-size:10px;color:var(--mute)}
+.oc-mgr{display:flex;align-items:center;gap:9px}
+.oc-items{margin-bottom:9px}
+.oc-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--line);font-size:13px}
+.oc-item:first-child{border-top:none}
+.oc-item .n{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oc-item .p{color:var(--mute);font-size:12px;flex:none}
+.oc-item .x{color:var(--mute);cursor:pointer;flex:none;font-size:12px}
+.oc-item .x:hover{color:var(--alert)}
+.oc-none{font-size:13px;color:var(--mute);padding:8px 0}
+.oc-warn{font-size:12px;color:var(--amber);line-height:1.45;margin-bottom:9px}
+.oc-warn a{color:var(--signal);font-weight:700}
+.oc-add{display:flex;gap:6px;margin-top:auto}
+.oc-add .btn{flex:1;text-align:center}
+.oc-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px}
+.oc-shelf{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;
+  align-items:start;max-height:420px;overflow-y:auto}
+.sh-card{background:var(--tint);border:1px solid var(--line);border-left:3px solid var(--line);
+  border-radius:0 10px 10px 0;padding:10px}
+.sh-t{font-family:'Bricolage Grotesque';font-size:16px;font-weight:800;color:var(--paper)}
+.sh-n{font-size:13px;font-weight:700;margin-bottom:3px;line-height:1.35}
+.sh-s{font-size:11px;color:var(--mute);margin-bottom:8px}
+.sh-card .btn{width:100%;text-align:center}
+.oc-fold{border-top:1px solid var(--line);background:var(--ink-2)}
+.oc-fold>summary{list-style:none;cursor:pointer;padding:13px 20px;display:flex;align-items:center;
+  gap:10px;font-weight:700;font-size:14px;user-select:none}
+.oc-fold>summary::-webkit-details-marker{display:none}
+.oc-fold>summary:before{content:'▸';color:var(--mute);font-size:12px;transition:transform .15s}
+.oc-fold[open]>summary:before{transform:rotate(90deg)}
+.oc-fold>summary .s{margin-left:auto;font-weight:400;font-size:12px;color:var(--mute);
+  max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.oc-fold-b{padding:4px 20px 18px}
+.oc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.oc-grid .field{margin-bottom:0}
+@media(max-width:1100px){
+  .oc-body{grid-template-columns:1fr 1fr}
+  .oc-col.wide{grid-column:1/-1}
+}
+@media(max-width:900px){
+  .ocard{width:100vw;height:100vh;max-height:none;border-radius:0;top:0;left:0;transform:none}
+  .oc-top{border-radius:0;padding:12px 14px}
+  .oc-body{grid-template-columns:1fr;padding:12px 14px}
+  .oc-col.wide{grid-column:auto}
+  .oc-amt{font-size:22px}
+  .oc-fold>summary,.oc-fold-b{padding-left:14px;padding-right:14px}
+  .oc-shelf{grid-template-columns:1fr 1fr;max-height:none}
+}
 .cat-scrim{position:fixed;inset:0;background:rgba(26,29,36,.5);z-index:70}
 .cat-modal{position:fixed;z-index:71;left:2vw;right:2vw;top:3vh;bottom:3vh;
   background:var(--ink-2);border-radius:16px;
@@ -946,6 +1026,36 @@ function drawOrders(){
     </div>`).join('')}</div>`;
 }
 
+/* ─────────── КАРТОЧКА ЗАКАЗА (продающая, по центру) ─────────── */
+// сколько дней клиент не покупал расходник и пора ли повторить
+function repeatHint(customerId){
+  if(!customerId) return null;
+  const past = S.orders.filter(o=>o.customer_id===customerId && o.statuses?.code==='won')
+    .sort((a,b)=>new Date(b.created_at)-new Date(a.created_at));
+  if(past.length<1) return null;
+  const items = S.lastItems || [];
+  const last = items.filter(i=>past.some(o=>o.id===i.order_id));
+  if(!last.length) return null;
+  const top = last[0];
+  const d = days(past.find(o=>o.id===top.order_id)?.created_at);
+  if(d < 45) return null;
+  return { name: top.products?.name || 'товар', days: d };
+}
+// ближайший уровень прайса выше текущей суммы
+function nextLevel(amount){
+  const lv = S.bundles.map(b=>+b.price||0).filter(p=>p>amount).sort((a,b)=>a-b);
+  if(!lv.length) return null;
+  const price = lv[0];
+  const b = S.bundles.find(x=>+x.price===price);
+  return { price, gap: price-amount, name: b?.name || '' };
+}
+function custStats(customerId){
+  const os = S.orders.filter(o=>o.customer_id===customerId);
+  const won = os.filter(o=>o.statuses?.code==='won');
+  const rev = won.reduce((a,o)=>a + +o.amount, 0);
+  return { n:os.length, w:won.length, rev, avg: won.length ? rev/won.length : 0 };
+}
+
 async function openOrder(id){
   S.openOrder = id;
   const o = S.orders.find(x=>x.id===id); if(!o) return;
@@ -953,146 +1063,248 @@ async function openOrder(id){
     sb.from('activities').select('*, employees(full_name)').eq('order_id',id).order('created_at',{ascending:false}),
     sb.from('order_items').select('*, products(name,sku)').eq('order_id',id),
   ]);
+  // история покупок клиента — для подсказок
+  const { data:hist } = await sb.from('order_items')
+    .select('*, products(name), orders!inner(customer_id,created_at,status_id)')
+    .eq('orders.customer_id', o.customer_id||0).limit(60);
+  S.lastItems = hist || [];
+
   closeAll();
   const phone = o.customers?.phone || '';
   const list = items || [];
   const itemsSum = list.reduce((a,i)=> a + (+i.qty||0) * (+i.price||0), 0);
   const owner = S.employees.find(e=>e.id===o.owner_id);
   const head  = headOf(o.owner_id);
+  const st = custStats(o.customer_id);
+  const nx = nextLevel(+o.amount||0);
+  const rep = repeatHint(o.customer_id);
+  const addrAny = addrFilled(o);
+  const isAdmin = S.me.role==='admin';
+  const boss = S.me.role!=='sales';
+  const stale = !['won','lost'].includes(o.statuses?.code) ? days(o.created_at) : 0;
 
   document.body.insertAdjacentHTML('beforeend', `
   <div class="scrim" onclick="closeAll()"></div>
-  <div class="drawer">
-    <button class="x" onclick="closeAll()">×</button>
-    <div class="mono" style="color:var(--mute);font-size:12px">${esc(o.number||o.id)}${
-      o.ext_id?` · внеш. ${esc(o.ext_id)}`:''}</div>
-    <div class="cust-head">
-      <input id="oc_name" class="cust-name" value="${esc(o.customers?.name||'')}" placeholder="Имя клиента"
-        onchange="saveCustomer(${id})">
-      <div class="cust-phone">
-        <input id="oc_phone" class="mono" type="tel" inputmode="tel" value="${esc(phone)}"
-          placeholder="Телефон" onchange="saveCustomer(${id})">
-        ${phone?`<a href="tel:+${esc(phone.replace(/\D/g,''))}" class="cust-call" title="Позвонить">☏</a>`:''}
+  <div class="ocard">
+    <div class="oc-top">
+      <div class="oc-who">
+        <input id="oc_name" class="oc-name" value="${esc(o.customers?.name||'')}" placeholder="Имя клиента"
+          onchange="saveCustomer(${id})">
+        <div class="oc-sub">
+          <span class="mono">${esc(o.number||o.id)}</span>
+          ${o.ext_id?`<span class="mono">· внеш. ${esc(o.ext_id)}</span>`:''}
+          <span class="tag" style="background:${o.statuses?.color}22;color:${o.statuses?.color}">${esc(o.statuses?.name||'')}</span>
+          ${stale>2?`<span class="oc-stale">${stale} дн. без движения</span>`:''}
+        </div>
+      </div>
+      <div class="oc-amt mono">${money(o.amount)}</div>
+      <button class="oc-x" onclick="closeAll()" aria-label="Закрыть">✕</button>
+    </div>
+
+    <div class="oc-body">
+      <div class="oc-col">
+        <div class="oc-box">
+          <div class="oc-phone">
+            <input id="oc_phone" class="mono" type="tel" inputmode="tel" value="${esc(phone)}"
+              placeholder="Телефон" onchange="saveCustomer(${id})">
+          </div>
+          <div class="oc-btns">
+            <button class="btn sm ghost" onclick="dial('${esc(phone)}',${id})">Звонок</button>
+            <button class="btn sm ghost" onclick="waPrompt(${id},'${esc(phone)}')">WhatsApp</button>
+          </div>
+        </div>
+
+        <div class="oc-box">
+          <div class="oc-lbl">За всё время</div>
+          <div class="oc-nums">
+            <div><b>${moneyShort(st.rev)}</b><span>выручка</span></div>
+            <div><b>${st.n}</b><span>заказов</span></div>
+            <div><b>${moneyShort(st.avg)}</b><span>ср. чек</span></div>
+          </div>
+        </div>
+
+        ${rep?`<div class="oc-box warn">
+          <div class="oc-lbl" style="color:#633806">Пора повторить</div>
+          <div style="font-size:13px;color:#633806;line-height:1.45">
+            ${esc(rep.name)} — брали ${rep.days} дн. назад</div>
+        </div>`:''}
+
+        <div class="oc-box">
+          <div class="oc-lbl">Менеджер</div>
+          <div class="oc-mgr"><span class="avatar">${ini(owner?.full_name)}</span>
+            <div style="min-width:0">
+              <div style="font-weight:600;font-size:13px">${esc(owner?.full_name||'не назначен')}</div>
+              ${head?`<div style="font-size:11px;color:var(--mute)">рук. ${esc(head.full_name)}</div>`:''}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="oc-col">
+        <div class="oc-box grow">
+          <div class="oc-lbl">Состав заказа</div>
+          <div class="oc-items">
+            ${list.length ? list.map(i=>`<div class="oc-item">
+              <span class="n">${esc(i.products?.name||'Товар удалён')}${i.qty>1?' × '+i.qty:''}</span>
+              <span class="p mono">${money((+i.qty||0)*(+i.price||0))}</span>
+              <span class="x" onclick="delOrderItem(${id},${i.id})">✕</span>
+            </div>`).join('')
+            : `<div class="oc-none">Состав не заполнен</div>`}
+          </div>
+          ${list.length && Math.abs(itemsSum-(+o.amount||0))>0.5 ? `<div class="oc-warn">
+            Товаров на ${money(itemsSum)}, в заказе ${money(o.amount)}.
+            <a href="#" onclick="syncOrderAmount(${id},${itemsSum});return false">Приравнять</a></div>`:''}
+          <div class="oc-add">
+            <button class="btn sm" onclick="openCatalog(p=>addProductToOrder(${id},p),'Добавить товар в заказ')">+ Товар</button>
+            <button class="btn sm ghost" onclick="openPicker({mode:'order',id:${id}})">Набор</button>
+          </div>
+        </div>
+
+        ${nx?`<div class="oc-box up">
+          <div class="oc-lbl" style="color:#085041">До следующего уровня</div>
+          <div style="font-size:14px;color:#085041;line-height:1.45;font-weight:700">
+            +${money(nx.gap)} → ${money(nx.price)}${nx.name?' · '+esc(nx.name):''}</div>
+        </div>`:''}
+
+        <div class="oc-box">
+          <div class="oc-btns col">
+            <button class="btn" onclick="scriptForOrder(${id})">Скрипт звонка</button>
+            <button class="btn ghost sm" onclick="aiOrder(${id})">Разбор от AI</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="oc-col wide">
+        <div class="oc-box grow">
+          <div class="oc-tabs" id="ocTabs"></div>
+          <div class="oc-shelf" id="ocShelf"></div>
+        </div>
       </div>
     </div>
-    <div class="mono" style="font-size:26px;font-weight:700;margin:14px 0">${money(o.amount)}</div>
 
-    <div class="ometa">
-      <div class="box"><div class="k">Менеджер</div>
-        <div class="v"><span class="avatar">${ini(owner?.full_name)}</span>${esc(owner?.full_name || o.employees?.full_name || 'не назначен')}</div></div>
-      <div class="box"><div class="k">Руководитель</div>
-        <div class="v">${head ? `<span class="avatar">${ini(head.full_name)}</span>${esc(head.full_name)}` : '<span style="color:var(--mute);font-weight:500">не назначен</span>'}</div></div>
-    </div>
-
-    <div class="field"><label>Этап сделки</label>
-      <select onchange="setStatus(${id},this.value)">
-        ${S.statuses.map(s=>`<option value="${s.id}" ${s.id===o.status_id?'selected':''}>${esc(s.name)}</option>`).join('')}
-      </select></div>
-
-    <div class="field"><label>Статус доставки</label>
-      <select onchange="setDeliveryStatus(${id},this.value)">
-        <option value="">— не задан —</option>
-        ${S.deliveryStatuses.map(s=>`<option value="${s.id}" ${s.id===o.delivery_status_id?'selected':''}>${esc(s.name)}</option>`).join('')}
-      </select></div>
-
-    <div class="field"><label>Тип доставки</label>
-      <select onchange="setDeliveryType(${id},this.value)">
-        <option value="">— не задан —</option>
-        ${S.deliveryTypes.map(t=>`<option value="${t.id}" ${t.id===o.delivery_type_id?'selected':''}>${esc(t.name)}</option>`).join('')}
-      </select></div>
-
-    <div class="field"><label>Статус посылки</label>
-      <select onchange="setOrderField(${id},'parcel_status_id',this.value)">
-        <option value="">— не задан —</option>
-        ${S.parcelStatuses.map(x=>`<option value="${x.id}" ${x.id===o.parcel_status_id?'selected':''}>${esc(x.name)}</option>`).join('')}
-      </select></div>
-
-    <div class="field"><label>Тип оплаты</label>
-      <select onchange="setOrderField(${id},'payment_type_id',this.value)">
-        <option value="">— не задан —</option>
-        ${S.paymentTypes.map(x=>`<option value="${x.id}" ${x.id===o.payment_type_id?'selected':''}>${esc(x.name)}</option>`).join('')}
-      </select></div>
-
-    <div class="field"><label>Внешний ID</label>
-      <input id="oc_ext" value="${esc(o.ext_id||'')}" placeholder="номер из другой системы"
-        onchange="setOrderText(${id},'ext_id',this.value)"></div>
-
-    ${S.me.role!=='sales' ? `<div class="field"><label>Менеджер</label>
-      <select onchange="setOrderField(${id},'owner_id',this.value,1)">
-        ${S.employees.filter(e=>e.active!==false).map(e=>
-          `<option value="${e.id}" ${e.id===o.owner_id?'selected':''}>${esc(e.full_name||'')}</option>`).join('')}
-      </select></div>` : ''}
-
-    <div class="row" style="margin-bottom:16px">
-      <button class="btn ghost sm" onclick="dial('${esc(phone)}',${id})">Позвонить</button>
-      <button class="btn ghost sm" onclick="waPrompt(${id},'${esc(phone)}')">WhatsApp</button>
-      <button class="btn ghost sm" onclick="aiOrder(${id})">Разбор от AI</button>
-      <button class="btn ghost sm" onclick="openPicker({mode:'order',id:${id}})">Подобрать набор</button>
-      <button class="btn ghost sm" onclick="scriptForOrder(${id})">Скрипт звонка</button>
-    </div>
-
-    <div class="card" style="padding:14px;margin-bottom:16px">
-      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
-        <h3 style="font-size:15px">Состав заказа</h3>
-        <button class="btn sm ghost" onclick="editOrderItems(${id})">${list.length?'Изменить':'Добавить товары'}</button>
-      </div>
-      ${list.length ? list.map(i=>`
-        <div class="row" style="justify-content:space-between;font-size:14px;padding:6px 0;flex-wrap:nowrap;gap:10px;border-top:1px solid var(--line)">
-          <span style="min-width:0;overflow:hidden;text-overflow:ellipsis">${esc(i.products?.name||'Товар удалён')}
-            <span style="color:var(--mute)">× ${i.qty}</span></span>
-          <span class="mono" style="white-space:nowrap">${money((+i.qty||0)*(+i.price||0))}</span></div>`).join('')
-        + `<div class="row" style="justify-content:space-between;margin-top:10px;padding-top:12px;border-top:2px solid var(--line);font-weight:700">
-             <span>Сумма товаров</span><span class="mono">${money(itemsSum)}</span></div>`
-          + (Math.abs(itemsSum - (+o.amount||0)) > 0.5
-              ? `<div style="font-size:12px;color:var(--amber);margin-top:8px">
-                   Сумма заказа (${money(o.amount)}) отличается от суммы товаров. 
-                   <a href="#" onclick="syncOrderAmount(${id},${itemsSum});return false" style="color:var(--signal);font-weight:600">Приравнять</a></div>`
-              : '')
-        : `<div style="color:var(--mute);font-size:13px;padding:6px 0">Состав не заполнен. Сумма заказа введена вручную: ${money(o.amount)}.</div>`}
-    </div>
-
-    <details class="addr" ${addrFilled(o)?'open':''}>
-      <summary>
-        <span>Адрес доставки</span>
-        <span class="addr-sub">${addrFilled(o)?esc(addrShort(o)):'не заполнен'}</span>
-      </summary>
-      <div class="addr-body">
-        <div class="row" style="gap:10px">
-          <div class="field" style="flex:1 1 100px"><label>Индекс</label>
-            <input id="a_zip" inputmode="numeric" value="${esc(o.addr_zip||'')}"></div>
-          <div class="field" style="flex:2 1 160px"><label>Область</label>
-            <input id="a_region" value="${esc(o.addr_region||'')}"></div>
+    <details class="oc-fold">
+      <summary><span>Детали заказа</span>
+        <span class="s">${esc(o.statuses?.name||'')}${o.delivery_statuses?.name?' · '+esc(o.delivery_statuses.name):''}${addrAny?' · адрес заполнен':''}</span></summary>
+      <div class="oc-fold-b">
+        <div class="oc-grid">
+          <div class="field"><label>Этап сделки</label>
+            <select onchange="setStatus(${id},this.value)">
+              ${S.statuses.map(x=>`<option value="${x.id}" ${x.id===o.status_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+          <div class="field"><label>Статус доставки</label>
+            <select onchange="setDeliveryStatus(${id},this.value)"><option value="">— не задан —</option>
+              ${S.deliveryStatuses.map(x=>`<option value="${x.id}" ${x.id===o.delivery_status_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+          <div class="field"><label>Тип доставки</label>
+            <select onchange="setDeliveryType(${id},this.value)"><option value="">— не задан —</option>
+              ${S.deliveryTypes.map(x=>`<option value="${x.id}" ${x.id===o.delivery_type_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+          <div class="field"><label>Статус посылки</label>
+            <select onchange="setOrderField(${id},'parcel_status_id',this.value)"><option value="">— не задан —</option>
+              ${S.parcelStatuses.map(x=>`<option value="${x.id}" ${x.id===o.parcel_status_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+          <div class="field"><label>Тип оплаты</label>
+            <select onchange="setOrderField(${id},'payment_type_id',this.value)"><option value="">— не задан —</option>
+              ${S.paymentTypes.map(x=>`<option value="${x.id}" ${x.id===o.payment_type_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+          <div class="field"><label>Внешний ID</label>
+            <input value="${esc(o.ext_id||'')}" onchange="setOrderText(${id},'ext_id',this.value)"></div>
+          ${boss?`<div class="field"><label>Менеджер</label>
+            <select onchange="setOrderField(${id},'owner_id',this.value,1)">
+              ${S.employees.filter(e=>e.active!==false).map(e=>
+                `<option value="${e.id}" ${e.id===o.owner_id?'selected':''}>${esc(e.full_name||'')}</option>`).join('')}
+            </select></div>`:''}
+          <div class="field"><label>Сумма заказа, ₸</label>
+            <input type="number" inputmode="numeric" value="${+o.amount||0}"
+              onchange="setOrderField(${id},'amount',this.value)"></div>
         </div>
-        <div class="row" style="gap:10px">
-          <div class="field" style="flex:1 1 140px"><label>Район</label>
-            <input id="a_district" value="${esc(o.addr_district||'')}"></div>
-          <div class="field" style="flex:1 1 140px"><label>Населённый пункт</label>
-            <input id="a_city" value="${esc(o.addr_city||'')}"></div>
+
+        <div class="oc-lbl" style="margin:14px 0 8px">Адрес доставки</div>
+        <div class="oc-grid">
+          <div class="field"><label>Индекс</label><input id="a_zip" value="${esc(o.addr_zip||'')}"></div>
+          <div class="field"><label>Область</label><input id="a_region" value="${esc(o.addr_region||'')}"></div>
+          <div class="field"><label>Район</label><input id="a_district" value="${esc(o.addr_district||'')}"></div>
+          <div class="field"><label>Населённый пункт</label><input id="a_city" value="${esc(o.addr_city||'')}"></div>
+          <div class="field"><label>Улица</label><input id="a_street" value="${esc(o.addr_street||'')}"></div>
+          <div class="field"><label>Дом</label><input id="a_house" value="${esc(o.addr_house||'')}"></div>
         </div>
-        <div class="row" style="gap:10px">
-          <div class="field" style="flex:2 1 160px"><label>Улица</label>
-            <input id="a_street" value="${esc(o.addr_street||'')}"></div>
-          <div class="field" style="flex:1 1 90px"><label>Дом</label>
-            <input id="a_house" value="${esc(o.addr_house||'')}"></div>
-        </div>
-        <button class="btn sm" onclick="saveAddress(${id})">Сохранить адрес</button>
+        <button class="btn sm" style="margin-top:8px" onclick="saveAddress(${id})">Сохранить адрес</button>
+
+        ${isAdmin?`<div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
+          <button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert)"
+            onclick="deleteOrder(${id})">Удалить заказ</button></div>`:''}
       </div>
     </details>
 
-    <div class="field"><label>Добавить заметку</label>
-      <textarea id="note" rows="3" placeholder="Что обсудили, что дальше"></textarea>
-      <button class="btn sm" style="margin-top:8px" onclick="addNote(${id})">Сохранить заметку</button></div>
-
-    <h3 style="font-size:15px;margin:20px 0 0">История</h3>
-    <div class="tl">${(acts||[]).map(a=>`<div class="ev ${a.type}">
-      <div class="t">${dt(a.created_at)} · ${esc(a.employees?.full_name||'система')}</div>
-      <div class="b">${a.type==='call'?'📞 ':a.type==='whatsapp'?'💬 ':''}${esc(a.body||'')}${a.duration?` <span style="color:var(--mute)">(${a.duration} с)</span>`:''}</div>
-      ${a.recording_url?`<audio controls src="${esc(a.recording_url)}" style="width:100%;margin-top:6px;height:34px"></audio>`:''}
-    </div>`).join('') || '<div class="ev"><div class="b" style="color:var(--mute)">Пока пусто</div></div>'}</div>
-    ${S.me.role==='admin' ? `<div style="border-top:1px solid var(--line);margin-top:22px;padding-top:16px">
-      <button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert)"
-        onclick="deleteOrder(${id})">Удалить заказ</button></div>` : ''}
+    <details class="oc-fold">
+      <summary><span>История и заметки</span>
+        <span class="s">${(acts||[]).length} ${plural((acts||[]).length,'запись','записи','записей')}</span></summary>
+      <div class="oc-fold-b">
+        <div class="field"><label>Добавить заметку</label>
+          <textarea id="note" rows="2" placeholder="Что обсудили, что дальше"></textarea>
+          <button class="btn sm" style="margin-top:8px" onclick="addNote(${id})">Сохранить заметку</button></div>
+        <div class="tl">${(acts||[]).map(a=>`<div class="ev ${a.type}">
+          <div class="t">${dt(a.created_at)} · ${esc(a.employees?.full_name||'система')}</div>
+          <div class="b">${a.type==='call'?'📞 ':a.type==='whatsapp'?'💬 ':''}${esc(a.body||'')}${a.duration?` <span style="color:var(--mute)">(${a.duration} с)</span>`:''}</div>
+          ${a.recording_url?`<audio controls src="${esc(a.recording_url)}" style="width:100%;margin-top:6px;height:34px"></audio>`:''}
+        </div>`).join('') || '<div class="ev"><div class="b" style="color:var(--mute)">Пока пусто</div></div>'}</div>
+      </div>
+    </details>
   </div>`);
+
+  S.shelf = { tab:'bundles', orderId:id, customerId:o.customer_id };
+  drawShelf();
+}
+
+/* ── витрина в карточке ── */
+function shelfTab(t){ S.shelf.tab = t; drawShelf(); }
+function drawShelf(){
+  const tabs = el('ocTabs'), box = el('ocShelf');
+  if(!tabs || !box) return;
+  const T = [['bundles','Наборы'],['past','Брал раньше'],['hits','Хиты'],['all','Каталог']];
+  tabs.innerHTML = T.map(([k,n])=>`<button class="pk-tab ${S.shelf.tab===k?'on':''}"
+    onclick="shelfTab('${k}')">${n}</button>`).join('');
+
+  const oid = S.shelf.orderId;
+  let html = '';
+  if(S.shelf.tab==='bundles'){
+    const bs = S.bundles.filter(b=>bOptionsOf(b.id).length);
+    html = bs.length ? bs.map(b=>{
+      const opts = bOptionsOf(b.id);
+      return `<div class="sh-card">
+        <div class="sh-t mono">${money(b.price)}</div>
+        <div class="sh-s">${b.name?esc(b.name):''} · ${opts.length} ${plural(opts.length,'вариант','варианта','вариантов')}</div>
+        <button class="btn sm" onclick="openPicker({mode:'order',id:${oid}})">Подобрать</button>
+      </div>`;}).join('')
+      : `<div class="oc-none">Наборы не заведены</div>`;
+  } else {
+    let prods = S.products.filter(p=>p.active!==false);
+    if(S.shelf.tab==='past'){
+      const ids = new Set((S.lastItems||[]).map(i=>i.product_id));
+      prods = prods.filter(p=>ids.has(p.id));
+    }
+    if(S.shelf.tab==='hits'){
+      prods = [...prods].sort((a,b)=>(+b.price||0)-(+a.price||0)).slice(0,12);
+    }
+    html = prods.length ? prods.slice(0,24).map(p=>{
+      const i = S.categories.findIndex(c=>c.id===p.category_id);
+      const col = i<0 ? CAT_PAL[CAT_PAL.length-1] : catColor(S.categories[i], i);
+      return `<div class="sh-card" style="border-left-color:${col.s}">
+        <div class="sh-n">${esc(p.name)}</div>
+        <div class="sh-s mono">${p.price?money(p.price):''}${p.stock!=null?' · ост. '+p.stock:''}</div>
+        <button class="btn sm ghost" onclick="addProductToOrder(${oid},S.products.find(x=>x.id===${p.id}))">+ В заказ</button>
+      </div>`;}).join('')
+      : `<div class="oc-none">${S.shelf.tab==='past'?'Клиент ещё ничего не покупал':'Товаров нет'}</div>`;
+  }
+  box.innerHTML = html;
+}
+async function addProductToOrder(orderId, p){
+  if(!p) return;
+  const { data:ex } = await sb.from('order_items').select('*')
+    .eq('order_id',orderId).eq('product_id',p.id).maybeSingle();
+  if(ex) await sb.from('order_items').update({ qty:(+ex.qty||1)+1 }).eq('id',ex.id);
+  else await sb.from('order_items').insert({ order_id:orderId, product_id:p.id, qty:1, price:+p.price||0 });
+  await loadAll(); openOrder(orderId);
 }
 async function deleteOrder(id){
   const o = S.orders.find(x=>x.id===id);
@@ -1104,7 +1316,11 @@ async function deleteOrder(id){
   if(error) return alert('Не удалось удалить заказ: '+error.message);
   closeAll(); await loadAll(); go(S.tab);
 }
-function closeAll(){ document.querySelectorAll('.scrim,.drawer,.modal,.mmenu').forEach(n=>n.remove()); S.openOrder=null; }
+async function delOrderItem(orderId, itemId){
+  await sb.from('order_items').delete().eq('id',itemId);
+  await loadAll(); openOrder(orderId);
+}
+function closeAll(){ document.querySelectorAll('.scrim,.drawer,.modal,.mmenu,.ocard').forEach(n=>n.remove()); S.openOrder=null; }
 async function setStatus(id,sid){
   const st=S.statuses.find(s=>s.id==sid);
   await sb.from('orders').update({status_id:+sid, closed_at:['won','lost'].includes(st.code)?new Date():null}).eq('id',id);

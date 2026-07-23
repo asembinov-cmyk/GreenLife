@@ -43,6 +43,7 @@ body[data-tab="ai"]       {--tint:#f6f5f9; --tint-2:#e9e5f5; --panel:#fbfafd}
 body[data-tab="customers"]{--tint:#f4f6f8; --tint-2:#e2ecf3; --panel:#f9fbfd}
 body[data-tab="products"] {--tint:#f8f6f3; --tint-2:#f2e8dd; --panel:#fdfbf8}
 body[data-tab="bundles"]  {--tint:#f7f4f0; --tint-2:#f0e3d4; --panel:#fdfbf8}
+body[data-tab="scripts"]  {--tint:#f5f7f7; --tint-2:#e2eeee; --panel:#fafcfc}
 body[data-tab="team"]     {--tint:#f7f5f6; --tint-2:#f0e4ea; --panel:#fdfafb}
 body[data-tab="analytics"]{--tint:#f4f6f9; --tint-2:#e3eaf6; --panel:#f9fbfd}
 body[data-tab="refs"]     {--tint:#f6f6f6; --tint-2:#eaeaea; --panel:#fbfbfb}
@@ -293,6 +294,66 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .slot-cat input{display:none}
 .slot-cat i{width:7px;height:7px;border-radius:99px;flex:none}
 .slot-cat.on{font-weight:700}
+.scr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.scr-card{background:var(--ink-2);border:1px solid var(--line);border-radius:13px;padding:14px}
+.scr-card-h{display:flex;align-items:baseline;gap:9px;margin-bottom:5px}
+.scr-nm{font-size:15px;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.scr-lvl{margin-left:auto;font-size:13px;font-weight:700;color:var(--signal);flex:none}
+.scr-meta{font-size:12px;color:var(--mute);margin-bottom:11px}
+.scr-act{display:flex;gap:7px;flex-wrap:wrap}
+.scr-act .btn{flex:1;text-align:center;white-space:nowrap}
+.scr-wrap{position:fixed;inset:0;z-index:65;background:var(--tint);display:flex;flex-direction:column;
+  padding-top:var(--safe-t)}
+.scr-top{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line);
+  background:var(--ink-2);flex:none}
+.scr-ttl{font-family:'Bricolage Grotesque';font-size:18px;font-weight:700;display:flex;
+  align-items:baseline;gap:10px;flex-wrap:wrap;min-width:0;flex:1}
+.scr-hint{font-size:13px;font-weight:400;color:var(--mute);font-family:Inter,sans-serif}
+.scr-lang{display:flex;gap:4px;flex:none}
+.scr-lang button{font-size:11px;padding:4px 11px;border-radius:99px;border:1px solid var(--line);
+  background:var(--tint);color:var(--mute);cursor:pointer}
+.scr-lang button.on{border-color:var(--signal);color:var(--signal);background:var(--tint-2);font-weight:700}
+.scr-x{font-size:17px;color:var(--mute);padding:4px 8px;flex:none}
+.scr-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:14px;
+  padding:18px 20px;overflow-y:auto;align-items:start}
+.scr-main{background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:22px 24px}
+.scr-main.key{border-left:4px solid #BA7517}
+.scr-main.obj{border-left:4px solid #D85A30}
+.scr-step-t{font-size:11px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--mute);margin-bottom:12px}
+.scr-say{font-size:19px;line-height:1.65;margin-bottom:16px}
+.scr-tip{font-size:12px;color:var(--mute);font-style:italic;padding:9px 12px;background:var(--tint);
+  border-radius:9px;margin-bottom:14px;line-height:1.5}
+.scr-opts{display:flex;gap:8px;flex-wrap:wrap}
+.scr-side{background:var(--ink-2);border:1px solid var(--line);border-radius:13px;padding:13px}
+.scr-side-t{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--mute);margin-bottom:9px}
+.scr-crumb{font-size:12px;color:var(--mute);padding:3px 0;line-height:1.4}
+.scr-build{flex:1;min-height:0;overflow-y:auto;padding:16px 20px 22px;
+  display:flex;flex-direction:column;gap:9px}
+.scr-row{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+  cursor:pointer;transition:border-color .12s}
+.scr-row:hover{border-color:var(--signal)}
+.scr-row.key{border-left:3px solid #BA7517}
+.scr-row.obj{border-left:3px solid #D85A30}
+.scr-row-h{display:flex;align-items:center;gap:9px;margin-bottom:6px}
+.scr-row-h .num{font-size:12px;color:var(--mute);flex:none;min-width:16px}
+.scr-row-h .t{font-size:14px;font-weight:700;flex:1;min-width:0;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.scr-row-b{font-size:12px;color:var(--mute);line-height:1.5;margin-bottom:8px}
+.scr-row-o{display:flex;gap:6px;flex-wrap:wrap}
+.scr-jump{font-size:10px;padding:3px 9px;border-radius:99px;background:var(--tint);color:var(--mute)}
+.opt-row{display:flex;gap:7px;align-items:center;margin-bottom:7px}
+.opt-row input{flex:1;min-width:0}
+.opt-row select{flex:1.2;min-width:0}
+@media(max-width:900px){
+  .scr-body{grid-template-columns:1fr;padding:12px 14px}
+  .scr-main{padding:16px 15px}
+  .scr-say{font-size:17px}
+  .scr-top{padding:12px 14px}
+  .scr-opts .btn{flex:1;text-align:center}
+  .scr-grid{grid-template-columns:1fr}
+}
 .cat-scrim{position:fixed;inset:0;background:rgba(26,29,36,.5);z-index:70}
 .cat-modal{position:fixed;z-index:71;left:2vw;right:2vw;top:3vh;bottom:3vh;
   background:var(--ink-2);border-radius:16px;
@@ -579,7 +640,7 @@ if(window.CSS && CSS.supports && CSS.supports('height','100dvh')){
 }
 
 const TAB_THEME = { dash:'#f6f7f4', pipe:'#f4f7f5', orders:'#f7f6f2', ai:'#f6f5f9',
-  customers:'#f4f6f8', products:'#f8f6f3', bundles:'#f7f4f0', team:'#f7f5f6', analytics:'#f4f6f9', refs:'#f6f6f6' };
+  customers:'#f4f6f8', products:'#f8f6f3', bundles:'#f7f4f0', scripts:'#f5f7f7', team:'#f7f5f6', analytics:'#f4f6f9', refs:'#f6f6f6' };
 
 const CFG = window.CRM_CONFIG || {};
 const SUPABASE_URL  = CFG.url  || '';
@@ -595,7 +656,8 @@ const FN = {
 const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.co', SUPABASE_ANON || 'placeholder');
 
 const S = { user:null, me:null, tab:'dash', statuses:[], deliveryStatuses:[], deliveryTypes:[], employees:[], products:[],
-            bundles:[], bundleOptions:[], bundleItems:[], bundleSlots:[], bOpen:null, draft:null, pick:null, cat:null,
+            bundles:[], bundleOptions:[], bundleItems:[], bundleSlots:[], bOpen:null,
+            scripts:[], scriptSteps:[], scr:null, draft:null, pick:null, cat:null,
             orders:[], customers:[], sources:[], categories:[], departments:[], ai:[],
             pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 }, pOpenCat:null,
             eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 }, eOpenDep:null,
@@ -685,14 +747,16 @@ async function loadAll(){
     sb.from('bundle_options').select('*').order('sort'),
     sb.from('bundle_items').select('*, products(name,sku)').order('sort'),
     sb.from('bundle_slots').select('*').order('sort'),
+    sb.from('scripts').select('*').order('sort'),
+    sb.from('script_steps').select('*').order('sort'),
   ];
   const settled = await Promise.all(q.map(x=>x.then(r=>r, e=>({data:[],error:e}))));
-  const [st,em,pr,so,ca,dp,cu,or_,ds,dtp,bn,bo,bi,bs] = settled;
+  const [st,em,pr,so,ca,dp,cu,or_,ds,dtp,bn,bo,bi,bs,sc,ss] = settled;
   settled.forEach(r=>{ if(r && r.error) console.warn('CRM load:', r.error.message||r.error); });
   S.statuses=st.data||[]; S.employees=em.data||[]; S.products=pr.data||[];
   S.sources=so.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
   S.customers=cu.data||[]; S.orders=or_.data||[]; S.deliveryStatuses=ds.data||[]; S.deliveryTypes=dtp.data||[];
-  S.bundles=bn.data||[]; S.bundleOptions=bo.data||[]; S.bundleItems=bi.data||[]; S.bundleSlots=bs.data||[];
+  S.bundles=bn.data||[]; S.bundleOptions=bo.data||[]; S.bundleItems=bi.data||[]; S.bundleSlots=bs.data||[]; S.scripts=sc.data||[]; S.scriptSteps=ss.data||[];
   S.me = S.employees.find(e=>e.id===S.user.id) || { full_name:S.user.email, role:'sales' };
   el('me').innerHTML = `<b>${esc(S.me.full_name)}</b>${({sales:'Менеджер',head:'Руководитель',admin:'Администратор'})[S.me.role]||S.me.role} ·
     <a href="#" onclick="signOut();return false" style="color:var(--mute)">выйти</a>`;
@@ -708,13 +772,13 @@ function live(){
 
 const TABS = [
   ['Работа',[['dash','Дашборд','◧'],['pipe','Воронка','▤'],['orders','Заказы','▦'],['ai','AI-помощник','✦']]],
-  ['База',  [['customers','Клиенты','◉'],['products','Товары','▩'],['bundles','Наборы','◈'],['team','Сотрудники','◍']]],
+  ['База',  [['customers','Клиенты','◉'],['products','Товары','▩'],['bundles','Наборы','◈'],['scripts','Скрипты','❝'],['team','Сотрудники','◍']]],
   ['Ещё',   [['analytics','Аналитика','◪'],['refs','Справочники','⚙']]],
 ];
 const ALL_TABS = TABS.flatMap(([,items])=>items);
 const TAB_NAME = Object.fromEntries(ALL_TABS.map(([k,n])=>[k,n]));
 const BOTTOM = [['dash','Дашборд','◧'],['pipe','Воронка','▤'],['orders','Заказы','▦'],['ai','AI','✦']];
-const MORE_KEYS = ['customers','products','bundles','team','analytics','refs'];
+const MORE_KEYS = ['customers','products','bundles','scripts','team','analytics','refs'];
 
 function renderNav(){
   el('nav').innerHTML = TABS.map(([g,items])=>
@@ -752,7 +816,7 @@ function go(k){
   const th = document.querySelector('meta[name=theme-color]');
   if(th && TAB_THEME[k]) th.setAttribute('content', TAB_THEME[k]);
   ({dash:vDash,pipe:vPipe,orders:vOrders,customers:vCustomers,products:vProducts,
-    bundles:vBundles,team:vTeam,analytics:vAnalytics,refs:vRefs,ai:vAI})[k]();
+    bundles:vBundles,scripts:vScripts,team:vTeam,analytics:vAnalytics,refs:vRefs,ai:vAI})[k]();
   markNav();
   window.scrollTo(0,0);
 }
@@ -940,6 +1004,7 @@ async function openOrder(id){
       <button class="btn ghost sm" onclick="waPrompt(${id},'${esc(phone)}')">WhatsApp</button>
       <button class="btn ghost sm" onclick="aiOrder(${id})">Разбор от AI</button>
       <button class="btn ghost sm" onclick="openPicker({mode:'order',id:${id}})">Подобрать набор</button>
+      <button class="btn ghost sm" onclick="scriptForOrder(${id})">Скрипт звонка</button>
     </div>
 
     <div class="card" style="padding:14px;margin-bottom:16px">
@@ -2316,6 +2381,315 @@ function renderBI(){
       <button class="del" onclick="delBI(${i})" title="Убрать">×</button>
     </div>`).join('')
     : `<div style="color:var(--mute);font-size:13px;padding:4px 0 8px">Пусто. Добавьте позиции из каталога или текстом.</div>`;
+}
+
+/* ─────────── СКРИПТЫ ЗВОНКОВ ─────────── */
+const stepsOf = sid => S.scriptSteps.filter(x=>x.script_id===sid)
+  .sort((a,b)=>(a.sort||0)-(b.sort||0));
+const scrLang = () => S.scr?.lang || 'ru';
+const stepText = st => scrLang()==='kz' ? (st.body_kz || st.body || '') : (st.body || '');
+const stepTitle = st => scrLang()==='kz' ? (st.title_kz || st.title || '') : (st.title || '');
+// переходы хранятся как JSON: [{l:"Согласился", l_kz:"Келісті", g:3}]
+function stepOpts(st){
+  try{ const a = JSON.parse(st.options||'[]'); return Array.isArray(a)?a:[]; }
+  catch{ return []; }
+}
+const optLabel = o => scrLang()==='kz' ? (o.l_kz || o.l || '') : (o.l || '');
+
+function vScripts(){
+  const isAdmin = S.me.role==='admin';
+  S.scr = S.scr || { mode:'list', lang:'ru' };
+  el('view').innerHTML = H('Скрипты', S.scripts.length+' сценариев разговора',
+    isAdmin ? `<button class="btn" onclick="editScript()">Новый скрипт</button>` : '') +
+  (S.scripts.length ? `<div class="scr-grid">${S.scripts.map(sc=>{
+    const n = stepsOf(sc.id).length;
+    const b = S.bundles.find(x=>x.id===sc.bundle_id);
+    return `<div class="scr-card">
+      <div class="scr-card-h">
+        <span class="scr-nm">${esc(sc.name)}</span>
+        ${b?`<span class="scr-lvl mono">${money(b.price)}</span>`:''}
+      </div>
+      <div class="scr-meta">${n} ${plural(n,'шаг','шага','шагов')}${sc.lang_kz?' · RU + KZ':''}</div>
+      <div class="scr-act">
+        <button class="btn sm" onclick="runScript(${sc.id})">Открыть в звонке</button>
+        ${isAdmin?`<button class="btn sm ghost" onclick="buildScript(${sc.id})">Конструктор</button>`:''}
+      </div>
+    </div>`;}).join('')}</div>`
+  : `<div class="card"><div class="empty"><b>Скриптов пока нет</b>${
+      isAdmin?'Создайте первый сценарий разговора':'Попросите администратора завести скрипт'}</div></div>`);
+}
+
+/* ── режим звонка ── */
+function runScript(sid, orderId){
+  const steps = stepsOf(sid);
+  if(!steps.length) return alert('В этом скрипте пока нет шагов. Откройте конструктор и добавьте их.');
+  S.scr = { mode:'call', id:sid, lang:S.scr?.lang||'ru', cur:steps[0].id, path:[], orderId:orderId||null };
+  drawCall();
+}
+function drawCall(){
+  document.querySelectorAll('.scr-wrap').forEach(n=>n.remove());
+  const sc = S.scripts.find(x=>x.id===S.scr.id);
+  const steps = stepsOf(S.scr.id);
+  const st = steps.find(x=>x.id===S.scr.cur);
+  const done = S.scr.cur===-1 || S.scr.cur===-2;
+
+  document.body.insertAdjacentHTML('beforeend', `
+  <div class="scr-wrap">
+    <div class="scr-top">
+      <div class="scr-ttl">${esc(sc?.name||'Скрипт')}
+        <span class="scr-hint">${done?'':'шаг '+(steps.findIndex(x=>x.id===S.scr.cur)+1)+' из '+steps.length}</span></div>
+      ${sc?.lang_kz?`<div class="scr-lang">
+        <button class="${scrLang()==='ru'?'on':''}" onclick="setScrLang('ru')">RU</button>
+        <button class="${scrLang()==='kz'?'on':''}" onclick="setScrLang('kz')">KZ</button>
+      </div>`:''}
+      <button class="scr-x" onclick="closeScript()" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="scr-body">
+      ${done ? finishHtml() : `
+      <div class="scr-main ${st.kind==='key'?'key':st.kind==='obj'?'obj':''}">
+        <div class="scr-step-t">${esc(stepTitle(st))}${
+          st.kind==='key'?' · ключевой':st.kind==='obj'?' · возражение':''}</div>
+        <div class="scr-say">${esc(stepText(st)).replace(/\n/g,'<br>')}</div>
+        ${st.hint?`<div class="scr-tip">${esc(st.hint)}</div>`:''}
+        <div class="scr-opts">
+          ${stepOpts(st).map(o=>`<button class="btn ${o.g===-2?'':'ghost'}"
+            onclick="goStep(${o.g})">${esc(optLabel(o))}</button>`).join('')
+            || '<button class="btn ghost" onclick="goStep(-2)">Завершить</button>'}
+        </div>
+      </div>`}
+      <div class="scr-side">
+        <div class="scr-side-t">Путь разговора</div>
+        ${S.scr.path.length ? S.scr.path.map(id=>{
+          const p = steps.find(x=>x.id===id);
+          return `<div class="scr-crumb">✓ ${esc(p?stepTitle(p):'')}</div>`;}).join('')
+          : '<div class="scr-crumb" style="opacity:.5">начало</div>'}
+        ${S.scr.path.length && !done ? `<button class="btn sm ghost" style="width:100%;margin-top:9px"
+          onclick="backStep()">← Назад</button>` : ''}
+      </div>
+    </div>
+  </div>`);
+}
+function finishHtml(){
+  const lost = S.scr.cur===-1;
+  return `<div class="scr-main" style="text-align:center;padding:34px 20px">
+    <div style="font-size:17px;font-weight:700;margin-bottom:6px;color:${lost?'var(--alert)':'#1D9E75'}">
+      ${lost?'Сделка сорвалась':'Оплата получена'}</div>
+    <div style="font-size:13px;color:var(--mute);margin-bottom:16px">
+      ${lost?'Шаг потери сохранён — попадёт в аналитику скриптов':'Отметьте оплату в карточке заказа'}</div>
+    <button class="btn" onclick="restartScript()">Начать заново</button>
+  </div>`;
+}
+async function goStep(g){
+  const steps = stepsOf(S.scr.id);
+  const from = steps.find(x=>x.id===S.scr.cur);
+  S.scr.path.push(S.scr.cur);
+  S.scr.cur = g;
+  // фиксируем исход для аналитики
+  if(g===-1 || g===-2){
+    try{
+      await sb.from('script_runs').insert({
+        script_id:S.scr.id, employee_id:S.user.id, order_id:S.scr.orderId||null,
+        last_step_id: from?from.id:null, result: g===-2?'won':'lost' });
+    }catch(e){ console.warn('script_runs:', e.message); }
+  }
+  drawCall();
+}
+function backStep(){
+  if(!S.scr.path.length) return;
+  S.scr.cur = S.scr.path.pop();
+  drawCall();
+}
+function restartScript(){
+  const steps = stepsOf(S.scr.id);
+  S.scr.cur = steps[0]?.id; S.scr.path = [];
+  drawCall();
+}
+function setScrLang(l){ S.scr.lang = l; drawCall(); }
+function closeScript(){
+  const oid = S.scr?.orderId;
+  S.scr = { mode:'list', lang:S.scr?.lang||'ru' };
+  document.querySelectorAll('.scr-wrap').forEach(n=>n.remove());
+  if(oid) openOrder(oid); else go('scripts');
+}
+
+function scriptForOrder(orderId){
+  if(!S.scripts.length) return alert('Скрипты не заведены. Раздел «Скрипты» — там их создаёт администратор.');
+  const o = S.orders.find(x=>x.id===orderId);
+  // если есть скрипт под текущую сумму заказа — предложить его первым
+  const byLevel = S.scripts.filter(sc=>{
+    const b = S.bundles.find(x=>x.id===sc.bundle_id);
+    return b && Math.abs((+b.price||0) - (+o?.amount||0)) < 1;
+  });
+  const list = byLevel.length ? byLevel : S.scripts;
+  if(list.length===1){ closeAll(); return runScript(list[0].id, orderId); }
+  formModal('Какой скрипт открыть?', `
+    <div class="field"><label>Сценарий</label><select id="sf_id">
+      ${list.map(sc=>{ const b=S.bundles.find(x=>x.id===sc.bundle_id);
+        return `<option value="${sc.id}">${esc(sc.name)}${b?' · '+money(b.price):''}</option>`;}).join('')}
+    </select></div>`,
+  ()=>{ const id=+el('sf_id').value; closeAll(); runScript(id, orderId); });
+}
+
+/* ── конструктор ── */
+function buildScript(sid){
+  S.scr = { mode:'build', id:sid, lang:S.scr?.lang||'ru' };
+  drawBuilder();
+}
+function drawBuilder(){
+  document.querySelectorAll('.scr-wrap').forEach(n=>n.remove());
+  const sc = S.scripts.find(x=>x.id===S.scr.id);
+  const steps = stepsOf(S.scr.id);
+  document.body.insertAdjacentHTML('beforeend', `
+  <div class="scr-wrap">
+    <div class="scr-top">
+      <div class="scr-ttl">Конструктор
+        <span class="scr-hint">${esc(sc?.name||'')}</span></div>
+      <button class="btn sm ghost" onclick="editScript(${sc.id})">Настройки</button>
+      <button class="btn sm" onclick="editStep(${sc.id})">+ Шаг</button>
+      <button class="scr-x" onclick="closeScript()" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="scr-build">
+      ${steps.length ? steps.map((st,i)=>`
+        <div class="scr-row ${st.kind==='key'?'key':st.kind==='obj'?'obj':''}"
+          onclick="editStep(${sc.id},${st.id})">
+          <div class="scr-row-h">
+            <span class="num mono">${i+1}</span>
+            <span class="t">${esc(st.title||'Без названия')}</span>
+            ${st.kind==='key'?'<span class="tag" style="background:#FAEEDA;color:#633806">ключевой</span>':''}
+            ${st.kind==='obj'?'<span class="tag" style="background:#FAECE7;color:#712B13">возражение</span>':''}
+          </div>
+          <div class="scr-row-b">${esc((st.body||'').slice(0,150))}${(st.body||'').length>150?'…':''}</div>
+          <div class="scr-row-o">
+            ${stepOpts(st).map(o=>{
+              const tgt = o.g===-2?'оплата' : o.g===-1?'потеря'
+                        : 'шаг '+(steps.findIndex(x=>x.id===o.g)+1);
+              return `<span class="scr-jump">${esc(o.l)} → ${tgt}</span>`;}).join('')
+              || '<span class="scr-jump" style="opacity:.5">переходы не заданы</span>'}
+          </div>
+        </div>`).join('')
+      : `<div class="empty" style="padding:40px"><b>Шагов пока нет</b>Нажмите «+ Шаг», чтобы собрать сценарий</div>`}
+    </div>
+  </div>`);
+}
+function editScript(id){
+  const sc = id ? S.scripts.find(x=>x.id===id) : null;
+  formModal(sc?'Настройки скрипта':'Новый скрипт',`
+    <div class="field"><label>Название</label>
+      <input id="s_name" value="${sc?esc(sc.name||''):''}" placeholder="например, Уровень 49 000"></div>
+    <div class="field"><label>Привязать к набору</label>
+      <select id="s_bundle"><option value="">— без привязки —</option>
+        ${S.bundles.map(b=>`<option value="${b.id}" ${sc&&sc.bundle_id===b.id?'selected':''}>${
+          money(b.price)}${b.name?' · '+esc(b.name):''}</option>`).join('')}
+      </select></div>
+    <div class="field"><label>Казахская версия</label>
+      <select id="s_kz">
+        <option value="0" ${sc&&sc.lang_kz?'':'selected'}>Только русский</option>
+        <option value="1" ${sc&&sc.lang_kz?'selected':''}>RU + KZ с переключателем</option>
+      </select></div>
+    ${sc?`<button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert);margin-top:8px"
+      onclick="delScript(${sc.id})">Удалить скрипт</button>`:''}`,
+  async()=>{
+    const name = el('s_name').value.trim();
+    if(!name) return el('formErr').textContent='Укажите название';
+    const patch = { name, bundle_id:+el('s_bundle').value||null, lang_kz:el('s_kz').value==='1' };
+    const { error } = sc ? await sb.from('scripts').update(patch).eq('id',sc.id)
+                         : await sb.from('scripts').insert({...patch, sort:(S.scripts.at(-1)?.sort||0)+1});
+    if(error) return el('formErr').textContent='Не удалось сохранить: '+error.message;
+    closeAll(); await loadAll();
+    if(S.scr?.mode==='build') drawBuilder(); else go('scripts');
+  });
+}
+async function delScript(id){
+  if(!confirm('Удалить скрипт со всеми шагами?')) return;
+  await sb.from('script_steps').delete().eq('script_id',id);
+  const { error } = await sb.from('scripts').delete().eq('id',id);
+  if(error) return alert('Не удалось удалить: '+error.message);
+  closeAll(); document.querySelectorAll('.scr-wrap').forEach(n=>n.remove());
+  S.scr={mode:'list',lang:'ru'}; await loadAll(); go('scripts');
+}
+function editStep(sid, stepId){
+  const sc = S.scripts.find(x=>x.id===sid);
+  const st = stepId ? S.scriptSteps.find(x=>x.id===stepId) : null;
+  const steps = stepsOf(sid);
+  S.optDraft = st ? stepOpts(st) : [];
+  formModal(st?'Шаг: '+esc(st.title||''):'Новый шаг',`
+    <div class="field"><label>Название шага</label>
+      <input id="t_title" value="${st?esc(st.title||''):''}" placeholder="например, Переход к цене"></div>
+    <div class="field"><label>Что говорит менеджер</label>
+      <textarea id="t_body" rows="5" placeholder="Текст реплики">${st?esc(st.body||''):''}</textarea></div>
+    ${sc?.lang_kz?`
+    <div class="field"><label>Название (KZ)</label>
+      <input id="t_title_kz" value="${st?esc(st.title_kz||''):''}"></div>
+    <div class="field"><label>Реплика (KZ)</label>
+      <textarea id="t_body_kz" rows="5">${st?esc(st.body_kz||''):''}</textarea></div>`:''}
+    <div class="field"><label>Подсказка менеджеру
+        <span style="text-transform:none;font-weight:400">— видна только ему</span></label>
+      <input id="t_hint" value="${st?esc(st.hint||''):''}"
+        placeholder="например: дождаться ответа, не давить"></div>
+    <div class="field"><label>Тип шага</label>
+      <select id="t_kind">
+        <option value="" ${!st||!st.kind?'selected':''}>Обычный</option>
+        <option value="key" ${st&&st.kind==='key'?'selected':''}>Ключевой (цена, закрытие)</option>
+        <option value="obj" ${st&&st.kind==='obj'?'selected':''}>Работа с возражением</option>
+      </select></div>
+
+    <div style="border-top:1px solid var(--line);margin:14px 0 12px;padding-top:14px">
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+        <label style="margin:0">Ответы клиента
+          <span style="text-transform:none;font-weight:400">— кнопки и куда ведут</span></label>
+        <button class="btn sm ghost" onclick="addOpt()">+ Ответ</button>
+      </div>
+      <div id="optList"></div>
+    </div>
+
+    ${st?`<button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert)"
+      onclick="delStep(${st.id})">Удалить шаг</button>`:''}`,
+  async()=>{
+    const title = el('t_title').value.trim();
+    if(!title) return el('formErr').textContent='Укажите название шага';
+    const patch = { script_id:sid, title, body:el('t_body').value.trim(),
+      hint:el('t_hint').value.trim()||null, kind:el('t_kind').value||null,
+      options: JSON.stringify(S.optDraft.filter(o=>(o.l||'').trim())) };
+    if(sc?.lang_kz){
+      patch.title_kz = el('t_title_kz').value.trim()||null;
+      patch.body_kz  = el('t_body_kz').value.trim()||null;
+    }
+    const { error } = st ? await sb.from('script_steps').update(patch).eq('id',st.id)
+                         : await sb.from('script_steps').insert({...patch, sort:(steps.at(-1)?.sort||0)+1});
+    if(error) return el('formErr').textContent='Не удалось сохранить: '+error.message;
+    closeAll(); await loadAll(); drawBuilder();
+  });
+  renderOpts(sid);
+}
+async function delStep(id){
+  if(!confirm('Удалить шаг? Переходы на него в других шагах перестанут работать.')) return;
+  const { error } = await sb.from('script_steps').delete().eq('id',id);
+  if(error) return alert('Не удалось удалить: '+error.message);
+  closeAll(); await loadAll(); drawBuilder();
+}
+function addOpt(){ S.optDraft.push({l:'',g:-2}); renderOpts(S.scr.id); }
+function delOpt(i){ S.optDraft.splice(i,1); renderOpts(S.scr.id); }
+function setOptL(i,v){ S.optDraft[i].l = v; }
+function setOptLkz(i,v){ S.optDraft[i].l_kz = v; }
+function setOptG(i,v){ S.optDraft[i].g = +v; }
+function renderOpts(sid){
+  const box = el('optList'); if(!box) return;
+  const sc = S.scripts.find(x=>x.id===sid);
+  const steps = stepsOf(sid);
+  box.innerHTML = S.optDraft.length ? S.optDraft.map((o,i)=>`
+    <div class="opt-row">
+      <input value="${esc(o.l||'')}" placeholder="ответ клиента" oninput="setOptL(${i},this.value)">
+      ${sc?.lang_kz?`<input value="${esc(o.l_kz||'')}" placeholder="KZ" style="max-width:110px"
+        oninput="setOptLkz(${i},this.value)">`:''}
+      <select onchange="setOptG(${i},this.value)">
+        ${steps.map((x,ix)=>`<option value="${x.id}" ${o.g===x.id?'selected':''}>→ ${ix+1}. ${esc(x.title||'')}</option>`).join('')}
+        <option value="-2" ${o.g===-2?'selected':''}>→ оплата ✓</option>
+        <option value="-1" ${o.g===-1?'selected':''}>→ потеря ✕</option>
+      </select>
+      <button class="del" onclick="delOpt(${i})" title="Убрать">×</button>
+    </div>`).join('')
+    : `<div style="color:var(--mute);font-size:13px;padding:4px 0 8px">
+        Ответов нет — шаг завершит разговор.</div>`;
 }
 
 function vAnalytics(){

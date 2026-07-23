@@ -445,7 +445,7 @@ const FN = {
 const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.co', SUPABASE_ANON || 'placeholder');
 
 const S = { user:null, me:null, tab:'dash', statuses:[], deliveryStatuses:[], deliveryTypes:[], employees:[], products:[],
-            bundles:[], bundleOptions:[], bundleItems:[], bOpen:null,
+            bundles:[], bundleOptions:[], bundleItems:[], bOpen:null, draft:null,
             orders:[], customers:[], sources:[], categories:[], departments:[], ai:[],
             pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 }, pOpenCat:null,
             eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 }, eOpenDep:null,
@@ -2014,57 +2014,200 @@ function formModal(title,html,onSave){
     <div class="err" id="formErr"></div></div></div>`);
   el('saveBtn').onclick = onSave;
 }
+/* ─────────── ЧЕРНОВИК ЗАКАЗА (полная карточка до сохранения) ─────────── */
 function newOrder(){
+  S.draft = { name:'', phone:'', source_id:null, status_id:S.statuses[0]?.id || null,
+              delivery_status_id:null, delivery_type_id:null, amount:0, comment:'',
+              items:[], addr:{ zip:'',region:'',district:'',city:'',street:'',house:'' } };
   S.orderItems = [];
-  formModal('Новый заказ',`
-    <div class="field"><label>Имя клиента</label><input id="f_name"></div>
-    <div class="field"><label>Телефон</label><input id="f_phone" type="tel" inputmode="tel" placeholder="+7"></div>
-    <div class="field"><label>Источник</label><select id="f_src"><option value="">—</option>
-      ${S.sources.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></div>
+  drawDraft();
+}
+function dSet(k,v){ S.draft[k] = v; }
+function dSetAddr(k,v){ S.draft.addr[k] = v; }
+function dSetAmount(v){ S.draft.amount = Math.max(0, +v||0); }
 
-    <div style="border-top:1px solid var(--line);margin:14px 0 12px;padding-top:14px">
-      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
-        <label style="margin:0">Товары в заказе</label>
-        <button class="btn sm ghost" onclick="addOI()">+ Позиция</button>
+function drawDraft(){
+  const d = S.draft;
+  const owner = S.employees.find(e=>e.id===S.user.id);
+  const head  = headOf(S.user.id);
+  const itemsSum = S.orderItems.reduce((a,r)=>a + (r.qty||0)*(r.price||0), 0);
+  const addrAny = Object.values(d.addr).some(Boolean);
+  closeAll();
+  document.body.insertAdjacentHTML('beforeend', `
+  <div class="scrim" onclick="cancelDraft()"></div>
+  <div class="drawer">
+    <button class="x" onclick="cancelDraft()">×</button>
+    <div class="mono" style="color:var(--mute);font-size:12px">НОВЫЙ ЗАКАЗ · черновик</div>
+    <div class="cust-head">
+      <input id="d_name" class="cust-name" value="${esc(d.name)}" placeholder="Имя клиента"
+        oninput="dSet('name',this.value)">
+      <div class="cust-phone">
+        <input id="d_phone" class="mono" type="tel" inputmode="tel" value="${esc(d.phone)}"
+          placeholder="Телефон" oninput="dSet('phone',this.value)">
+      </div>
+    </div>
+    <div class="mono" style="font-size:26px;font-weight:700;margin:14px 0">${money(d.amount)}</div>
+
+    <div class="ometa">
+      <div class="box"><div class="k">Менеджер</div>
+        <div class="v"><span class="avatar">${ini(owner?.full_name||S.me.full_name)}</span>${esc(owner?.full_name || S.me.full_name || '')}</div></div>
+      <div class="box"><div class="k">Руководитель</div>
+        <div class="v">${head ? `<span class="avatar">${ini(head.full_name)}</span>${esc(head.full_name)}` : '<span style="color:var(--mute);font-weight:500">не назначен</span>'}</div></div>
+    </div>
+
+    <div class="field"><label>Этап сделки</label>
+      <select onchange="dSet('status_id',+this.value)">
+        ${S.statuses.map(s=>`<option value="${s.id}" ${s.id===d.status_id?'selected':''}>${esc(s.name)}</option>`).join('')}
+      </select></div>
+
+    <div class="field"><label>Источник</label>
+      <select onchange="dSet('source_id',this.value?+this.value:null)">
+        <option value="">— не задан —</option>
+        ${S.sources.map(s=>`<option value="${s.id}" ${s.id===d.source_id?'selected':''}>${esc(s.name)}</option>`).join('')}
+      </select></div>
+
+    <div class="field"><label>Статус доставки</label>
+      <select onchange="dSet('delivery_status_id',this.value?+this.value:null)">
+        <option value="">— не задан —</option>
+        ${S.deliveryStatuses.map(s=>`<option value="${s.id}" ${s.id===d.delivery_status_id?'selected':''}>${esc(s.name)}</option>`).join('')}
+      </select></div>
+
+    <div class="field"><label>Тип доставки</label>
+      <select onchange="dSet('delivery_type_id',this.value?+this.value:null)">
+        <option value="">— не задан —</option>
+        ${S.deliveryTypes.map(t=>`<option value="${t.id}" ${t.id===d.delivery_type_id?'selected':''}>${esc(t.name)}</option>`).join('')}
+      </select></div>
+
+    ${S.bundles.length ? `<div class="field"><label>Готовый набор
+      <span style="text-transform:none;font-weight:400">— подставит состав и сумму</span></label>
+      <select onchange="applyBundleToDraft(this.value)">
+        <option value="">— без набора, соберу вручную —</option>
+        ${S.bundles.map(b=>{
+          const opts = bOptionsOf(b.id);
+          return opts.length ? `<optgroup label="${esc(money(b.price))}${b.name?' · '+esc(b.name):''}">
+            ${opts.map((o,idx)=>`<option value="${b.id}:${o.id}">${String.fromCharCode(65+idx)} — ${
+              esc(bItemsOf(o.id).map(i=>`${i.qty||1}× ${itemLabel(i)}`).join(', ') || 'состав не заполнен')}</option>`).join('')}
+          </optgroup>` : '';
+        }).join('')}
+      </select></div>` : ''}
+
+    <div class="card" style="padding:14px;margin-bottom:16px">
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="font-size:15px">Состав заказа</h3>
+        <button class="btn sm ghost" onclick="addOI();syncDraftSum()">+ Позиция</button>
       </div>
       <div id="oiList"></div>
-      <div class="oi-sum"><span>Сумма товаров</span><span class="mono" id="oiSum">0 ₸</span></div>
+      <div class="oi-sum"><span>Сумма товаров</span><span class="mono" id="oiSum">${money(itemsSum)}</span></div>
     </div>
 
     <div class="field"><label>Сумма заказа, ₸
-      <span style="text-transform:none;font-weight:400">(можно оставить как есть — подставится сумма товаров)</span></label>
-      <input id="f_amount" type="number" inputmode="numeric" value="0"></div>
-    <div class="field"><label>Комментарий</label><textarea id="f_comment" rows="2"></textarea></div>`,
-  async()=>{
-    const name=el('f_name').value.trim(); if(!name) return el('formErr').textContent='Укажите имя клиента';
-    const phone=el('f_phone').value.trim();
-    const clean = S.orderItems.filter(r=>r.product_id);
-    const itemsSum = clean.reduce((a,r)=>a + r.qty*r.price, 0);
-    const manual = +el('f_amount').value||0;
-    const amount = itemsSum > 0 ? itemsSum : manual;
+      <span style="text-transform:none;font-weight:400">(0 — подставится сумма товаров)</span></label>
+      <input id="d_amount" type="number" inputmode="numeric" value="${d.amount}"
+        oninput="dSetAmount(this.value)"></div>
 
-    el('saveBtn').textContent='Сохраняю…'; el('saveBtn').disabled=true;
+    <details class="addr" ${addrAny?'open':''}>
+      <summary><span>Адрес доставки</span>
+        <span class="addr-sub">${addrAny?'заполняется':'не заполнен'}</span></summary>
+      <div class="addr-body">
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1 1 100px"><label>Индекс</label>
+            <input value="${esc(d.addr.zip)}" inputmode="numeric" oninput="dSetAddr('zip',this.value)"></div>
+          <div class="field" style="flex:2 1 160px"><label>Область</label>
+            <input value="${esc(d.addr.region)}" oninput="dSetAddr('region',this.value)"></div>
+        </div>
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:1 1 140px"><label>Район</label>
+            <input value="${esc(d.addr.district)}" oninput="dSetAddr('district',this.value)"></div>
+          <div class="field" style="flex:1 1 140px"><label>Населённый пункт</label>
+            <input value="${esc(d.addr.city)}" oninput="dSetAddr('city',this.value)"></div>
+        </div>
+        <div class="row" style="gap:10px">
+          <div class="field" style="flex:2 1 160px"><label>Улица</label>
+            <input value="${esc(d.addr.street)}" oninput="dSetAddr('street',this.value)"></div>
+          <div class="field" style="flex:1 1 90px"><label>Дом</label>
+            <input value="${esc(d.addr.house)}" oninput="dSetAddr('house',this.value)"></div>
+        </div>
+      </div>
+    </details>
 
-    let cust = phone ? S.customers.find(c=>c.phone===phone) : null;
-    if(!cust){ const {data} = await sb.from('customers').insert({name,phone,owner_id:S.user.id,
-      source_id:+el('f_src').value||null}).select().single(); cust=data; }
+    <div class="field"><label>Комментарий</label>
+      <textarea id="d_comment" rows="2" oninput="dSet('comment',this.value)">${esc(d.comment)}</textarea></div>
 
-    const { data:ord, error } = await sb.from('orders').insert({ number:'ORD-'+Date.now(), customer_id:cust.id,
-      owner_id:S.user.id, status_id:S.statuses[0]?.id, amount,
-      source_id:+el('f_src').value||null, comment:el('f_comment').value.trim() }).select().single();
-    if(error){ el('saveBtn').textContent='Сохранить'; el('saveBtn').disabled=false;
-      return el('formErr').textContent='Не удалось сохранить: '+error.message; }
-
-    if(clean.length){
-      const { error:e2 } = await sb.from('order_items').insert(clean.map(r=>({
-        order_id:ord.id, product_id:r.product_id, qty:r.qty, price:r.price })));
-      if(e2) console.warn('order_items:', e2.message);
-    }
-    S.orderItems = [];
-    closeAll(); await loadAll(); go(S.tab);
-    openOrder(ord.id);
-  });
+    <div class="row" style="margin-top:6px;padding-bottom:6px">
+      <button class="btn" id="saveBtn" onclick="saveDraft()">Создать заказ</button>
+      <button class="btn ghost" onclick="cancelDraft()">Отмена</button>
+    </div>
+    <div class="err" id="formErr"></div>
+  </div>`);
   renderOI();
+}
+function syncDraftSum(){
+  const sum = S.orderItems.reduce((a,r)=>a + (r.qty||0)*(r.price||0), 0);
+  if(el('oiSum')) el('oiSum').textContent = money(sum);
+}
+function applyBundleToDraft(val){
+  if(!val) return;
+  const [bid,oid] = val.split(':').map(Number);
+  const b = S.bundles.find(x=>x.id===bid);
+  const items = bItemsOf(oid);
+  S.orderItems = items.filter(i=>i.product_id).map(i=>({
+    product_id:i.product_id, qty:+i.qty||1,
+    price: i.price!=null ? +i.price : (S.products.find(p=>p.id===i.product_id)?.price || 0) }));
+  S.draft.amount = b?.price || 0;
+  S.draft.bundleLabel = `${money(b?.price||0)}${b?.name?' «'+b.name+'»':''}`;
+  const textOnly = items.filter(i=>!i.product_id).map(i=>`${i.qty||1}× ${i.label||''}`).join(', ');
+  if(textOnly) S.draft.comment = (S.draft.comment?S.draft.comment+'\n':'') + `Набор: ${textOnly}`;
+  drawDraft();
+}
+function cancelDraft(){
+  const d = S.draft;
+  const touched = d && (d.name || d.phone || S.orderItems.length || d.amount || d.comment);
+  if(touched && !confirm('Закрыть черновик? Введённые данные не сохранятся.')) return;
+  S.draft = null; S.orderItems = [];
+  closeAll();
+}
+async function saveDraft(){
+  const d = S.draft;
+  const name = (d.name||'').trim();
+  if(!name){ el('formErr').textContent = 'Укажите имя клиента'; el('d_name')?.focus(); return; }
+  const phone = (d.phone||'').trim();
+  const clean = S.orderItems.filter(r=>r.product_id);
+  const itemsSum = clean.reduce((a,r)=>a + r.qty*r.price, 0);
+  const amount = d.amount > 0 ? d.amount : itemsSum;
+
+  el('saveBtn').textContent='Создаю…'; el('saveBtn').disabled=true;
+  const fail = m => { el('saveBtn').textContent='Создать заказ'; el('saveBtn').disabled=false;
+                      el('formErr').textContent = m; };
+
+  let cust = phone ? S.customers.find(c=>c.phone===phone) : null;
+  if(!cust){
+    const { data, error } = await sb.from('customers')
+      .insert({ name, phone, owner_id:S.user.id, source_id:d.source_id }).select().single();
+    if(error) return fail('Не удалось сохранить клиента: '+error.message);
+    cust = data;
+  }
+
+  const patch = { number:'ORD-'+Date.now(), customer_id:cust.id, owner_id:S.user.id,
+    status_id:d.status_id, amount, source_id:d.source_id, comment:(d.comment||'').trim()||null,
+    delivery_status_id:d.delivery_status_id, delivery_type_id:d.delivery_type_id,
+    addr_zip:d.addr.zip.trim()||null, addr_region:d.addr.region.trim()||null,
+    addr_district:d.addr.district.trim()||null, addr_city:d.addr.city.trim()||null,
+    addr_street:d.addr.street.trim()||null, addr_house:d.addr.house.trim()||null };
+
+  const { data:ord, error } = await sb.from('orders').insert(patch).select().single();
+  if(error) return fail('Не удалось сохранить заказ: '+error.message);
+
+  if(clean.length){
+    const { error:e2 } = await sb.from('order_items').insert(clean.map(r=>({
+      order_id:ord.id, product_id:r.product_id, qty:r.qty, price:r.price })));
+    if(e2) console.warn('order_items:', e2.message);
+  }
+  if(d.bundleLabel){
+    await sb.from('activities').insert({ order_id:ord.id, employee_id:S.user.id, type:'note',
+      body:'Подобран набор '+d.bundleLabel });
+  }
+  S.draft = null; S.orderItems = [];
+  closeAll(); await loadAll(); go(S.tab); openOrder(ord.id);
 }
 function newCustomer(){
   formModal('Новый клиент',`

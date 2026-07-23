@@ -458,13 +458,13 @@ tbody tr:hover td{background:var(--tint)}
 .spark{display:flex;align-items:flex-end;gap:3px;height:52px}
 .spark i{flex:1;background:var(--line);border-radius:3px 3px 0 0;min-height:2px;transition:height .5s}
 .spark i.hot{background:var(--signal)}
-.scrim{position:fixed;inset:0;background:#1a1d2455;backdrop-filter:blur(3px);z-index:40}
+.scrim{position:fixed;inset:0;background:#1a1d2455;backdrop-filter:blur(3px);z-index:85}
 .drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--ink-2);
-  border-left:1px solid var(--line);z-index:41;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  border-left:1px solid var(--line);z-index:86;overflow-y:auto;-webkit-overflow-scrolling:touch;
   overscroll-behavior:contain;padding:22px;animation:sl .22s cubic-bezier(.2,.8,.2,1)}
 @keyframes sl{from{transform:translateX(24px);opacity:0}}
 @keyframes su{from{transform:translateY(28px);opacity:0}}
-.modal{position:fixed;inset:0;display:grid;place-items:center;z-index:41;padding:20px}
+.modal{position:fixed;inset:0;display:grid;place-items:center;z-index:86;padding:20px}
 .modal .card{width:min(520px,100%);max-height:88vh;overflow-y:auto;
   -webkit-overflow-scrolling:touch;overscroll-behavior:contain}
 .x{position:absolute;top:16px;right:18px;font-size:22px;color:var(--mute);width:38px;height:38px;border-radius:10px}
@@ -558,7 +558,7 @@ tbody tr:hover td{background:var(--tint)}
   .tabbar button span.ic{font-size:19px;line-height:1}
   .tabbar button.on{color:var(--paper)}
   .tabbar button.on span.ic{color:var(--signal)}
-  .mmenu{display:block;position:fixed;left:0;right:0;bottom:0;z-index:42;background:var(--ink-2);
+  .mmenu{display:block;position:fixed;left:0;right:0;bottom:0;z-index:87;background:var(--ink-2);
     border-radius:20px 20px 0 0;padding:18px 16px calc(20px + var(--safe-b));
     max-height:calc(var(--vh) * .8);overflow-y:auto;overscroll-behavior:contain;
     animation:su .22s cubic-bezier(.2,.8,.2,1)}
@@ -658,7 +658,7 @@ const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.c
 const S = { user:null, me:null, tab:'dash', statuses:[], deliveryStatuses:[], deliveryTypes:[], employees:[], products:[],
             bundles:[], bundleOptions:[], bundleItems:[], bundleSlots:[], bOpen:null,
             scripts:[], scriptSteps:[], scr:null, draft:null, pick:null, cat:null,
-            orders:[], customers:[], sources:[], categories:[], departments:[], ai:[],
+            orders:[], customers:[], paymentTypes:[], parcelStatuses:[], categories:[], departments:[], ai:[],
             pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 }, pOpenCat:null,
             eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 }, eOpenDep:null,
             orderItems:[] };
@@ -735,11 +735,12 @@ async function loadAll(){
     sb.from('statuses').select('*').order('sort'),
     sb.from('employees').select('*'),
     sb.from('products').select('*').order('name'),
-    sb.from('sources').select('*'),
+    sb.from('payment_types').select('*').order('sort'),
+    sb.from('parcel_statuses').select('*').order('sort'),
     sb.from('categories').select('*'),
     sb.from('departments').select('*').order('name'),
     sb.from('customers').select('*').order('created_at',{ascending:false}).limit(500),
-    sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color), delivery_statuses(name,color)')
+    sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color), delivery_statuses(name,color), payment_types(name), parcel_statuses(name,color)')
       .order('created_at',{ascending:false}).limit(600),
     sb.from('delivery_statuses').select('*').order('sort'),
     sb.from('delivery_types').select('*').order('sort'),
@@ -751,10 +752,10 @@ async function loadAll(){
     sb.from('script_steps').select('*').order('sort'),
   ];
   const settled = await Promise.all(q.map(x=>x.then(r=>r, e=>({data:[],error:e}))));
-  const [st,em,pr,so,ca,dp,cu,or_,ds,dtp,bn,bo,bi,bs,sc,ss] = settled;
+  const [st,em,pr,pt,ps,ca,dp,cu,or_,ds,dtp,bn,bo,bi,bs,sc,ss] = settled;
   settled.forEach(r=>{ if(r && r.error) console.warn('CRM load:', r.error.message||r.error); });
   S.statuses=st.data||[]; S.employees=em.data||[]; S.products=pr.data||[];
-  S.sources=so.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
+  S.paymentTypes=pt.data||[]; S.parcelStatuses=ps.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
   S.customers=cu.data||[]; S.orders=or_.data||[]; S.deliveryStatuses=ds.data||[]; S.deliveryTypes=dtp.data||[];
   S.bundles=bn.data||[]; S.bundleOptions=bo.data||[]; S.bundleItems=bi.data||[]; S.bundleSlots=bs.data||[]; S.scripts=sc.data||[]; S.scriptSteps=ss.data||[];
   S.me = S.employees.find(e=>e.id===S.user.id) || { full_name:S.user.email, role:'sales' };
@@ -911,7 +912,7 @@ function vOrders(){
 }
 function drawOrders(){
   const q = (el('q')?.value||'').toLowerCase();
-  const rows = myOrders().filter(o=>!q || (o.customers?.name||'').toLowerCase().includes(q) || (o.number||'').toLowerCase().includes(q));
+  const rows = myOrders().filter(o=>!q || (o.customers?.name||'').toLowerCase().includes(q) || (o.number||'').toLowerCase().includes(q) || (o.ext_id||'').toLowerCase().includes(q));
   if(!rows.length){
     el('tbl').innerHTML = `<div class="empty"><b>Заказов пока нет</b>Создайте первый или подключите приём заявок по API</div>`;
     return;
@@ -963,7 +964,8 @@ async function openOrder(id){
   <div class="scrim" onclick="closeAll()"></div>
   <div class="drawer">
     <button class="x" onclick="closeAll()">×</button>
-    <div class="mono" style="color:var(--mute);font-size:12px">${esc(o.number||o.id)}</div>
+    <div class="mono" style="color:var(--mute);font-size:12px">${esc(o.number||o.id)}${
+      o.ext_id?` · внеш. ${esc(o.ext_id)}`:''}</div>
     <div class="cust-head">
       <input id="oc_name" class="cust-name" value="${esc(o.customers?.name||'')}" placeholder="Имя клиента"
         onchange="saveCustomer(${id})">
@@ -998,6 +1000,28 @@ async function openOrder(id){
         <option value="">— не задан —</option>
         ${S.deliveryTypes.map(t=>`<option value="${t.id}" ${t.id===o.delivery_type_id?'selected':''}>${esc(t.name)}</option>`).join('')}
       </select></div>
+
+    <div class="field"><label>Статус посылки</label>
+      <select onchange="setOrderField(${id},'parcel_status_id',this.value)">
+        <option value="">— не задан —</option>
+        ${S.parcelStatuses.map(x=>`<option value="${x.id}" ${x.id===o.parcel_status_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+      </select></div>
+
+    <div class="field"><label>Тип оплаты</label>
+      <select onchange="setOrderField(${id},'payment_type_id',this.value)">
+        <option value="">— не задан —</option>
+        ${S.paymentTypes.map(x=>`<option value="${x.id}" ${x.id===o.payment_type_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+      </select></div>
+
+    <div class="field"><label>Внешний ID</label>
+      <input id="oc_ext" value="${esc(o.ext_id||'')}" placeholder="номер из другой системы"
+        onchange="setOrderText(${id},'ext_id',this.value)"></div>
+
+    ${S.me.role!=='sales' ? `<div class="field"><label>Менеджер</label>
+      <select onchange="setOrderField(${id},'owner_id',this.value,1)">
+        ${S.employees.filter(e=>e.active!==false).map(e=>
+          `<option value="${e.id}" ${e.id===o.owner_id?'selected':''}>${esc(e.full_name||'')}</option>`).join('')}
+      </select></div>` : ''}
 
     <div class="row" style="margin-bottom:16px">
       <button class="btn ghost sm" onclick="dial('${esc(phone)}',${id})">Позвонить</button>
@@ -1099,6 +1123,22 @@ async function setDeliveryType(id,tid){
   await sb.from('orders').update({ delivery_type_id: tid ? +tid : null }).eq('id',id);
   await sb.from('activities').insert({order_id:id,employee_id:S.user.id,type:'status',
     body:'Тип доставки: '+(t?t.name:'не задан')});
+  await loadAll(); openOrder(id);
+}
+async function setOrderField(id, field, val, isText){
+  const v = val==='' ? null : (isText ? val : +val);
+  const { error } = await sb.from('orders').update({ [field]: v }).eq('id', id);
+  if(error) return alert('Не удалось сохранить: '+error.message);
+  if(field==='owner_id'){
+    const emp = S.employees.find(e=>e.id===v);
+    await sb.from('activities').insert({ order_id:id, employee_id:S.user.id, type:'status',
+      body:'Менеджер: '+(emp?emp.full_name:'не назначен') });
+  }
+  await loadAll(); openOrder(id);
+}
+async function setOrderText(id, field, val){
+  const { error } = await sb.from('orders').update({ [field]: val.trim()||null }).eq('id', id);
+  if(error) return alert('Не удалось сохранить: '+error.message);
   await loadAll(); openOrder(id);
 }
 const ADDR_FIELDS = ['zip','region','district','city','street','house'];
@@ -2697,8 +2737,8 @@ function vAnalytics(){
   const funnel = S.statuses.map(s=>({ s, n:os.filter(o=>o.status_id===s.id).length,
                                       sum:os.filter(o=>o.status_id===s.id).reduce((a,o)=>a+ +o.amount,0) }));
   const mxF = Math.max(1,...funnel.map(f=>f.n));
-  const bySrc = S.sources.map(s=>{
-    const l = os.filter(o=>o.source_id===s.id), w = l.filter(o=>o.statuses?.code==='won');
+  const bySrc = S.paymentTypes.map(s=>{
+    const l = os.filter(o=>o.payment_type_id===s.id), w = l.filter(o=>o.statuses?.code==='won');
     return { name:s.name, n:l.length, rev:w.reduce((a,o)=>a+ +o.amount,0), conv:l.length?w.length/l.length*100:0 };
   }).sort((a,b)=>b.rev-a.rev);
   const mons = {}; os.filter(o=>o.statuses?.code==='won').forEach(o=>{
@@ -2718,9 +2758,9 @@ function vAnalytics(){
       <div class="row" style="justify-content:space-between;color:var(--mute);font-size:11px;margin-top:8px;flex-wrap:nowrap">
         ${mEnt.map(([k])=>`<span>${k}</span>`).join('')}</div></div>
   </div>
-  <div class="card" style="margin-top:14px"><h3 style="font-size:16px;margin-bottom:12px">Источники заявок</h3>
+  <div class="card" style="margin-top:14px"><h3 style="font-size:16px;margin-bottom:12px">Типы оплаты</h3>
     ${bySrc.length?`
-    <div class="tw"><table><thead><tr><th>Источник</th><th>Заявок</th><th>Конверсия</th><th>Выручка</th></tr></thead><tbody>
+    <div class="tw"><table><thead><tr><th>Тип оплаты</th><th>Заявок</th><th>Конверсия</th><th>Выручка</th></tr></thead><tbody>
       ${bySrc.map(s=>`<tr><td style="font-weight:600">${esc(s.name)}</td><td>${s.n}</td>
         <td class="${s.conv>=25?'up':''}">${s.conv.toFixed(0)}%</td><td class="mono">${money(s.rev)}</td></tr>`).join('')}
       </tbody></table></div>
@@ -2730,7 +2770,7 @@ function vAnalytics(){
           <div class="sub">${s.n} заявок · конверсия <span class="${s.conv>=25?'up':''}">${s.conv.toFixed(0)}%</span></div></div>
         <div class="right"><div class="mono" style="font-weight:700">${moneyShort(s.rev)}</div></div>
       </div>`).join('')}</div>`
-    :'<div class="empty" style="padding:20px">Источники не заполнены</div>'}</div>`;
+    :'<div class="empty" style="padding:20px">Типы оплаты не заполнены</div>'}</div>`;
 }
 function vRefs(){
   const isAdmin = S.me.role==='admin';
@@ -2765,7 +2805,8 @@ function vRefs(){
     ${blk('Этапы воронки', S.statuses, 'statuses')}
     ${blk('Статусы доставки', S.deliveryStatuses, 'delivery_statuses')}
     ${blk('Типы доставки', S.deliveryTypes, 'delivery_types')}
-    ${blk('Источники заявок', S.sources, 'sources')}
+    ${blk('Типы оплаты', S.paymentTypes, 'payment_types')}
+    ${blk('Статусы посылки', S.parcelStatuses, 'parcel_statuses')}
   </div>`;
 }
 const REF = {
@@ -2815,13 +2856,15 @@ async function delRefCard(kind, id, name){
   closeAll(); await loadAll(); go('refs');
 }
 async function addRef(t){
-  const titles = { statuses:'этапа воронки', sources:'источника заявок', delivery_statuses:'статуса доставки', delivery_types:'типа доставки' };
+  const titles = { statuses:'этапа воронки', delivery_statuses:'статуса доставки', delivery_types:'типа доставки', payment_types:'типа оплаты', parcel_statuses:'статуса посылки' };
   const name = prompt('Название '+(titles[t]||'записи'));
   if(!name || !name.trim()) return;
   const v = { name: name.trim() };
   if(t==='statuses'){ v.code = 'st_' + Date.now(); v.color = '#6f7687'; v.sort = (S.statuses.at(-1)?.sort || 0) + 1; }
   if(t==='delivery_statuses'){ v.color = '#6f7687'; v.sort = (S.deliveryStatuses.at(-1)?.sort || 0) + 1; }
   if(t==='delivery_types'){ v.sort = (S.deliveryTypes.at(-1)?.sort || 0) + 1; }
+  if(t==='payment_types'){ v.sort = (S.paymentTypes.at(-1)?.sort || 0) + 1; }
+  if(t==='parcel_statuses'){ v.color = '#6f7687'; v.sort = (S.parcelStatuses.at(-1)?.sort || 0) + 1; }
   const { error } = await sb.from(t).insert(v);
   if(error) return alert('Не удалось сохранить: '+error.message);
   await loadAll(); go('refs');
@@ -2838,6 +2881,14 @@ async function delRef(t,id){
   if(t==='delivery_types'){
     const used = S.orders.filter(o=>o.delivery_type_id===id).length;
     if(used) return alert('Нельзя удалить: этот тип доставки указан в '+used+' заказ(ах). Сначала смените его в заказах.');
+  }
+  if(t==='payment_types'){
+    const used = S.orders.filter(o=>o.payment_type_id===id).length;
+    if(used) return alert('Нельзя удалить: этот тип оплаты указан в '+used+' заказ(ах). Сначала смените его в заказах.');
+  }
+  if(t==='parcel_statuses'){
+    const used = S.orders.filter(o=>o.parcel_status_id===id).length;
+    if(used) return alert('Нельзя удалить: этот статус посылки указан в '+used+' заказ(ах). Сначала смените его в заказах.');
   }
   if(!confirm('Удалить запись?')) return;
   const { error } = await sb.from(t).delete().eq('id',id);
@@ -2856,7 +2907,8 @@ function formModal(title,html,onSave){
 }
 /* ─────────── ЧЕРНОВИК ЗАКАЗА (полная карточка до сохранения) ─────────── */
 function newOrder(){
-  S.draft = { name:'', phone:'', source_id:null, status_id:S.statuses[0]?.id || null,
+  S.draft = { name:'', phone:'', ext_id:'', owner_id:S.user.id, status_id:S.statuses[0]?.id || null,
+              payment_type_id:null, parcel_status_id:null,
               delivery_status_id:null, delivery_type_id:null, amount:0, comment:'',
               items:[], addr:{ zip:'',region:'',district:'',city:'',street:'',house:'' } };
   S.orderItems = [];
@@ -2900,10 +2952,26 @@ function drawDraft(){
         ${S.statuses.map(s=>`<option value="${s.id}" ${s.id===d.status_id?'selected':''}>${esc(s.name)}</option>`).join('')}
       </select></div>
 
-    <div class="field"><label>Источник</label>
-      <select onchange="dSet('source_id',this.value?+this.value:null)">
+    <div class="field"><label>Внешний ID</label>
+      <input value="${esc(d.ext_id||'')}" placeholder="номер из другой системы"
+        oninput="dSet('ext_id',this.value)"></div>
+
+    ${S.me.role!=='sales' ? `<div class="field"><label>Менеджер</label>
+      <select onchange="dSet('owner_id',this.value)">
+        ${S.employees.filter(e=>e.active!==false).map(e=>
+          `<option value="${e.id}" ${e.id===d.owner_id?'selected':''}>${esc(e.full_name||'')}</option>`).join('')}
+      </select></div>` : ''}
+
+    <div class="field"><label>Тип оплаты</label>
+      <select onchange="dSet('payment_type_id',this.value?+this.value:null)">
         <option value="">— не задан —</option>
-        ${S.sources.map(s=>`<option value="${s.id}" ${s.id===d.source_id?'selected':''}>${esc(s.name)}</option>`).join('')}
+        ${S.paymentTypes.map(x=>`<option value="${x.id}" ${x.id===d.payment_type_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+      </select></div>
+
+    <div class="field"><label>Статус посылки</label>
+      <select onchange="dSet('parcel_status_id',this.value?+this.value:null)">
+        <option value="">— не задан —</option>
+        ${S.parcelStatuses.map(x=>`<option value="${x.id}" ${x.id===d.parcel_status_id?'selected':''}>${esc(x.name)}</option>`).join('')}
       </select></div>
 
     <div class="field"><label>Статус доставки</label>
@@ -3016,13 +3084,14 @@ async function saveDraft(){
   let cust = phone ? S.customers.find(c=>c.phone===phone) : null;
   if(!cust){
     const { data, error } = await sb.from('customers')
-      .insert({ name, phone, owner_id:S.user.id, source_id:d.source_id }).select().single();
+      .insert({ name, phone, owner_id:S.user.id }).select().single();
     if(error) return fail('Не удалось сохранить клиента: '+error.message);
     cust = data;
   }
 
-  const patch = { number:'ORD-'+Date.now(), customer_id:cust.id, owner_id:S.user.id,
-    status_id:d.status_id, amount, source_id:d.source_id, comment:(d.comment||'').trim()||null,
+  const patch = { number:'ORD-'+Date.now(), customer_id:cust.id, owner_id:d.owner_id||S.user.id,
+    status_id:d.status_id, amount, comment:(d.comment||'').trim()||null,
+    ext_id:(d.ext_id||'').trim()||null, payment_type_id:d.payment_type_id, parcel_status_id:d.parcel_status_id,
     delivery_status_id:d.delivery_status_id, delivery_type_id:d.delivery_type_id,
     addr_zip:d.addr.zip.trim()||null, addr_region:d.addr.region.trim()||null,
     addr_district:d.addr.district.trim()||null, addr_city:d.addr.city.trim()||null,

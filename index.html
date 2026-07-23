@@ -234,6 +234,32 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .pk-q-v{min-width:22px;text-align:center;font-size:14px;font-weight:700}
 .pk-warn{font-size:12px;color:var(--amber);margin-top:10px;line-height:1.5}
 .pk-warn a{color:var(--signal);font-weight:700}
+.pk-cat{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.pk-cat-q{width:100%;margin-bottom:9px}
+.pk-cat-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px}
+.pk-tab{font-size:11px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);
+  background:var(--tint);color:var(--mute);cursor:pointer;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:5px}
+.pk-tab i{width:7px;height:7px;border-radius:99px;flex:none}
+.pk-tab:hover{border-color:var(--signal)}
+.pk-tab.on{border-color:var(--signal);color:var(--signal);background:var(--tint-2);font-weight:700}
+.pk-cat-list{max-height:260px;overflow-y:auto;margin:0 -4px;padding:0 4px}
+.pk-cbox{border:1px solid var(--line);border-left:3px solid var(--line);
+  border-radius:0 11px 11px 0;overflow:hidden;background:var(--tint);margin-bottom:0}
+.pk-cbox-h{padding:7px 11px;font-size:10px;font-weight:800;letter-spacing:.07em;
+  text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pk-cbox-h span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-cbox-h .cnt{font-weight:400;letter-spacing:0;text-transform:none;flex:none}
+.pk-cat-row{display:flex;align-items:center;gap:9px;padding:8px 11px;border-top:1px solid var(--line);
+  cursor:pointer}
+.pk-cbox .pk-cat-row:first-of-type{border-top:none}
+.pk-cat-row:hover{background:var(--ink-2)}
+.pk-cat-row .n{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pk-cat-row .st{font-size:11px;color:var(--mute);flex:none}
+.pk-cat-row .st.zero{color:var(--alert)}
+.pk-cat-row .pr{font-size:12px;color:var(--mute);flex:none;font-variant-numeric:tabular-nums}
+.pk-cat-row .plus{font-size:15px;color:var(--signal);flex:none;font-weight:700}
+.pk-cat-empty{padding:18px;text-align:center;color:var(--mute);font-size:13px}
 .pk-total{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;
   border-top:2px solid var(--line);font-weight:700}
 .pk-total input{width:120px;margin-left:auto;text-align:right}
@@ -1754,11 +1780,12 @@ function drawPicker(){
             <button class="pk-q" onclick="pkQty(${ix},1)">+</button>
           </div>`).join('') || '<div style="color:var(--mute);font-size:13px;padding:8px 0">Позиции убраны</div>'}</div>
 
-        <select onchange="pkAdd(this.value);this.value=''" style="margin-top:10px">
-          <option value="">+ добавить товар из каталога</option>
-          ${S.products.filter(p=>p.active!==false).map(p=>
-            `<option value="${p.id}">${esc(p.name)}${p.price?' — '+money(p.price):''}</option>`).join('')}
-        </select>
+        <div class="pk-cat">
+          <input id="pkQ" class="pk-cat-q" placeholder="Поиск товара" value="${esc(S.pick.q||'')}"
+            oninput="pkSearch(this.value)">
+          <div class="pk-cat-tabs" id="pkTabs"></div>
+          <div class="pk-cat-list" id="pkCat"></div>
+        </div>
 
         ${sum && Math.abs(sum-k.price)>0.5 ? `<div class="pk-warn">
           Товаров набрано на ${money(sum)}, цена набора ${money(k.price)}.
@@ -1773,11 +1800,13 @@ function drawPicker(){
       </div>
     </div>
   </div>`);
+  drawCatalog();
 }
 function pickOption(bid, oid){
   const b = S.bundles.find(x=>x.id===bid);
   const o = S.bundleOptions.find(x=>x.id===oid);
   S.pick.bundle = bid; S.pick.option = oid;
+  S.pick.q = ''; S.pick.cat = '';
   S.pick.bundleName = b.name || money(b.price);
   S.pick.optionName = optionTitle(o);
   S.pick.price = +b.price||0;
@@ -1801,6 +1830,79 @@ function pkAdd(pid){
   if(ex) ex.qty++;
   else S.pick.items.push({ product_id:p.id, name:p.name, qty:1, price:+p.price||0 });
   drawPicker();
+  const q = el('pkQ'); if(q) q.focus();
+}
+function pkSearch(v){
+  S.pick.q = v;
+  drawCatalog();
+}
+function pkCatTab(c){
+  S.pick.cat = (S.pick.cat===c) ? '' : c;
+  drawCatalog();
+}
+// палитра меток категорий: цвет назначается по порядку категории
+const CAT_PAL = [
+  {b:'#EEEDFE', t:'#3C3489', s:'#7F77DD'},
+  {b:'#E1F5EE', t:'#085041', s:'#1D9E75'},
+  {b:'#FAECE7', t:'#712B13', s:'#D85A30'},
+  {b:'#E6F1FB', t:'#0C447C', s:'#378ADD'},
+  {b:'#FBEAF0', t:'#72243E', s:'#D4537E'},
+  {b:'#FAEEDA', t:'#633806', s:'#BA7517'},
+  {b:'#EAF3DE', t:'#27500A', s:'#639922'},
+  {b:'#F1EFE8', t:'#444441', s:'#888780'},
+];
+// цвет из справочника, если задан; иначе по индексу
+function catColor(cat, idx){
+  if(cat && cat.color){
+    const c = cat.color;
+    return { b:c+'22', t:c, s:c };
+  }
+  return CAT_PAL[idx % CAT_PAL.length];
+}
+// группы каталога: реальные категории из справочника + «Без категории»
+function catalogGroups(){
+  const q = (S.pick.q||'').trim().toLowerCase();
+  const match = p => !q || (p.name||'').toLowerCase().includes(q)
+                  || (p.sku||'').toLowerCase().includes(q);
+  const live = S.products.filter(p=>p.active!==false && match(p));
+  const groups = S.categories.map((c,i)=>({
+    key:String(c.id), name:c.name, col:catColor(c,i),
+    items: live.filter(p=>p.category_id===c.id)
+               .sort((a,b)=>(a.name||'').localeCompare(b.name||'','ru')) }))
+    .filter(g=>g.items.length);
+  const none = live.filter(p=>!p.category_id)
+                   .sort((a,b)=>(a.name||'').localeCompare(b.name||'','ru'));
+  if(none.length) groups.push({ key:'none', name:'Без категории',
+    col:CAT_PAL[CAT_PAL.length-1], items:none });
+  return groups;
+}
+function drawCatalog(){
+  const tabsBox = el('pkTabs'), listBox = el('pkCat');
+  if(!tabsBox || !listBox) return;
+  const groups = catalogGroups();
+  const cur = S.pick.cat || '';
+
+  tabsBox.innerHTML = `<button class="pk-tab ${!cur?'on':''}" onclick="pkCatTab('')">Все</button>` +
+    groups.map(g=>{
+      const on = cur===g.key;
+      return `<button class="pk-tab" onclick="pkCatTab('${g.key}')"
+        style="${on?`border-color:${g.col.s};background:${g.col.b};color:${g.col.t};font-weight:700`:''}">
+        <i style="background:${g.col.s}"></i>${esc(g.name)}</button>`;
+    }).join('');
+
+  const show = cur ? groups.filter(g=>g.key===cur) : groups;
+  listBox.innerHTML = show.length ? show.map(g=>`
+    <div class="pk-cbox" style="border-left-color:${g.col.s}">
+      <div class="pk-cbox-h" style="background:${g.col.b};color:${g.col.t}">
+        <span>${esc(g.name)}</span><span class="cnt">${g.items.length}</span></div>
+      ${g.items.map(p=>`<div class="pk-cat-row" onclick="pkAdd(${p.id})">
+        <span class="n">${esc(p.name)}</span>
+        ${p.stock!=null?`<span class="st ${p.stock>0?'':'zero'}">ост. ${p.stock}</span>`:''}
+        <span class="pr mono">${p.price?money(p.price):''}</span>
+        <span class="plus" style="color:${g.col.s}">+</span>
+      </div>`).join('')}
+    </div>`).join('')
+    : `<div class="pk-cat-empty">Ничего не найдено</div>`;
 }
 function pkSetPrice(v){ S.pick.price = Math.round(v); drawPicker(); }
 

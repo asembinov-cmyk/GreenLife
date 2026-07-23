@@ -160,41 +160,33 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
   max-width:55%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .addr .addr-body{padding:2px 14px 14px}
 /* ── Наборы ── */
-.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px;align-items:start}
-.bcard{--acc:#b08d3f;background:var(--ink-2);border:1px solid var(--line);border-radius:16px;
-  overflow:hidden;transition:box-shadow .18s,border-color .18s;position:relative}
-.bcard:before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--acc);opacity:.85}
-.bcard:hover{box-shadow:0 6px 20px rgba(26,29,36,.09);border-color:var(--acc)}
-.bcard.open{box-shadow:0 8px 26px rgba(26,29,36,.12);border-color:var(--acc)}
-.bc-top{display:flex;align-items:center;gap:12px;padding:16px 16px 14px 19px;cursor:pointer;user-select:none}
-.bc-price{flex:1;min-width:0}
-.bc-amt{font-family:'Bricolage Grotesque';font-size:27px;font-weight:800;line-height:1.05;
-  letter-spacing:-.02em;color:var(--paper)}
-.bc-name{font-size:12px;color:var(--acc);font-weight:700;text-transform:uppercase;
-  letter-spacing:.06em;margin-top:5px}
-.bc-meta{text-align:right;flex:none}
-.bc-chip{display:inline-block;background:var(--tint-2);color:var(--paper);font-size:11px;font-weight:700;
-  padding:4px 9px;border-radius:99px}
-.bc-margin{font-size:11px;color:var(--mute);margin-top:5px;font-variant-numeric:tabular-nums}
-.bc-arrow{color:var(--mute);font-size:12px;flex:none;width:12px;text-align:center}
-.bc-pitch{margin:0 16px 12px 19px;padding:9px 12px;background:var(--tint);border-radius:9px;
-  font-size:13px;color:var(--mute);line-height:1.45;border-left:2px solid var(--acc)}
-.bcard .bc-body{display:none;padding:0 16px 14px 19px}
-.bcard.open .bc-body{display:block}
-.bopt{border-top:1px solid var(--line);padding:13px 0 12px}
-.bopt-h{display:flex;align-items:baseline;gap:9px;margin-bottom:8px;flex-wrap:wrap}
-.bopt-n{font-size:11px;font-weight:800;color:var(--acc);text-transform:uppercase;letter-spacing:.07em}
-.bopt-name{font-size:12px;color:var(--mute)}
-.bopt-list{list-style:none;display:flex;flex-direction:column;gap:5px;margin-bottom:11px}
-.bopt-list li{display:flex;gap:9px;align-items:baseline;font-size:14px;line-height:1.35}
-.bopt-list .q{color:var(--acc);font-weight:700;flex:none;font-size:13px;min-width:26px}
-.bopt-list .l{min-width:0}
-.bopt-act{display:flex;gap:8px;flex-wrap:wrap}
-.bc-admin{border-top:1px dashed var(--line);margin-top:4px;padding-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.blvls{display:flex;flex-direction:column;gap:12px}
+.blvl{--acc:#b08d3f;background:var(--ink-2);border:1px solid var(--line);border-radius:14px;
+  padding:14px 16px;position:relative;overflow:hidden}
+.blvl:before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--acc);opacity:.85}
+.blvl-h{display:flex;align-items:baseline;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.blvl-price{font-family:'Bricolage Grotesque';font-size:22px;font-weight:800;color:var(--paper);
+  letter-spacing:-.02em}
+.blvl-name{font-size:13px;color:var(--acc);font-weight:700}
+.blvl-cnt{margin-left:auto;font-size:12px;color:var(--mute)}
+.blvl-pitch{font-size:13px;color:var(--mute);line-height:1.5;margin-bottom:11px;
+  padding:8px 11px;background:var(--tint);border-radius:9px;border-left:2px solid var(--acc)}
+.blvl-opts{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:9px}
+.bopt2{background:var(--tint);border:1px solid var(--line);border-radius:11px;padding:11px 12px;
+  display:flex;flex-direction:column}
+.bopt2-t{font-size:13px;font-weight:700;color:var(--paper);margin-bottom:7px}
+.bopt2-items{flex:1;margin-bottom:10px}
+.bopt2-i{font-size:12px;color:var(--mute);line-height:1.65}
+.bopt2-i .q{color:var(--paper);font-weight:700}
+.bopt2-act{display:flex;gap:6px;flex-wrap:wrap}
+.bopt2-act .btn{flex:1;text-align:center;white-space:nowrap}
+.bopt2-add{border-style:dashed;color:var(--mute);font-size:13px;align-items:center;
+  justify-content:center;cursor:pointer;min-height:80px;text-align:center}
+.bopt2-add:hover{border-color:var(--acc);color:var(--acc)}
+.blvl-admin{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line)}
 @media(max-width:900px){
-  .bgrid{grid-template-columns:1fr;gap:12px}
-  .bc-amt{font-size:24px}
-  .bopt-act .btn{flex:1;text-align:center}
+  .blvl-opts{grid-template-columns:1fr}
+  .blvl-price{font-size:20px}
 }
 .bpick{display:flex;flex-direction:column;gap:12px;max-height:60vh;overflow-y:auto}
 .bpick-b{--acc:#b08d3f;border:1px solid var(--line);border-radius:12px;padding:11px 12px;background:var(--tint)}
@@ -208,6 +200,50 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .bpick-let{flex:none;width:20px;height:20px;border-radius:6px;background:var(--acc);color:#fff;
   font-size:11px;font-weight:800;display:grid;place-items:center}
 .bpick-txt{min-width:0}
+.pk-wrap{position:fixed;inset:0;z-index:60;background:var(--tint);display:flex;flex-direction:column;
+  padding-top:var(--safe-t)}
+.pk-top{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);
+  background:var(--ink-2);flex:none}
+.pk-ttl{font-family:'Bricolage Grotesque';font-size:18px;font-weight:700;display:flex;
+  align-items:baseline;gap:10px;flex-wrap:wrap;min-width:0}
+.pk-hint{font-size:13px;font-weight:400;color:var(--mute);font-family:Inter,sans-serif}
+.pk-x{margin-left:auto;font-size:17px;color:var(--mute);padding:4px 8px;flex:none}
+.pk-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,380px);
+  gap:16px;padding:16px 20px 20px;overflow:hidden}
+.pk-grid{overflow-y:auto;display:flex;flex-direction:column;gap:11px;padding-right:4px}
+.pk-lvl{background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.pk-lvl-h{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.pk-price{font-family:'Bricolage Grotesque';font-size:19px;font-weight:800;color:var(--paper)}
+.pk-name{font-size:13px;color:var(--signal);font-weight:700}
+.pk-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.pk-opt{text-align:left;padding:10px 11px;border-radius:10px;border:1px solid var(--line);
+  background:var(--tint);cursor:pointer;display:block;transition:border-color .12s}
+.pk-opt:hover{border-color:var(--signal)}
+.pk-opt.on{border-color:var(--signal);border-width:2px;padding:9px 10px;background:var(--tint-2)}
+.pk-opt-t{font-size:13px;font-weight:700;margin-bottom:6px;color:var(--paper)}
+.pk-opt-i{font-size:12px;color:var(--mute);line-height:1.65}
+.pk-opt-i .q{color:var(--paper);font-weight:700}
+.pk-side{background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:16px;
+  overflow-y:auto}
+.pk-empty{color:var(--mute);font-size:13px;text-align:center;padding:28px 8px;line-height:1.6}
+.pk-row{display:flex;align-items:center;gap:9px;padding:8px 0;border-top:1px solid var(--line)}
+.pk-row-n{flex:1;min-width:0;font-size:14px}
+.pk-q{width:28px;height:28px;border:1px solid var(--line);border-radius:8px;font-size:15px;
+  color:var(--paper);flex:none;background:var(--tint)}
+.pk-q:hover{border-color:var(--signal)}
+.pk-q-v{min-width:22px;text-align:center;font-size:14px;font-weight:700}
+.pk-warn{font-size:12px;color:var(--amber);margin-top:10px;line-height:1.5}
+.pk-warn a{color:var(--signal);font-weight:700}
+.pk-total{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:12px;
+  border-top:2px solid var(--line);font-weight:700}
+.pk-total input{width:120px;margin-left:auto;text-align:right}
+@media(max-width:900px){
+  .pk-body{grid-template-columns:1fr;grid-template-rows:1fr auto;overflow-y:auto;padding:12px 14px 16px}
+  .pk-grid{overflow:visible}
+  .pk-side{max-height:none}
+  .pk-top{padding:12px 14px}
+  .pk-opts{grid-template-columns:1fr}
+}
 .tw{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--mute);padding:0 12px 10px;font-weight:600;white-space:nowrap}
@@ -445,7 +481,7 @@ const FN = {
 const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.co', SUPABASE_ANON || 'placeholder');
 
 const S = { user:null, me:null, tab:'dash', statuses:[], deliveryStatuses:[], deliveryTypes:[], employees:[], products:[],
-            bundles:[], bundleOptions:[], bundleItems:[], bOpen:null, draft:null,
+            bundles:[], bundleOptions:[], bundleItems:[], bOpen:null, draft:null, pick:null,
             orders:[], customers:[], sources:[], categories:[], departments:[], ai:[],
             pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 }, pOpenCat:null,
             eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 }, eOpenDep:null,
@@ -786,7 +822,7 @@ async function openOrder(id){
       <button class="btn ghost sm" onclick="dial('${esc(phone)}',${id})">Позвонить</button>
       <button class="btn ghost sm" onclick="waPrompt(${id},'${esc(phone)}')">WhatsApp</button>
       <button class="btn ghost sm" onclick="aiOrder(${id})">Разбор от AI</button>
-      <button class="btn ghost sm" onclick="pickBundle(${id})">Подобрать набор</button>
+      <button class="btn ghost sm" onclick="openPicker({mode:'order',id:${id}})">Подобрать набор</button>
     </div>
 
     <div class="card" style="padding:14px;margin-bottom:16px">
@@ -1603,146 +1639,202 @@ function vBundles(){
   const isAdmin = S.me.role==='admin';
   el('view').innerHTML = H('Наборы', S.bundles.length+' уровней прайса · подберите комплект под клиента',
     isAdmin ? `<button class="btn" onclick="editBundle()">Добавить набор</button>` : '') +
-  (S.bundles.length ? `<div class="bgrid">${S.bundles.map(b=>bundleCard(b,isAdmin)).join('')}</div>`
+  (S.bundles.length ? `<div class="blvls">${S.bundles.map(b=>bundleCard(b,isAdmin)).join('')}</div>`
     : `<div class="card"><div class="empty"><b>Наборов пока нет</b>${
         isAdmin?'Добавьте первый уровень прайса':'Попросите администратора завести прайс'}</div></div>`);
 }
-
+function plural(n, one, few, many){
+  const n10 = n % 10, n100 = n % 100;
+  if(n10===1 && n100!==11) return one;
+  if(n10>=2 && n10<=4 && (n100<10 || n100>=20)) return few;
+  return many;
+}
 function bundleCard(b, isAdmin){
   const opts = bOptionsOf(b.id);
-  const open = S.bOpen === b.id;
-  return `<div class="bcard ${open?'open':''}" ${b.accent?`style="--acc:${esc(b.accent)}"`:''}>
-    <div class="bc-top" onclick="toggleBundle(${b.id})">
-      <div class="bc-price">
-        <div class="bc-amt mono">${money(b.price)}</div>
-        ${b.name?`<div class="bc-name">${esc(b.name)}</div>`:''}
-      </div>
-      <div class="bc-meta">
-        <div class="bc-chip">${opts.length} ${opts.length===1?'вариант':'варианта'}</div>
-        ${b.cost?`<div class="bc-margin">маржа ${moneyShort(margin(b))} · ${marginPct(b)}%</div>`:''}
-      </div>
-      <span class="bc-arrow">${open?'▴':'▾'}</span>
+  return `<div class="blvl" ${b.accent?`style="--acc:${esc(b.accent)}"`:''}>
+    <div class="blvl-h">
+      <span class="blvl-price mono">${money(b.price)}</span>
+      ${b.name?`<span class="blvl-name">${esc(b.name)}</span>`:''}
+      <span class="blvl-cnt">${opts.length} ${plural(opts.length,'вариант','варианта','вариантов')}</span>
     </div>
-
-    ${b.pitch?`<div class="bc-pitch">${esc(b.pitch)}</div>`:''}
-
-    <div class="bc-body">
-      ${opts.length ? opts.map((o,idx)=>`
-        <div class="bopt">
-          <div class="bopt-h">
-            <span class="bopt-n">${idx===0?'Вариант A':'Вариант '+String.fromCharCode(65+idx)}</span>
-            ${o.name?`<span class="bopt-name">${esc(o.name)}</span>`:''}
+    ${b.pitch?`<div class="blvl-pitch">${esc(b.pitch)}</div>`:''}
+    <div class="blvl-opts">
+      ${opts.map(o=>`
+        <div class="bopt2">
+          <div class="bopt2-t">${esc(optionTitle(o))}</div>
+          <div class="bopt2-items">
+            ${bItemsOf(o.id).map(i=>`<div class="bopt2-i">
+              <span class="q mono">${i.qty||1}×</span> ${esc(itemLabel(i))}</div>`).join('')
+              || '<div class="bopt2-i" style="color:var(--mute)">состав не заполнен</div>'}
           </div>
-          <ul class="bopt-list">
-            ${bItemsOf(o.id).map(i=>`<li>
-              <span class="q mono">${i.qty||1}×</span>
-              <span class="l">${esc(itemLabel(i))}</span>
-            </li>`).join('') || '<li style="color:var(--mute)">состав не заполнен</li>'}
-          </ul>
-          <div class="bopt-act">
-            <button class="btn sm" onclick="event.stopPropagation();useBundle(${b.id},${o.id})">В заказ</button>
-            ${isAdmin?`<button class="btn sm ghost" onclick="event.stopPropagation();editOption(${b.id},${o.id})">Изменить</button>`:''}
+          <div class="bopt2-act">
+            <button class="btn sm" onclick="fromShowcase(${b.id},${o.id})">В заказ</button>
+            ${isAdmin?`<button class="btn sm ghost" onclick="editOption(${b.id},${o.id})">Изменить</button>`:''}
           </div>
-        </div>`).join('')
-      : `<div class="bopt" style="color:var(--mute);font-size:13px">Варианты комплектации не заданы.</div>`}
-
-      ${isAdmin?`<div class="bc-admin">
-        <button class="btn sm ghost" onclick="event.stopPropagation();editOption(${b.id})">+ Вариант</button>
-        <button class="btn sm ghost" onclick="event.stopPropagation();editBundle(${b.id})">Настроить набор</button>
-      </div>`:''}
+        </div>`).join('')}
+      ${isAdmin?`<button class="bopt2 bopt2-add" onclick="editOption(${b.id})">
+        <span>+ Добавить комплектацию</span></button>`:''}
     </div>
+    ${isAdmin?`<div class="blvl-admin">
+      <button class="btn sm ghost" onclick="editBundle(${b.id})">Настроить набор</button>
+    </div>`:''}
   </div>`;
 }
-function toggleBundle(id){ S.bOpen = (S.bOpen===id) ? null : id; vBundles(); }
 
-/* ── подстановка набора в заказ ── */
-async function useBundle(bundleId, optionId){
-  const b = S.bundles.find(x=>x.id===bundleId);
-  const items = bItemsOf(optionId);
-  const linked = items.filter(i=>i.product_id);
-
-  const open = myOrders().filter(o=>!['won','lost'].includes(o.statuses?.code));
-  if(!open.length) return alert('Нет активных заказов. Создайте заказ, затем подберите набор.');
-
-  formModal('Набор '+money(b.price)+' → в заказ',`
-    <p style="color:var(--mute);font-size:13px;margin-bottom:12px">
-      Позиции набора добавятся в состав заказа, сумма станет ${money(b.price)}.
-      ${items.length!==linked.length?`<br><span style="color:var(--amber)">Часть позиций задана текстом — они попадут в комментарий, а не в состав.</span>`:''}</p>
-    <div class="field"><label>Заказ</label><select id="ub_order">
-      ${open.map(o=>`<option value="${o.id}">${esc(o.customers?.name||'Без имени')} · ${money(o.amount)} · ${esc(o.statuses?.name||'')}</option>`).join('')}
-    </select></div>
-    <div class="field"><label>Что добавить</label><select id="ub_mode">
-      <option value="replace">Заменить состав заказа набором</option>
-      <option value="append">Добавить к текущему составу</option>
-    </select></div>`,
-  async()=>{
-    const oid = +el('ub_order').value;
-    const mode = el('ub_mode').value;
-    el('saveBtn').textContent='Добавляю…'; el('saveBtn').disabled=true;
-
-    if(mode==='replace') await sb.from('order_items').delete().eq('order_id',oid);
-    if(linked.length){
-      const { error } = await sb.from('order_items').insert(linked.map(i=>({
-        order_id:oid, product_id:i.product_id, qty:i.qty||1,
-        price:i.price!=null ? i.price : (S.products.find(p=>p.id===i.product_id)?.price || 0) })));
-      if(error){ el('saveBtn').textContent='Сохранить'; el('saveBtn').disabled=false;
-        return el('formErr').textContent='Не удалось добавить: '+error.message; }
-    }
-    const textOnly = items.filter(i=>!i.product_id).map(i=>`${i.qty||1}× ${i.label||''}`).join(', ');
-    await sb.from('orders').update({ amount: b.price }).eq('id',oid);
-    await sb.from('activities').insert({ order_id:oid, employee_id:S.user.id, type:'note',
-      body:`Подобран набор ${money(b.price)}${b.name?' «'+b.name+'»':''}`
-        + (textOnly?`. Позиции без каталога: ${textOnly}`:'') });
-
-    closeAll(); await loadAll(); go('orders'); openOrder(oid);
-  });
+/* ─────────── ПОЛНОЭКРАННЫЙ ПОДБОР НАБОРА ─────────── */
+// автоимя варианта, если админ не задал: по самой дорогой позиции из каталога
+function optionTitle(o){
+  if(o.name) return o.name;
+  const its = bItemsOf(o.id);
+  const priced = its.filter(i=>i.product_id)
+    .map(i=>({ n:i.products?.name||'', p:+(S.products.find(p=>p.id===i.product_id)?.price)||0 }))
+    .sort((a,b)=>b.p-a.p);
+  if(priced.length && priced[0].n) return 'С '+priced[0].n.toLowerCase();
+  const txt = its.find(i=>!i.product_id && i.label);
+  return txt ? 'С '+txt.label.toLowerCase() : 'Комплектация';
 }
 
-/* ── подбор набора из карточки заказа ── */
-function pickBundle(orderId){
+// target: {mode:'order', id} | {mode:'draft'}
+function openPicker(target){
   if(!S.bundles.length) return alert('Наборы не заведены. Раздел «Наборы» — там их создаёт администратор.');
-  closeAll();
-  document.body.insertAdjacentHTML('beforeend',`
-  <div class="scrim" onclick="closeAll();openOrder(${orderId})"></div>
-  <div class="modal"><div class="card" style="position:relative">
-    <button class="x" onclick="closeAll();openOrder(${orderId})">×</button>
-    <h2 style="font-size:20px;margin-bottom:4px;padding-right:44px">Подобрать набор</h2>
-    <p style="color:var(--mute);font-size:13px;margin-bottom:14px">
-      Выберите уровень чека и вариант комплектации — состав и сумма подставятся в заказ.</p>
-    <div class="bpick">${S.bundles.map(b=>{
-      const opts = bOptionsOf(b.id);
-      return `<div class="bpick-b" ${b.accent?`style="--acc:${esc(b.accent)}"`:''}>
-        <div class="bpick-h"><span class="mono">${money(b.price)}</span>
-          ${b.name?`<span class="bpick-n">${esc(b.name)}</span>`:''}</div>
-        ${opts.length ? opts.map((o,idx)=>`
-          <button class="bpick-o" onclick="applyBundle(${orderId},${b.id},${o.id})">
-            <span class="bpick-let">${String.fromCharCode(65+idx)}</span>
-            <span class="bpick-txt">${bItemsOf(o.id).map(i=>`${i.qty||1}× ${esc(itemLabel(i))}`).join(', ')
-              || 'состав не заполнен'}</span>
-          </button>`).join('')
-        : `<div style="font-size:13px;color:var(--mute);padding:4px 0 8px">нет вариантов</div>`}
-      </div>`;}).join('')}</div>
-  </div></div>`);
+  S.pick = { target, bundle:null, option:null, items:[], price:0 };
+  drawPicker();
 }
-async function applyBundle(orderId, bundleId, optionId){
-  const b = S.bundles.find(x=>x.id===bundleId);
-  const items = bItemsOf(optionId);
-  const linked = items.filter(i=>i.product_id);
-  const textOnly = items.filter(i=>!i.product_id).map(i=>`${i.qty||1}× ${i.label||''}`).join(', ');
-  if(!confirm(`Подставить набор ${money(b.price)} в заказ? Текущий состав будет заменён.`)) return;
+function closePicker(){
+  const t = S.pick?.target;
+  S.pick = null;
+  document.querySelectorAll('.pk-wrap').forEach(n=>n.remove());
+  if(t?.mode==='order') openOrder(t.id);
+  else if(t?.mode==='draft') drawDraft();
+}
+function drawPicker(){
+  const k = S.pick;
+  document.querySelectorAll('.pk-wrap').forEach(n=>n.remove());
+  const sum = k.items.reduce((a,i)=>a + (i.qty||0)*(i.price||0), 0);
+  document.body.insertAdjacentHTML('beforeend', `
+  <div class="pk-wrap">
+    <div class="pk-top">
+      <div class="pk-ttl">Подобрать набор
+        <span class="pk-hint">${k.option ? esc(k.bundleName+' · '+k.optionName) : 'выберите комплектацию'}</span></div>
+      <button class="pk-x" onclick="closePicker()" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="pk-body">
+      <div class="pk-grid">
+        ${S.bundles.map(b=>{
+          const opts = bOptionsOf(b.id);
+          if(!opts.length) return '';
+          return `<div class="pk-lvl">
+            <div class="pk-lvl-h">
+              <span class="pk-price mono">${money(b.price)}</span>
+              ${b.name?`<span class="pk-name">${esc(b.name)}</span>`:''}
+            </div>
+            <div class="pk-opts">
+              ${opts.map(o=>{
+                const on = k.option===o.id;
+                const its = bItemsOf(o.id);
+                return `<button class="pk-opt ${on?'on':''}" onclick="pickOption(${b.id},${o.id})">
+                  <div class="pk-opt-t">${esc(optionTitle(o))}</div>
+                  ${its.map(i=>`<div class="pk-opt-i"><span class="q mono">${i.qty||1}×</span> ${esc(itemLabel(i))}</div>`).join('')
+                    || '<div class="pk-opt-i" style="color:var(--mute)">состав не заполнен</div>'}
+                </button>`;}).join('')}
+            </div>
+          </div>`;}).join('')}
+      </div>
 
-  await sb.from('order_items').delete().eq('order_id',orderId);
+      <div class="pk-side">
+        ${!k.option ? `<div class="pk-empty">Выберите комплектацию слева — здесь её можно дособрать под клиента.</div>` : `
+        <div class="pk-price mono" style="font-size:20px">${money(k.price)}</div>
+        <div class="pk-name" style="margin-bottom:12px">${esc(k.bundleName)} · ${esc(k.optionName)}</div>
+
+        <div id="pkItems">${k.items.map((i,ix)=>`
+          <div class="pk-row">
+            <span class="pk-row-n">${esc(i.name)}</span>
+            <button class="pk-q" onclick="pkQty(${ix},-1)">−</button>
+            <span class="pk-q-v mono">${i.qty}</span>
+            <button class="pk-q" onclick="pkQty(${ix},1)">+</button>
+          </div>`).join('') || '<div style="color:var(--mute);font-size:13px;padding:8px 0">Позиции убраны</div>'}</div>
+
+        <select onchange="pkAdd(this.value);this.value=''" style="margin-top:10px">
+          <option value="">+ добавить товар из каталога</option>
+          ${S.products.filter(p=>p.active!==false).map(p=>
+            `<option value="${p.id}">${esc(p.name)}${p.price?' — '+money(p.price):''}</option>`).join('')}
+        </select>
+
+        ${sum && Math.abs(sum-k.price)>0.5 ? `<div class="pk-warn">
+          Товаров набрано на ${money(sum)}, цена набора ${money(k.price)}.
+          <a href="#" onclick="pkSetPrice(${sum});return false">Приравнять</a></div>` : ''}
+
+        <div class="pk-total">
+          <span>Итог</span>
+          <input class="mono" type="number" inputmode="numeric" value="${k.price}"
+            oninput="S.pick.price=Math.max(0,+this.value||0)">
+        </div>
+        <button class="btn" style="width:100%;margin-top:10px" onclick="applyPick()">Подставить в заказ</button>`}
+      </div>
+    </div>
+  </div>`);
+}
+function pickOption(bid, oid){
+  const b = S.bundles.find(x=>x.id===bid);
+  const o = S.bundleOptions.find(x=>x.id===oid);
+  S.pick.bundle = bid; S.pick.option = oid;
+  S.pick.bundleName = b.name || money(b.price);
+  S.pick.optionName = optionTitle(o);
+  S.pick.price = +b.price||0;
+  S.pick.items = bItemsOf(oid).map(i=>({
+    product_id: i.product_id || null,
+    name: itemLabel(i),
+    qty: +i.qty||1,
+    price: i.price!=null ? +i.price : (S.products.find(p=>p.id===i.product_id)?.price || 0) }));
+  drawPicker();
+}
+function pkQty(ix, d){
+  const it = S.pick.items[ix]; if(!it) return;
+  it.qty = Math.max(0, it.qty + d);
+  if(!it.qty) S.pick.items.splice(ix,1);
+  drawPicker();
+}
+function pkAdd(pid){
+  if(!pid) return;
+  const p = S.products.find(x=>x.id==pid); if(!p) return;
+  const ex = S.pick.items.find(i=>i.product_id===p.id);
+  if(ex) ex.qty++;
+  else S.pick.items.push({ product_id:p.id, name:p.name, qty:1, price:+p.price||0 });
+  drawPicker();
+}
+function pkSetPrice(v){ S.pick.price = Math.round(v); drawPicker(); }
+
+async function applyPick(){
+  const k = S.pick;
+  if(!k.option) return;
+  const linked = k.items.filter(i=>i.product_id);
+  const textOnly = k.items.filter(i=>!i.product_id).map(i=>`${i.qty}× ${i.name}`).join(', ');
+  const label = `${money(k.price)} · ${k.bundleName} · ${k.optionName}`;
+
+  if(k.target.mode==='draft'){
+    S.orderItems = linked.map(i=>({ product_id:i.product_id, qty:i.qty, price:i.price }));
+    S.draft.amount = k.price;
+    S.draft.bundleLabel = label;
+    if(textOnly) S.draft.comment = (S.draft.comment?S.draft.comment+'\n':'') + `Набор: ${textOnly}`;
+    S.pick = null;
+    document.querySelectorAll('.pk-wrap').forEach(n=>n.remove());
+    drawDraft();
+    return;
+  }
+
+  const oid = k.target.id;
+  await sb.from('order_items').delete().eq('order_id',oid);
   if(linked.length){
     const { error } = await sb.from('order_items').insert(linked.map(i=>({
-      order_id:orderId, product_id:i.product_id, qty:i.qty||1,
-      price:i.price!=null ? i.price : (S.products.find(p=>p.id===i.product_id)?.price || 0) })));
+      order_id:oid, product_id:i.product_id, qty:i.qty, price:i.price })));
     if(error) return alert('Не удалось добавить состав: '+error.message);
   }
-  await sb.from('orders').update({ amount:b.price }).eq('id',orderId);
-  await sb.from('activities').insert({ order_id:orderId, employee_id:S.user.id, type:'note',
-    body:`Подобран набор ${money(b.price)}${b.name?' «'+b.name+'»':''}`
-      + (textOnly?`. Позиции без каталога: ${textOnly}`:'') });
-  closeAll(); await loadAll(); openOrder(orderId);
+  await sb.from('orders').update({ amount:k.price }).eq('id',oid);
+  await sb.from('activities').insert({ order_id:oid, employee_id:S.user.id, type:'note',
+    body:`Подобран набор ${label}` + (textOnly?`. Позиции без каталога: ${textOnly}`:'') });
+  S.pick = null;
+  document.querySelectorAll('.pk-wrap').forEach(n=>n.remove());
+  await loadAll(); openOrder(oid);
 }
 
 /* ── админ: набор ── */
@@ -2078,18 +2170,9 @@ function drawDraft(){
         ${S.deliveryTypes.map(t=>`<option value="${t.id}" ${t.id===d.delivery_type_id?'selected':''}>${esc(t.name)}</option>`).join('')}
       </select></div>
 
-    ${S.bundles.length ? `<div class="field"><label>Готовый набор
-      <span style="text-transform:none;font-weight:400">— подставит состав и сумму</span></label>
-      <select onchange="applyBundleToDraft(this.value)">
-        <option value="">— без набора, соберу вручную —</option>
-        ${S.bundles.map(b=>{
-          const opts = bOptionsOf(b.id);
-          return opts.length ? `<optgroup label="${esc(money(b.price))}${b.name?' · '+esc(b.name):''}">
-            ${opts.map((o,idx)=>`<option value="${b.id}:${o.id}">${String.fromCharCode(65+idx)} — ${
-              esc(bItemsOf(o.id).map(i=>`${i.qty||1}× ${itemLabel(i)}`).join(', ') || 'состав не заполнен')}</option>`).join('')}
-          </optgroup>` : '';
-        }).join('')}
-      </select></div>` : ''}
+    ${S.bundles.length ? `<div class="field"><label>Готовый набор</label>
+      <button class="btn ghost" style="width:100%" onclick="openPicker({mode:'draft'})">
+        ${d.bundleLabel ? esc(d.bundleLabel) : 'Подобрать набор из прайса'}</button></div>` : ''}
 
     <div class="card" style="padding:14px;margin-bottom:16px">
       <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
@@ -2145,19 +2228,19 @@ function syncDraftSum(){
   const sum = S.orderItems.reduce((a,r)=>a + (r.qty||0)*(r.price||0), 0);
   if(el('oiSum')) el('oiSum').textContent = money(sum);
 }
-function applyBundleToDraft(val){
-  if(!val) return;
-  const [bid,oid] = val.split(':').map(Number);
-  const b = S.bundles.find(x=>x.id===bid);
-  const items = bItemsOf(oid);
-  S.orderItems = items.filter(i=>i.product_id).map(i=>({
-    product_id:i.product_id, qty:+i.qty||1,
-    price: i.price!=null ? +i.price : (S.products.find(p=>p.id===i.product_id)?.price || 0) }));
-  S.draft.amount = b?.price || 0;
-  S.draft.bundleLabel = `${money(b?.price||0)}${b?.name?' «'+b.name+'»':''}`;
-  const textOnly = items.filter(i=>!i.product_id).map(i=>`${i.qty||1}× ${i.label||''}`).join(', ');
-  if(textOnly) S.draft.comment = (S.draft.comment?S.draft.comment+'\n':'') + `Набор: ${textOnly}`;
-  drawDraft();
+function fromShowcase(bid, oid){
+  const open = myOrders().filter(o=>!['won','lost'].includes(o.statuses?.code));
+  if(!open.length) return alert('Нет активных заказов. Создайте заказ, затем подберите набор.');
+  formModal('В какой заказ?', `
+    <div class="field"><label>Заказ</label><select id="fs_order">
+      ${open.map(o=>`<option value="${o.id}">${esc(o.customers?.name||'Без имени')} · ${money(o.amount)} · ${esc(o.statuses?.name||'')}</option>`).join('')}
+    </select></div>`,
+  ()=>{
+    const target = +el('fs_order').value;
+    closeAll();
+    openPicker({mode:'order', id:target});
+    pickOption(bid, oid);
+  });
 }
 function cancelDraft(){
   const d = S.draft;

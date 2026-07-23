@@ -178,12 +178,15 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .bopt2-items{flex:1;margin-bottom:10px}
 .bopt2-i{font-size:12px;color:var(--mute);line-height:1.65}
 .bopt2-i .q{color:var(--paper);font-weight:700}
+.bopt2-slot{font-size:12px;color:var(--signal);font-weight:700;margin-top:5px;line-height:1.5}
 .bopt2-act{display:flex;gap:6px;flex-wrap:wrap}
 .bopt2-act .btn{flex:1;text-align:center;white-space:nowrap}
 .bopt2-add{border-style:dashed;color:var(--mute);font-size:13px;align-items:center;
   justify-content:center;cursor:pointer;min-height:80px;text-align:center}
 .bopt2-add:hover{border-color:var(--acc);color:var(--acc)}
-.blvl-admin{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line)}
+.blvl-admin{margin-top:11px;padding-top:11px;border-top:1px dashed var(--line);
+  display:flex;gap:7px;flex-wrap:wrap}
+.blvl-del{color:var(--alert);border-color:var(--alert)}
 @media(max-width:900px){
   .blvl-opts{grid-template-columns:1fr}
   .blvl-price{font-size:20px}
@@ -208,7 +211,7 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
   align-items:baseline;gap:10px;flex-wrap:wrap;min-width:0}
 .pk-hint{font-size:13px;font-weight:400;color:var(--mute);font-family:Inter,sans-serif}
 .pk-x{margin-left:auto;font-size:17px;color:var(--mute);padding:4px 8px;flex:none}
-.pk-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,380px);
+.pk-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,560px);
   gap:16px;padding:16px 20px 20px;overflow:hidden}
 .pk-grid{overflow-y:auto;display:flex;flex-direction:column;gap:11px;padding-right:4px}
 .pk-lvl{background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
@@ -234,16 +237,93 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .pk-q-v{min-width:22px;text-align:center;font-size:14px;font-weight:700}
 .pk-warn{font-size:12px;color:var(--amber);margin-top:10px;line-height:1.5}
 .pk-warn a{color:var(--signal);font-weight:700}
-.pk-cat{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
-.pk-cat-q{width:100%;margin-bottom:9px}
-.pk-cat-tabs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:9px}
-.pk-tab{font-size:11px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);
-  background:var(--tint);color:var(--mute);cursor:pointer;white-space:nowrap;
-  display:inline-flex;align-items:center;gap:5px}
-.pk-tab i{width:7px;height:7px;border-radius:99px;flex:none}
-.pk-tab:hover{border-color:var(--signal)}
-.pk-tab.on{border-color:var(--signal);color:var(--signal);background:var(--tint-2);font-weight:700}
-.pk-cat-list{max-height:260px;overflow-y:auto;margin:0 -4px;padding:0 4px}
+.bld-h{margin-bottom:12px}
+.bld-price{font-family:'Bricolage Grotesque';font-size:22px;font-weight:800;color:var(--paper)}
+.bld-name{font-size:13px;color:var(--signal);font-weight:700;margin-top:2px}
+.bld-fixed{background:var(--tint-2);border-radius:10px;padding:10px 12px;margin-bottom:12px}
+.bld-fixed-t{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--mute);margin-bottom:6px}
+.bld-fixed-i{display:flex;align-items:center;gap:8px;font-size:14px;padding:2px 0}
+.bld-fixed-i .lock{font-size:11px;opacity:.6}
+.bld-slot{margin-bottom:12px}
+.bld-slot-h{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.bld-slot-h .lbl{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
+.bld-slot-h .cnt{margin-left:auto;font-size:13px;font-weight:700}
+.bld-slot-h .cnt.full{color:#1D9E75}
+.bld-bar{height:5px;background:var(--line);border-radius:99px;overflow:hidden}
+.bld-bar i{display:block;height:100%;background:var(--signal);transition:width .2s}
+.bld-bar i.full{background:#1D9E75}
+.bld-chips{margin-top:9px;display:flex;flex-wrap:wrap;gap:6px}
+.bld-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:99px;font-size:12px}
+.bld-chip i{width:6px;height:6px;border-radius:99px;flex:none}
+.bld-chip b{cursor:pointer;opacity:.65;font-weight:400;font-size:13px}
+.bld-chip b:hover{opacity:1}
+.bld-none{font-size:13px;color:var(--mute)}
+.bld-pool{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px;
+  align-items:start;margin-bottom:12px}
+.bld-box{border:1px solid var(--line);border-left:3px solid var(--line);border-radius:0 11px 11px 0;
+  overflow:hidden;background:var(--ink-2)}
+.bld-box-h{padding:7px 11px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
+  display:flex;justify-content:space-between;align-items:center;gap:8px}
+.bld-box-h span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bld-box-h .cnt{font-weight:400;letter-spacing:0;text-transform:none;flex:none}
+.bld-row{display:flex;align-items:center;gap:8px;padding:7px 11px;border-top:1px solid var(--line);
+  cursor:pointer}
+.bld-box .bld-row:first-of-type{border-top:none}
+.bld-row:hover{background:var(--tint)}
+.bld-row.off{opacity:.4;cursor:not-allowed}
+.bld-row.off:hover{background:transparent}
+.bld-row .n{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bld-row .pr{font-size:12px;color:var(--mute);flex:none;font-variant-numeric:tabular-nums}
+.bld-row .plus{font-size:14px;font-weight:700;flex:none}
+.bld-foot{display:flex;align-items:center;gap:10px;padding-top:12px;border-top:2px solid var(--line)}
+.bld-foot .lbl{font-size:13px;color:var(--mute)}
+.bld-foot .sum{margin-left:auto;font-size:18px;font-weight:800}
+.bld-foot .btn.off{opacity:.5;cursor:not-allowed}
+.slot-cats{display:flex;flex-wrap:wrap;gap:6px}
+.slot-cat{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;
+  border:1px solid var(--line);background:var(--tint);color:var(--mute);font-size:12px;cursor:pointer}
+.slot-cat input{display:none}
+.slot-cat i{width:7px;height:7px;border-radius:99px;flex:none}
+.slot-cat.on{font-weight:700}
+.cat-scrim{position:fixed;inset:0;background:rgba(26,29,36,.5);z-index:70}
+.cat-modal{position:fixed;z-index:71;left:50%;top:50%;transform:translate(-50%,-50%);
+  width:min(1100px,94vw);height:min(760px,88vh);background:var(--ink-2);border-radius:16px;
+  display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(26,29,36,.3)}
+.cat-top{display:flex;align-items:center;padding:15px 20px;border-bottom:1px solid var(--line);flex:none}
+.cat-ttl{font-family:'Bricolage Grotesque';font-size:18px;font-weight:700}
+.cat-x{margin-left:auto;font-size:17px;color:var(--mute);padding:4px 8px}
+.cat-tools{padding:13px 20px 11px;border-bottom:1px solid var(--line);flex:none}
+.cat-q{width:100%;margin-bottom:10px}
+.cat-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.cat-body{flex:1;min-height:0;overflow-y:auto;padding:16px 20px 20px}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;align-items:start}
+.cat-box{border:1px solid var(--line);border-left:3px solid var(--line);border-radius:0 12px 12px 0;
+  overflow:hidden;background:var(--tint)}
+.cat-box-h{padding:8px 12px;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
+  display:flex;justify-content:space-between;align-items:center;gap:8px}
+.cat-box-h span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-box-h .cnt{font-weight:400;letter-spacing:0;text-transform:none;flex:none}
+.cat-box-b{background:var(--ink-2)}
+.cat-row{display:flex;align-items:center;gap:9px;padding:8px 12px;border-top:1px solid var(--line);
+  cursor:pointer}
+.cat-box-b .cat-row:first-child{border-top:none}
+.cat-row:hover{background:var(--tint)}
+.cat-row .n{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cat-row .st{font-size:11px;color:var(--mute);flex:none}
+.cat-row .st.zero{color:var(--alert)}
+.cat-row .pr{font-size:12px;color:var(--mute);flex:none;font-variant-numeric:tabular-nums}
+.cat-row .plus{font-size:15px;flex:none;font-weight:700}
+.cat-empty{padding:40px;text-align:center;color:var(--mute);font-size:14px}
+.cat-toast{position:fixed;z-index:80;left:50%;bottom:34px;transform:translateX(-50%);
+  background:var(--paper);color:var(--ink);padding:9px 16px;border-radius:10px;font-size:13px;
+  font-weight:600;box-shadow:0 6px 20px rgba(26,29,36,.25)}
+@media(max-width:900px){
+  .cat-modal{width:100vw;height:100vh;max-height:none;border-radius:0;top:0;left:0;transform:none}
+  .cat-grid{grid-template-columns:1fr}
+  .cat-top,.cat-tools{padding-left:14px;padding-right:14px}
+  .cat-body{padding:12px 14px 18px}
+}
 .pk-cbox{border:1px solid var(--line);border-left:3px solid var(--line);
   border-radius:0 11px 11px 0;overflow:hidden;background:var(--tint);margin-bottom:0}
 .pk-cbox-h{padding:7px 11px;font-size:10px;font-weight:800;letter-spacing:.07em;
@@ -507,7 +587,7 @@ const FN = {
 const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.co', SUPABASE_ANON || 'placeholder');
 
 const S = { user:null, me:null, tab:'dash', statuses:[], deliveryStatuses:[], deliveryTypes:[], employees:[], products:[],
-            bundles:[], bundleOptions:[], bundleItems:[], bOpen:null, draft:null, pick:null,
+            bundles:[], bundleOptions:[], bundleItems:[], bOpen:null, draft:null, pick:null, cat:null,
             orders:[], customers:[], sources:[], categories:[], departments:[], ai:[],
             pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 }, pOpenCat:null,
             eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 }, eOpenDep:null,
@@ -1003,8 +1083,18 @@ async function editOrderItems(orderId){
 }
 function oiFormHtml(){
   return `<div id="oiList"></div>
-    <button class="btn sm ghost" style="margin-top:4px" onclick="addOI()">+ Добавить позицию</button>
+    <div class="row" style="gap:8px;margin-top:4px">
+      <button class="btn sm" onclick="openCatalog(p=>addOIProduct(p), 'Добавить товар в заказ')">+ Из каталога</button>
+      <button class="btn sm ghost" onclick="addOI()">Пустая строка</button>
+    </div>
     <div class="oi-sum"><span>Сумма товаров</span><span class="mono" id="oiSum">0 ₸</span></div>`;
+}
+function addOIProduct(p){
+  const ex = S.orderItems.find(r=>r.product_id===p.id);
+  if(ex) ex.qty++;
+  else S.orderItems.push({ product_id:p.id, qty:1, price:+p.price||0 });
+  renderOI();
+  syncDraftSum && syncDraftSum();
 }
 const prodOptions = sel => '<option value="">— выберите товар —</option>' +
   S.products.filter(p=>p.active!==false).map(p=>
@@ -1690,8 +1780,10 @@ function bundleCard(b, isAdmin){
           <div class="bopt2-t">${esc(optionTitle(o))}</div>
           <div class="bopt2-items">
             ${bItemsOf(o.id).map(i=>`<div class="bopt2-i">
-              <span class="q mono">${i.qty||1}×</span> ${esc(itemLabel(i))}</div>`).join('')
-              || '<div class="bopt2-i" style="color:var(--mute)">состав не заполнен</div>'}
+              <span class="q mono">${i.qty||1}×</span> ${esc(itemLabel(i))}</div>`).join('')}
+            ${slotQtyOf(o) ? `<div class="bopt2-slot">+ ${slotQtyOf(o)} на выбор${
+              slotCatsOf(o).length ? ': '+slotCatsOf(o).map(id=>esc(S.categories.find(c=>c.id===id)?.name||'')).filter(Boolean).join(', ') : ''}</div>` : ''}
+            ${!bItemsOf(o.id).length && !slotQtyOf(o) ? '<div class="bopt2-i" style="color:var(--mute)">состав не заполнен</div>' : ''}
           </div>
           <div class="bopt2-act">
             <button class="btn sm" onclick="fromShowcase(${b.id},${o.id})">В заказ</button>
@@ -1702,13 +1794,112 @@ function bundleCard(b, isAdmin){
         <span>+ Добавить комплектацию</span></button>`:''}
     </div>
     ${isAdmin?`<div class="blvl-admin">
-      <button class="btn sm ghost" onclick="editBundle(${b.id})">Настроить набор</button>
+      <button class="btn sm ghost" onclick="editOption(${b.id})">+ Комплектация</button>
+      <button class="btn sm ghost" onclick="editBundle(${b.id})">Настроить</button>
+      <button class="btn sm ghost blvl-del" onclick="delBundle(${b.id})">Удалить набор</button>
     </div>`:''}
   </div>`;
 }
 
 /* ─────────── ПОЛНОЭКРАННЫЙ ПОДБОР НАБОРА ─────────── */
 // автоимя варианта, если админ не задал: по самой дорогой позиции из каталога
+/* ─────────── МОДАЛЬНЫЙ КАТАЛОГ ТОВАРОВ ─────────── */
+const CAT_PAL = [
+  {b:'#EEEDFE', t:'#3C3489', s:'#7F77DD'},
+  {b:'#E1F5EE', t:'#085041', s:'#1D9E75'},
+  {b:'#FAECE7', t:'#712B13', s:'#D85A30'},
+  {b:'#E6F1FB', t:'#0C447C', s:'#378ADD'},
+  {b:'#FBEAF0', t:'#72243E', s:'#D4537E'},
+  {b:'#FAEEDA', t:'#633806', s:'#BA7517'},
+  {b:'#EAF3DE', t:'#27500A', s:'#639922'},
+  {b:'#F1EFE8', t:'#444441', s:'#888780'},
+];
+function catColor(cat, idx){
+  if(cat && cat.color){ const c = cat.color; return { b:c+'22', t:c, s:c }; }
+  return CAT_PAL[idx % CAT_PAL.length];
+}
+function openCatalog(onPick, title){
+  S.cat = { q:'', cat:'', onPick, title: title || 'Добавить товар' };
+  document.body.insertAdjacentHTML('beforeend', `
+  <div class="cat-scrim" onclick="closeCatalog()"></div>
+  <div class="cat-modal">
+    <div class="cat-top">
+      <div class="cat-ttl">${esc(S.cat.title)}</div>
+      <button class="cat-x" onclick="closeCatalog()" aria-label="Закрыть">✕</button>
+    </div>
+    <div class="cat-tools">
+      <input id="catQ" class="cat-q" placeholder="Поиск по названию или артикулу"
+        oninput="catSearch(this.value)" autocomplete="off">
+      <div class="cat-tabs" id="catTabs"></div>
+    </div>
+    <div class="cat-body" id="catBody"></div>
+  </div>`);
+  drawCatalogModal();
+  setTimeout(()=>el('catQ')?.focus(), 50);
+}
+function closeCatalog(){
+  S.cat = null;
+  document.querySelectorAll('.cat-scrim,.cat-modal,.cat-toast').forEach(n=>n.remove());
+}
+function catSearch(v){ S.cat.q = v; drawCatalogModal(); }
+function catTab(k){ S.cat.cat = (S.cat.cat===k)?'':k; drawCatalogModal(); }
+function catPick(pid){
+  const p = S.products.find(x=>x.id==pid); if(!p) return;
+  S.cat.onPick(p);
+  const q = el('catQ');
+  if(q){ q.value=''; S.cat.q=''; drawCatalogModal(); q.focus(); }
+  flashAdded(p.name);
+}
+function flashAdded(name){
+  document.querySelectorAll('.cat-toast').forEach(n=>n.remove());
+  document.body.insertAdjacentHTML('beforeend', `<div class="cat-toast">${esc(name)} — добавлен</div>`);
+  setTimeout(()=>document.querySelectorAll('.cat-toast').forEach(n=>n.remove()), 1400);
+}
+function catalogGroups(q){
+  const term = (q||'').trim().toLowerCase();
+  const match = p => !term || (p.name||'').toLowerCase().includes(term)
+                  || (p.sku||'').toLowerCase().includes(term);
+  const live = S.products.filter(p=>p.active!==false && match(p));
+  const groups = S.categories.map((c,i)=>({
+    key:String(c.id), name:c.name, col:catColor(c,i),
+    items: live.filter(p=>p.category_id===c.id)
+               .sort((a,b)=>(a.name||'').localeCompare(b.name||'','ru')) }))
+    .filter(g=>g.items.length);
+  const none = live.filter(p=>!p.category_id)
+                   .sort((a,b)=>(a.name||'').localeCompare(b.name||'','ru'));
+  if(none.length) groups.push({ key:'none', name:'Без категории',
+    col:CAT_PAL[CAT_PAL.length-1], items:none });
+  return groups;
+}
+function drawCatalogModal(){
+  const tabs = el('catTabs'), body = el('catBody');
+  if(!tabs || !body) return;
+  const groups = catalogGroups(S.cat.q);
+  const cur = S.cat.cat || '';
+  tabs.innerHTML = `<button class="pk-tab ${!cur?'on':''}" onclick="catTab('')">Все</button>` +
+    groups.map(g=>{
+      const on = cur===g.key;
+      return `<button class="pk-tab" onclick="catTab('${g.key}')"
+        style="${on?`border-color:${g.col.s};background:${g.col.b};color:${g.col.t};font-weight:700`:''}">
+        <i style="background:${g.col.s}"></i>${esc(g.name)}</button>`;
+    }).join('');
+  const show = cur ? groups.filter(g=>g.key===cur) : groups;
+  body.innerHTML = show.length ? `<div class="cat-grid">${show.map(g=>`
+    <div class="cat-box" style="border-left-color:${g.col.s}">
+      <div class="cat-box-h" style="background:${g.col.b};color:${g.col.t}">
+        <span>${esc(g.name)}</span><span class="cnt">${g.items.length}</span></div>
+      <div class="cat-box-b">
+        ${g.items.map(p=>`<div class="cat-row" onclick="catPick(${p.id})">
+          <span class="n">${esc(p.name)}</span>
+          ${p.stock!=null?`<span class="st ${p.stock>0?'':'zero'}">${p.stock}</span>`:''}
+          <span class="pr mono">${p.price?money(p.price):''}</span>
+          <span class="plus" style="color:${g.col.s}">+</span>
+        </div>`).join('')}
+      </div>
+    </div>`).join('')}</div>`
+    : `<div class="cat-empty">Ничего не найдено</div>`;
+}
+
 function optionTitle(o){
   if(o.name) return o.name;
   const its = bItemsOf(o.id);
@@ -1723,7 +1914,7 @@ function optionTitle(o){
 // target: {mode:'order', id} | {mode:'draft'}
 function openPicker(target){
   if(!S.bundles.length) return alert('Наборы не заведены. Раздел «Наборы» — там их создаёт администратор.');
-  S.pick = { target, bundle:null, option:null, items:[], price:0 };
+  S.pick = { target, bundle:null, option:null, fixed:[], slot:[], price:0 };
   drawPicker();
 }
 function closePicker(){
@@ -1733,74 +1924,150 @@ function closePicker(){
   if(t?.mode==='order') openOrder(t.id);
   else if(t?.mode==='draft') drawDraft();
 }
+/* ─────────── СБОРКА НАБОРА (внутри карточки) ─────────── */
+const slotQtyOf = o => +o.slot_qty || 0;
+const slotCatsOf = o => (o.slot_categories ? String(o.slot_categories).split(',').filter(Boolean).map(Number) : []);
+const pickedQty = () => (S.pick.slot||[]).reduce((a,x)=>a+x.qty,0);
+
+// категории, разрешённые для добора в текущей комплектации
+function slotGroups(){
+  const o = S.bundleOptions.find(x=>x.id===S.pick.option);
+  if(!o) return [];
+  const allow = slotCatsOf(o);
+  const live = S.products.filter(p=>p.active!==false);
+  return S.categories.map((c,i)=>({
+      key:c.id, name:c.name, col:catColor(c,i),
+      items: live.filter(p=>p.category_id===c.id)
+                 .sort((a,b)=>(a.name||'').localeCompare(b.name||'','ru')) }))
+    .filter(g=>g.items.length && (!allow.length || allow.includes(g.key)));
+}
+function slotAdd(pid){
+  const o = S.bundleOptions.find(x=>x.id===S.pick.option);
+  const lim = slotQtyOf(o);
+  if(pickedQty() >= lim) return;
+  const p = S.products.find(x=>x.id==pid); if(!p) return;
+  S.pick.slot = S.pick.slot || [];
+  const ex = S.pick.slot.find(x=>x.product_id===p.id);
+  if(ex) ex.qty++;
+  else S.pick.slot.push({ product_id:p.id, name:p.name, qty:1, price:+p.price||0,
+                          cat:p.category_id });
+  drawPickerSide();
+}
+function slotDel(ix){
+  S.pick.slot.splice(ix,1);
+  drawPickerSide();
+}
+function slotSub(ix){
+  const it = S.pick.slot[ix]; if(!it) return;
+  it.qty--; if(!it.qty) S.pick.slot.splice(ix,1);
+  drawPickerSide();
+}
+function builderHtml(){
+  const k = S.pick;
+  if(!k.option) return `<div class="pk-empty">Выберите комплектацию — здесь её можно собрать под клиента.</div>`;
+  const o = S.bundleOptions.find(x=>x.id===k.option);
+  const lim = slotQtyOf(o);
+  const got = pickedQty();
+  const left = lim - got;
+  const full = lim>0 ? got>=lim : true;
+  const groups = slotGroups();
+  const catOf = id => S.categories.find(c=>c.id===id);
+  const colOf = id => { const i = S.categories.findIndex(c=>c.id===id);
+                        return i<0 ? CAT_PAL[CAT_PAL.length-1] : catColor(S.categories[i], i); };
+
+  return `
+    <div class="bld-h">
+      <div class="bld-price mono">${money(k.price)}</div>
+      <div class="bld-name">${esc(k.bundleName)} · ${esc(k.optionName)}</div>
+    </div>
+
+    ${k.fixed.length ? `<div class="bld-fixed">
+      <div class="bld-fixed-t">В наборе всегда</div>
+      ${k.fixed.map(i=>`<div class="bld-fixed-i">
+        <span class="lock">🔒</span><span>${i.qty}× ${esc(i.name)}</span></div>`).join('')}
+    </div>` : ''}
+
+    ${lim>0 ? `
+    <div class="bld-slot">
+      <div class="bld-slot-h">
+        <span class="lbl">Добрать товары</span>
+        <span class="cnt ${full?'full':''}">${got} из ${lim}</span>
+      </div>
+      <div class="bld-bar"><i class="${full?'full':''}" style="width:${lim?Math.min(100,got/lim*100):0}%"></i></div>
+      <div class="bld-chips">
+        ${(k.slot||[]).length ? k.slot.map((x,ix)=>{
+          const c = colOf(x.cat);
+          return `<span class="bld-chip" style="background:${c.b};color:${c.t}">
+            <i style="background:${c.s}"></i>${esc(x.name)}${x.qty>1?' × '+x.qty:''}
+            <b onclick="slotSub(${ix})">✕</b></span>`;}).join('')
+        : `<span class="bld-none">Пока ничего не добрано${full?'':' — доступно '+left}</span>`}
+      </div>
+    </div>
+
+    <div class="bld-pool">
+      ${groups.map(g=>`
+        <div class="bld-box" style="border-left-color:${g.col.s}">
+          <div class="bld-box-h" style="background:${g.col.b};color:${g.col.t}">
+            <span>${esc(g.name)}</span><span class="cnt">${g.items.length}</span></div>
+          ${g.items.map(p=>`<div class="bld-row ${full?'off':''}"
+            ${full?'':`onclick="slotAdd(${p.id})"`}>
+            <span class="n">${esc(p.name)}</span>
+            <span class="pr mono">${p.price?money(p.price):''}</span>
+            <span class="plus" style="color:${full?'var(--mute)':g.col.s}">+</span>
+          </div>`).join('')}
+        </div>`).join('')}
+    </div>` : ''}
+
+    <div class="bld-foot">
+      <span class="lbl">Итог</span>
+      <span class="sum mono">${money(k.price)}</span>
+      <button class="btn ${full?'':'off'}" ${full?'':'disabled'} onclick="applyPick()">
+        ${full ? 'Подставить в заказ' : 'Добавьте ещё '+left}</button>
+    </div>`;
+}
+function drawPickerSide(){
+  const box = el('pkSide'); if(!box) return;
+  box.innerHTML = builderHtml();
+  const h = el('pkHint');
+  if(h) h.textContent = S.pick.option ? S.pick.bundleName+' · '+S.pick.optionName : 'выберите комплектацию';
+}
 function drawPicker(){
   const k = S.pick;
   document.querySelectorAll('.pk-wrap').forEach(n=>n.remove());
-  const sum = k.items.reduce((a,i)=>a + (i.qty||0)*(i.price||0), 0);
   document.body.insertAdjacentHTML('beforeend', `
   <div class="pk-wrap">
     <div class="pk-top">
       <div class="pk-ttl">Подобрать набор
-        <span class="pk-hint">${k.option ? esc(k.bundleName+' · '+k.optionName) : 'выберите комплектацию'}</span></div>
+        <span class="pk-hint" id="pkHint">${k.option ? esc(k.bundleName+' · '+k.optionName) : 'выберите комплектацию'}</span></div>
       <button class="pk-x" onclick="closePicker()" aria-label="Закрыть">✕</button>
     </div>
     <div class="pk-body">
-      <div class="pk-grid">
-        ${S.bundles.map(b=>{
-          const opts = bOptionsOf(b.id);
-          if(!opts.length) return '';
-          return `<div class="pk-lvl">
-            <div class="pk-lvl-h">
-              <span class="pk-price mono">${money(b.price)}</span>
-              ${b.name?`<span class="pk-name">${esc(b.name)}</span>`:''}
-            </div>
-            <div class="pk-opts">
-              ${opts.map(o=>{
-                const on = k.option===o.id;
-                const its = bItemsOf(o.id);
-                return `<button class="pk-opt ${on?'on':''}" onclick="pickOption(${b.id},${o.id})">
-                  <div class="pk-opt-t">${esc(optionTitle(o))}</div>
-                  ${its.map(i=>`<div class="pk-opt-i"><span class="q mono">${i.qty||1}×</span> ${esc(itemLabel(i))}</div>`).join('')
-                    || '<div class="pk-opt-i" style="color:var(--mute)">состав не заполнен</div>'}
-                </button>`;}).join('')}
-            </div>
-          </div>`;}).join('')}
-      </div>
-
-      <div class="pk-side">
-        ${!k.option ? `<div class="pk-empty">Выберите комплектацию слева — здесь её можно дособрать под клиента.</div>` : `
-        <div class="pk-price mono" style="font-size:20px">${money(k.price)}</div>
-        <div class="pk-name" style="margin-bottom:12px">${esc(k.bundleName)} · ${esc(k.optionName)}</div>
-
-        <div id="pkItems">${k.items.map((i,ix)=>`
-          <div class="pk-row">
-            <span class="pk-row-n">${esc(i.name)}</span>
-            <button class="pk-q" onclick="pkQty(${ix},-1)">−</button>
-            <span class="pk-q-v mono">${i.qty}</span>
-            <button class="pk-q" onclick="pkQty(${ix},1)">+</button>
-          </div>`).join('') || '<div style="color:var(--mute);font-size:13px;padding:8px 0">Позиции убраны</div>'}</div>
-
-        <div class="pk-cat">
-          <input id="pkQ" class="pk-cat-q" placeholder="Поиск товара" value="${esc(S.pick.q||'')}"
-            oninput="pkSearch(this.value)">
-          <div class="pk-cat-tabs" id="pkTabs"></div>
-          <div class="pk-cat-list" id="pkCat"></div>
-        </div>
-
-        ${sum && Math.abs(sum-k.price)>0.5 ? `<div class="pk-warn">
-          Товаров набрано на ${money(sum)}, цена набора ${money(k.price)}.
-          <a href="#" onclick="pkSetPrice(${sum});return false">Приравнять</a></div>` : ''}
-
-        <div class="pk-total">
-          <span>Итог</span>
-          <input class="mono" type="number" inputmode="numeric" value="${k.price}"
-            oninput="S.pick.price=Math.max(0,+this.value||0)">
-        </div>
-        <button class="btn" style="width:100%;margin-top:10px" onclick="applyPick()">Подставить в заказ</button>`}
-      </div>
+      <div class="pk-grid" id="pkGrid">${pickerGridHtml()}</div>
+      <div class="pk-side" id="pkSide">${pickerSideHtml()}</div>
     </div>
   </div>`);
-  drawCatalog();
+}
+function pickerGridHtml(){
+  const k = S.pick;
+  return S.bundles.map(b=>{
+    const opts = bOptionsOf(b.id);
+    if(!opts.length) return '';
+    return `<div class="pk-lvl">
+      <div class="pk-lvl-h">
+        <span class="pk-price mono">${money(b.price)}</span>
+        ${b.name?`<span class="pk-name">${esc(b.name)}</span>`:''}
+      </div>
+      <div class="pk-opts">
+        ${opts.map(o=>{
+          const on = k.option===o.id;
+          const its = bItemsOf(o.id);
+          return `<button class="pk-opt ${on?'on':''}" onclick="pickOption(${b.id},${o.id})">
+            <div class="pk-opt-t">${esc(optionTitle(o))}</div>
+            ${its.map(i=>`<div class="pk-opt-i"><span class="q mono">${i.qty||1}×</span> ${esc(itemLabel(i))}</div>`).join('')
+              || '<div class="pk-opt-i" style="color:var(--mute)">состав не заполнен</div>'}
+          </button>`;}).join('')}
+      </div>
+    </div>`;}).join('');
 }
 function pickOption(bid, oid){
   const b = S.bundles.find(x=>x.id===bid);
@@ -1810,107 +2077,23 @@ function pickOption(bid, oid){
   S.pick.bundleName = b.name || money(b.price);
   S.pick.optionName = optionTitle(o);
   S.pick.price = +b.price||0;
-  S.pick.items = bItemsOf(oid).map(i=>({
+  S.pick.fixed = bItemsOf(oid).map(i=>({
     product_id: i.product_id || null,
     name: itemLabel(i),
     qty: +i.qty||1,
     price: i.price!=null ? +i.price : (S.products.find(p=>p.id===i.product_id)?.price || 0) }));
-  drawPicker();
+  S.pick.slot = [];
+  const g = el('pkGrid'); if(g) g.innerHTML = pickerGridHtml();
+  drawPickerSide();
 }
-function pkQty(ix, d){
-  const it = S.pick.items[ix]; if(!it) return;
-  it.qty = Math.max(0, it.qty + d);
-  if(!it.qty) S.pick.items.splice(ix,1);
-  drawPicker();
-}
-function pkAdd(pid){
-  if(!pid) return;
-  const p = S.products.find(x=>x.id==pid); if(!p) return;
-  const ex = S.pick.items.find(i=>i.product_id===p.id);
-  if(ex) ex.qty++;
-  else S.pick.items.push({ product_id:p.id, name:p.name, qty:1, price:+p.price||0 });
-  drawPicker();
-  const q = el('pkQ'); if(q) q.focus();
-}
-function pkSearch(v){
-  S.pick.q = v;
-  drawCatalog();
-}
-function pkCatTab(c){
-  S.pick.cat = (S.pick.cat===c) ? '' : c;
-  drawCatalog();
-}
-// палитра меток категорий: цвет назначается по порядку категории
-const CAT_PAL = [
-  {b:'#EEEDFE', t:'#3C3489', s:'#7F77DD'},
-  {b:'#E1F5EE', t:'#085041', s:'#1D9E75'},
-  {b:'#FAECE7', t:'#712B13', s:'#D85A30'},
-  {b:'#E6F1FB', t:'#0C447C', s:'#378ADD'},
-  {b:'#FBEAF0', t:'#72243E', s:'#D4537E'},
-  {b:'#FAEEDA', t:'#633806', s:'#BA7517'},
-  {b:'#EAF3DE', t:'#27500A', s:'#639922'},
-  {b:'#F1EFE8', t:'#444441', s:'#888780'},
-];
-// цвет из справочника, если задан; иначе по индексу
-function catColor(cat, idx){
-  if(cat && cat.color){
-    const c = cat.color;
-    return { b:c+'22', t:c, s:c };
-  }
-  return CAT_PAL[idx % CAT_PAL.length];
-}
-// группы каталога: реальные категории из справочника + «Без категории»
-function catalogGroups(){
-  const q = (S.pick.q||'').trim().toLowerCase();
-  const match = p => !q || (p.name||'').toLowerCase().includes(q)
-                  || (p.sku||'').toLowerCase().includes(q);
-  const live = S.products.filter(p=>p.active!==false && match(p));
-  const groups = S.categories.map((c,i)=>({
-    key:String(c.id), name:c.name, col:catColor(c,i),
-    items: live.filter(p=>p.category_id===c.id)
-               .sort((a,b)=>(a.name||'').localeCompare(b.name||'','ru')) }))
-    .filter(g=>g.items.length);
-  const none = live.filter(p=>!p.category_id)
-                   .sort((a,b)=>(a.name||'').localeCompare(b.name||'','ru'));
-  if(none.length) groups.push({ key:'none', name:'Без категории',
-    col:CAT_PAL[CAT_PAL.length-1], items:none });
-  return groups;
-}
-function drawCatalog(){
-  const tabsBox = el('pkTabs'), listBox = el('pkCat');
-  if(!tabsBox || !listBox) return;
-  const groups = catalogGroups();
-  const cur = S.pick.cat || '';
-
-  tabsBox.innerHTML = `<button class="pk-tab ${!cur?'on':''}" onclick="pkCatTab('')">Все</button>` +
-    groups.map(g=>{
-      const on = cur===g.key;
-      return `<button class="pk-tab" onclick="pkCatTab('${g.key}')"
-        style="${on?`border-color:${g.col.s};background:${g.col.b};color:${g.col.t};font-weight:700`:''}">
-        <i style="background:${g.col.s}"></i>${esc(g.name)}</button>`;
-    }).join('');
-
-  const show = cur ? groups.filter(g=>g.key===cur) : groups;
-  listBox.innerHTML = show.length ? show.map(g=>`
-    <div class="pk-cbox" style="border-left-color:${g.col.s}">
-      <div class="pk-cbox-h" style="background:${g.col.b};color:${g.col.t}">
-        <span>${esc(g.name)}</span><span class="cnt">${g.items.length}</span></div>
-      ${g.items.map(p=>`<div class="pk-cat-row" onclick="pkAdd(${p.id})">
-        <span class="n">${esc(p.name)}</span>
-        ${p.stock!=null?`<span class="st ${p.stock>0?'':'zero'}">ост. ${p.stock}</span>`:''}
-        <span class="pr mono">${p.price?money(p.price):''}</span>
-        <span class="plus" style="color:${g.col.s}">+</span>
-      </div>`).join('')}
-    </div>`).join('')
-    : `<div class="pk-cat-empty">Ничего не найдено</div>`;
-}
-function pkSetPrice(v){ S.pick.price = Math.round(v); drawPicker(); }
+function pkSetPrice(v){ S.pick.price = Math.round(v); drawPickerSide(); }
 
 async function applyPick(){
   const k = S.pick;
   if(!k.option) return;
-  const linked = k.items.filter(i=>i.product_id);
-  const textOnly = k.items.filter(i=>!i.product_id).map(i=>`${i.qty}× ${i.name}`).join(', ');
+  const all = [...(k.fixed||[]), ...(k.slot||[])];
+  const linked = all.filter(i=>i.product_id);
+  const textOnly = all.filter(i=>!i.product_id).map(i=>`${i.qty}× ${i.name}`).join(', ');
   const label = `${money(k.price)} · ${k.bundleName} · ${k.optionName}`;
 
   if(k.target.mode==='draft'){
@@ -1982,39 +2165,82 @@ async function delBundle(id){
 function editOption(bundleId, optionId){
   const o = optionId ? S.bundleOptions.find(x=>x.id===optionId) : null;
   S.biDraft = o ? bItemsOf(o.id).map(i=>({ product_id:i.product_id, label:i.label, qty:i.qty||1 })) : [];
+  S.slotCats = o && o.slot_categories ? String(o.slot_categories).split(',').filter(Boolean).map(Number) : [];
   const b = S.bundles.find(x=>x.id===bundleId);
-  formModal((o?'Вариант':'Новый вариант')+' · набор '+money(b?.price||0),`
-    <div class="field"><label>Название варианта</label>
-      <input id="o_name" value="${o?esc(o.name||''):''}" placeholder="необязательно"></div>
-    <label style="margin-bottom:6px;display:block">Состав</label>
-    <div id="biList"></div>
-    <div class="row" style="gap:8px;margin-top:6px">
-      <button class="btn sm ghost" onclick="addBI(true)">+ Из каталога</button>
-      <button class="btn sm ghost" onclick="addBI(false)">+ Текстом</button>
+  formModal((o?'Комплектация':'Новая комплектация')+' · '+money(b?.price||0),`
+    <div class="field"><label>Название</label>
+      <input id="o_name" value="${o?esc(o.name||''):''}" placeholder="например, С мультиваркой"></div>
+
+    <div style="border-top:1px solid var(--line);margin:14px 0 12px;padding-top:14px">
+      <label style="margin-bottom:6px;display:block">Фиксированная часть
+        <span style="text-transform:none;font-weight:400">— всегда входит в набор</span></label>
+      <div id="biList"></div>
+      <div class="row" style="gap:8px;margin-top:6px">
+        <button class="btn sm ghost" onclick="addBIFromCatalog()">+ Из каталога</button>
+        <button class="btn sm ghost" onclick="addBI(false)">+ Текстом</button>
+      </div>
     </div>
-    ${o?`<button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert);margin-top:14px"
-      onclick="delOption(${o.id})">Удалить вариант</button>`:''}`,
+
+    <div style="border-top:1px solid var(--line);margin:14px 0 12px;padding-top:14px">
+      <label style="margin-bottom:6px;display:block">Слот добора
+        <span style="text-transform:none;font-weight:400">— сколько позиций менеджер добирает сам</span></label>
+      <div class="field" style="margin-bottom:10px">
+        <input id="o_slot" type="number" inputmode="numeric" min="0"
+          value="${o?(o.slot_qty||0):0}" placeholder="0 — добор не нужен"></div>
+      <label style="margin-bottom:6px;display:block;font-size:11px">Разрешённые категории</label>
+      <div class="slot-cats">
+        ${S.categories.map((c,i)=>{
+          const on = S.slotCats.includes(c.id);
+          const k = catColor(c,i);
+          return `<label class="slot-cat ${on?'on':''}" style="${on?`border-color:${k.s};background:${k.b};color:${k.t}`:''}">
+            <input type="checkbox" value="${c.id}" ${on?'checked':''} onchange="toggleSlotCat(${c.id},this)">
+            <i style="background:${k.s}"></i>${esc(c.name)}</label>`;}).join('')}
+      </div>
+      <div style="font-size:12px;color:var(--mute);margin-top:8px">
+        Если не отметить ни одной — можно брать из любой категории.</div>
+    </div>
+
+    ${o?`<button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert);margin-top:6px"
+      onclick="delOption(${o.id})">Удалить комплектацию</button>`:''}`,
   async()=>{
-    const clean = S.biDraft.filter(r=>r.product_id || (r.label||'').trim());
-    if(!clean.length) return el('formErr').textContent='Добавьте хотя бы одну позицию';
+    const fixed = S.biDraft.filter(r=>r.product_id || (r.label||'').trim());
+    const slotQty = +el('o_slot').value||0;
+    if(!fixed.length && !slotQty)
+      return el('formErr').textContent='Задайте фиксированную часть или слот добора';
     const name = el('o_name').value.trim()||null;
+    const patch = { name, slot_qty:slotQty, slot_categories:S.slotCats.join(',')||null };
     let oid = o?.id;
-    if(o){ await sb.from('bundle_options').update({name}).eq('id',o.id);
+    if(o){ await sb.from('bundle_options').update(patch).eq('id',o.id);
            await sb.from('bundle_items').delete().eq('option_id',o.id); }
     else {
       const sort = (bOptionsOf(bundleId).at(-1)?.sort||0)+1;
       const { data, error } = await sb.from('bundle_options')
-        .insert({bundle_id:bundleId, name, sort}).select().single();
+        .insert({bundle_id:bundleId, sort, ...patch}).select().single();
       if(error) return el('formErr').textContent='Не удалось сохранить: '+error.message;
       oid = data.id;
     }
-    const { error:e2 } = await sb.from('bundle_items').insert(clean.map((r,idx)=>({
-      option_id:oid, product_id:r.product_id||null, label:r.product_id?null:(r.label||'').trim(),
-      qty:r.qty||1, sort:idx })));
-    if(e2) return el('formErr').textContent='Не удалось сохранить состав: '+e2.message;
+    if(fixed.length){
+      const { error:e2 } = await sb.from('bundle_items').insert(fixed.map((r,idx)=>({
+        option_id:oid, product_id:r.product_id||null, label:r.product_id?null:(r.label||'').trim(),
+        qty:r.qty||1, sort:idx })));
+      if(e2) return el('formErr').textContent='Не удалось сохранить состав: '+e2.message;
+    }
     closeAll(); await loadAll(); go('bundles');
   });
   renderBI();
+}
+function toggleSlotCat(id, box){
+  if(box.checked){ if(!S.slotCats.includes(id)) S.slotCats.push(id); }
+  else S.slotCats = S.slotCats.filter(x=>x!==id);
+  const lab = box.closest('.slot-cat');
+  const idx = S.categories.findIndex(c=>c.id===id);
+  const k = catColor(S.categories[idx], idx);
+  if(box.checked){ lab.classList.add('on');
+    lab.style.borderColor=k.s; lab.style.background=k.b; lab.style.color=k.t; }
+  else { lab.classList.remove('on'); lab.style.cssText=''; }
+}
+function addBIFromCatalog(){
+  openCatalog(p=>{ S.biDraft.push({ product_id:p.id, qty:1 }); renderBI(); }, 'Фиксированный товар набора');
 }
 async function delOption(id){
   if(!confirm('Удалить этот вариант комплектации?')) return;
@@ -2279,7 +2505,10 @@ function drawDraft(){
     <div class="card" style="padding:14px;margin-bottom:16px">
       <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
         <h3 style="font-size:15px">Состав заказа</h3>
-        <button class="btn sm ghost" onclick="addOI();syncDraftSum()">+ Позиция</button>
+        <div class="row" style="gap:6px">
+          <button class="btn sm" onclick="openCatalog(p=>addOIProduct(p), 'Добавить товар в заказ')">+ Из каталога</button>
+          <button class="btn sm ghost" onclick="addOI();syncDraftSum()">Пустая</button>
+        </div>
       </div>
       <div id="oiList"></div>
       <div class="oi-sum"><span>Сумма товаров</span><span class="mono" id="oiSum">${money(itemsSum)}</span></div>

@@ -1915,6 +1915,7 @@ function drawCatalogModal(){
 }
 
 function optionTitle(o){
+  if(!o) return 'Комплектация';
   if(o.name) return o.name;
   const its = bItemsOf(o.id);
   const priced = its.filter(i=>i.product_id)
@@ -1928,6 +1929,7 @@ function optionTitle(o){
 // target: {mode:'order', id} | {mode:'draft'}
 function openPicker(target){
   if(!S.bundles.length) return alert('Наборы не заведены. Раздел «Наборы» — там их создаёт администратор.');
+  if(!S.bundleOptions.length) return alert('У наборов нет ни одной комплектации.\n\nОткройте раздел «Наборы» и добавьте комплектацию — тогда набор можно будет подобрать.');
   S.pick = { target, bundle:null, option:null, fixed:[], slot:[], price:0 };
   drawPicker();
 }
@@ -2055,12 +2057,16 @@ function drawPicker(){
     </div>
     <div class="pk-body">
       <div class="pk-grid" id="pkGrid">${pickerGridHtml()}</div>
-      <div class="pk-side" id="pkSide">${pickerSideHtml()}</div>
+      <div class="pk-side" id="pkSide">${builderHtml()}</div>
     </div>
   </div>`);
 }
 function pickerGridHtml(){
   const k = S.pick;
+  const any = S.bundles.some(b=>bOptionsOf(b.id).length);
+  if(!any) return `<div class="pk-empty" style="padding:40px 16px">
+    <b style="display:block;margin-bottom:6px">Комплектаций пока нет</b>
+    Откройте раздел «Наборы» и добавьте комплектацию — тогда её можно будет подобрать в заказ.</div>`;
   return S.bundles.map(b=>{
     const opts = bOptionsOf(b.id);
     if(!opts.length) return '';

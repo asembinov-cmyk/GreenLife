@@ -204,7 +204,7 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .bpick-let{flex:none;width:20px;height:20px;border-radius:6px;background:var(--acc);color:#fff;
   font-size:11px;font-weight:800;display:grid;place-items:center}
 .bpick-txt{min-width:0}
-.pk-wrap{position:fixed;inset:0;z-index:60;background:var(--tint);display:flex;flex-direction:column;
+.pk-wrap{position:fixed;inset:0;z-index:90;background:var(--tint);display:flex;flex-direction:column;
   padding-top:var(--safe-t)}
 .pk-body{padding-left:16px;padding-right:16px}
 .pk-top{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);
@@ -302,7 +302,7 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .scr-meta{font-size:12px;color:var(--mute);margin-bottom:11px}
 .scr-act{display:flex;gap:7px;flex-wrap:wrap}
 .scr-act .btn{flex:1;text-align:center;white-space:nowrap}
-.scr-wrap{position:fixed;inset:0;z-index:65;background:var(--tint);display:flex;flex-direction:column;
+.scr-wrap{position:fixed;inset:0;z-index:90;background:var(--tint);display:flex;flex-direction:column;
   padding-top:var(--safe-t)}
 .scr-top{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--line);
   background:var(--ink-2);flex:none}
@@ -434,8 +434,8 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
   .oc-fold>summary,.oc-fold-b{padding-left:14px;padding-right:14px}
   .oc-shelf{grid-template-columns:1fr 1fr;max-height:none}
 }
-.cat-scrim{position:fixed;inset:0;background:rgba(26,29,36,.5);z-index:70}
-.cat-modal{position:fixed;z-index:71;left:2vw;right:2vw;top:3vh;bottom:3vh;
+.cat-scrim{position:fixed;inset:0;background:rgba(26,29,36,.5);z-index:90}
+.cat-modal{position:fixed;z-index:91;left:2vw;right:2vw;top:3vh;bottom:3vh;
   background:var(--ink-2);border-radius:16px;
   display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(26,29,36,.3)}
 .cat-top{display:flex;align-items:center;padding:15px 20px;border-bottom:1px solid var(--line);flex:none}
@@ -464,7 +464,7 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .cat-row .pr{font-size:12px;color:var(--mute);flex:none;font-variant-numeric:tabular-nums}
 .cat-row .plus{font-size:15px;flex:none;font-weight:700}
 .cat-empty{padding:40px;text-align:center;color:var(--mute);font-size:14px}
-.cat-toast{position:fixed;z-index:80;left:50%;bottom:34px;transform:translateX(-50%);
+.cat-toast{position:fixed;z-index:99;left:50%;bottom:34px;transform:translateX(-50%);
   background:var(--paper);color:var(--ink);padding:9px 16px;border-radius:10px;font-size:13px;
   font-weight:600;box-shadow:0 6px 20px rgba(26,29,36,.25)}
 @media(max-width:900px){
@@ -735,7 +735,7 @@ const FN = {
 
 const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.co', SUPABASE_ANON || 'placeholder');
 
-const S = { user:null, me:null, tab:'dash', statuses:[], deliveryStatuses:[], deliveryTypes:[], employees:[], products:[],
+const S = { user:null, me:null, tab:'dash', statuses:[], deliveryTypes:[], employees:[], products:[],
             bundles:[], bundleOptions:[], bundleItems:[], bundleSlots:[], bOpen:null,
             scripts:[], scriptSteps:[], scr:null, draft:null, pick:null, cat:null,
             orders:[], customers:[], paymentTypes:[], parcelStatuses:[], categories:[], departments:[], ai:[],
@@ -820,9 +820,8 @@ async function loadAll(){
     sb.from('categories').select('*'),
     sb.from('departments').select('*').order('name'),
     sb.from('customers').select('*').order('created_at',{ascending:false}).limit(500),
-    sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color), delivery_statuses(name,color), payment_types(name), parcel_statuses(name,color)')
+    sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color), payment_types(name), parcel_statuses(name,color)')
       .order('created_at',{ascending:false}).limit(600),
-    sb.from('delivery_statuses').select('*').order('sort'),
     sb.from('delivery_types').select('*').order('sort'),
     sb.from('bundles').select('*').order('price'),
     sb.from('bundle_options').select('*').order('sort'),
@@ -832,11 +831,11 @@ async function loadAll(){
     sb.from('script_steps').select('*').order('sort'),
   ];
   const settled = await Promise.all(q.map(x=>x.then(r=>r, e=>({data:[],error:e}))));
-  const [st,em,pr,pt,ps,ca,dp,cu,or_,ds,dtp,bn,bo,bi,bs,sc,ss] = settled;
+  const [st,em,pr,pt,ps,ca,dp,cu,or_,dtp,bn,bo,bi,bs,sc,ss] = settled;
   settled.forEach(r=>{ if(r && r.error) console.warn('CRM load:', r.error.message||r.error); });
   S.statuses=st.data||[]; S.employees=em.data||[]; S.products=pr.data||[];
   S.paymentTypes=pt.data||[]; S.parcelStatuses=ps.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
-  S.customers=cu.data||[]; S.orders=or_.data||[]; S.deliveryStatuses=ds.data||[]; S.deliveryTypes=dtp.data||[];
+  S.customers=cu.data||[]; S.orders=or_.data||[]; S.deliveryTypes=dtp.data||[];
   S.bundles=bn.data||[]; S.bundleOptions=bo.data||[]; S.bundleItems=bi.data||[]; S.bundleSlots=bs.data||[]; S.scripts=sc.data||[]; S.scriptSteps=ss.data||[];
   S.me = S.employees.find(e=>e.id===S.user.id) || { full_name:S.user.email, role:'sales' };
   el('me').innerHTML = `<b>${esc(S.me.full_name)}</b>${({sales:'Менеджер',head:'Руководитель',admin:'Администратор'})[S.me.role]||S.me.role} ·
@@ -1184,16 +1183,12 @@ async function openOrder(id){
 
     <details class="oc-fold">
       <summary><span>Детали заказа</span>
-        <span class="s">${esc(o.statuses?.name||'')}${o.delivery_statuses?.name?' · '+esc(o.delivery_statuses.name):''}${addrAny?' · адрес заполнен':''}</span></summary>
+        <span class="s">${esc(o.statuses?.name||'')}${o.parcel_statuses?.name?' · '+esc(o.parcel_statuses.name):''}${addrAny?' · адрес заполнен':''}</span></summary>
       <div class="oc-fold-b">
         <div class="oc-grid">
           <div class="field"><label>Этап сделки</label>
             <select onchange="setStatus(${id},this.value)">
               ${S.statuses.map(x=>`<option value="${x.id}" ${x.id===o.status_id?'selected':''}>${esc(x.name)}</option>`).join('')}
-            </select></div>
-          <div class="field"><label>Статус доставки</label>
-            <select onchange="setDeliveryStatus(${id},this.value)"><option value="">— не задан —</option>
-              ${S.deliveryStatuses.map(x=>`<option value="${x.id}" ${x.id===o.delivery_status_id?'selected':''}>${esc(x.name)}</option>`).join('')}
             </select></div>
           <div class="field"><label>Тип доставки</label>
             <select onchange="setDeliveryType(${id},this.value)"><option value="">— не задан —</option>
@@ -1261,7 +1256,9 @@ function shelfTab(t){ S.shelf.tab = t; drawShelf(); }
 function drawShelf(){
   const tabs = el('ocTabs'), box = el('ocShelf');
   if(!tabs || !box) return;
-  const T = [['bundles','Наборы'],['past','Брал раньше'],['hits','Хиты'],['all','Каталог']];
+  const T = S.shelf.draft
+    ? [['bundles','Наборы'],['hits','Хиты'],['all','Каталог']]
+    : [['bundles','Наборы'],['past','Брал раньше'],['hits','Хиты'],['all','Каталог']];
   tabs.innerHTML = T.map(([k,n])=>`<button class="pk-tab ${S.shelf.tab===k?'on':''}"
     onclick="shelfTab('${k}')">${n}</button>`).join('');
 
@@ -1274,7 +1271,7 @@ function drawShelf(){
       return `<div class="sh-card">
         <div class="sh-t mono">${money(b.price)}</div>
         <div class="sh-s">${b.name?esc(b.name):''} · ${opts.length} ${plural(opts.length,'вариант','варианта','вариантов')}</div>
-        <button class="btn sm" onclick="openPicker({mode:'order',id:${oid}})">Подобрать</button>
+        <button class="btn sm" onclick="openPicker(S.shelf.draft?{mode:'draft'}:{mode:'order',id:${oid}})">Подобрать</button>
       </div>`;}).join('')
       : `<div class="oc-none">Наборы не заведены</div>`;
   } else {
@@ -1292,11 +1289,22 @@ function drawShelf(){
       return `<div class="sh-card" style="border-left-color:${col.s}">
         <div class="sh-n">${esc(p.name)}</div>
         <div class="sh-s mono">${p.price?money(p.price):''}${p.stock!=null?' · ост. '+p.stock:''}</div>
-        <button class="btn sm ghost" onclick="addProductToOrder(${oid},S.products.find(x=>x.id===${p.id}))">+ В заказ</button>
+        <button class="btn sm ghost" onclick="shelfAdd(${p.id})">+ В заказ</button>
       </div>`;}).join('')
       : `<div class="oc-none">${S.shelf.tab==='past'?'Клиент ещё ничего не покупал':'Товаров нет'}</div>`;
   }
   box.innerHTML = html;
+}
+function shelfAdd(pid){
+  const p = S.products.find(x=>x.id===pid); if(!p) return;
+  if(S.shelf.draft){
+    const ex = S.orderItems.find(r=>r.product_id===p.id);
+    if(ex) ex.qty++;
+    else S.orderItems.push({ product_id:p.id, qty:1, price:+p.price||0 });
+    drawDraft();
+  } else {
+    addProductToOrder(S.shelf.orderId, p);
+  }
 }
 async function addProductToOrder(orderId, p){
   if(!p) return;
@@ -1325,13 +1333,6 @@ async function setStatus(id,sid){
   const st=S.statuses.find(s=>s.id==sid);
   await sb.from('orders').update({status_id:+sid, closed_at:['won','lost'].includes(st.code)?new Date():null}).eq('id',id);
   await sb.from('activities').insert({order_id:id,employee_id:S.user.id,type:'status',body:'Этап: '+st.name});
-  await loadAll(); openOrder(id);
-}
-async function setDeliveryStatus(id,sid){
-  const st = S.deliveryStatuses.find(s=>s.id==sid);
-  await sb.from('orders').update({ delivery_status_id: sid ? +sid : null }).eq('id',id);
-  await sb.from('activities').insert({order_id:id,employee_id:S.user.id,type:'status',
-    body:'Доставка: '+(st?st.name:'не задан')});
   await loadAll(); openOrder(id);
 }
 async function setDeliveryType(id,tid){
@@ -3019,7 +3020,6 @@ function vRefs(){
     ${richBlk('Отделы', S.departments, 'dep')}
     ${richBlk('Категории товаров', S.categories, 'cat')}
     ${blk('Этапы воронки', S.statuses, 'statuses')}
-    ${blk('Статусы доставки', S.deliveryStatuses, 'delivery_statuses')}
     ${blk('Типы доставки', S.deliveryTypes, 'delivery_types')}
     ${blk('Типы оплаты', S.paymentTypes, 'payment_types')}
     ${blk('Статусы посылки', S.parcelStatuses, 'parcel_statuses')}
@@ -3072,12 +3072,11 @@ async function delRefCard(kind, id, name){
   closeAll(); await loadAll(); go('refs');
 }
 async function addRef(t){
-  const titles = { statuses:'этапа воронки', delivery_statuses:'статуса доставки', delivery_types:'типа доставки', payment_types:'типа оплаты', parcel_statuses:'статуса посылки' };
+  const titles = { statuses:'этапа воронки', delivery_types:'типа доставки', payment_types:'типа оплаты', parcel_statuses:'статуса посылки' };
   const name = prompt('Название '+(titles[t]||'записи'));
   if(!name || !name.trim()) return;
   const v = { name: name.trim() };
   if(t==='statuses'){ v.code = 'st_' + Date.now(); v.color = '#6f7687'; v.sort = (S.statuses.at(-1)?.sort || 0) + 1; }
-  if(t==='delivery_statuses'){ v.color = '#6f7687'; v.sort = (S.deliveryStatuses.at(-1)?.sort || 0) + 1; }
   if(t==='delivery_types'){ v.sort = (S.deliveryTypes.at(-1)?.sort || 0) + 1; }
   if(t==='payment_types'){ v.sort = (S.paymentTypes.at(-1)?.sort || 0) + 1; }
   if(t==='parcel_statuses'){ v.color = '#6f7687'; v.sort = (S.parcelStatuses.at(-1)?.sort || 0) + 1; }
@@ -3089,10 +3088,6 @@ async function delRef(t,id){
   if(t==='statuses'){
     const used = S.orders.filter(o=>o.status_id===id).length;
     if(used) return alert('Нельзя удалить: на этом этапе '+used+' заказ(ов). Сначала переведите их в другой этап.');
-  }
-  if(t==='delivery_statuses'){
-    const used = S.orders.filter(o=>o.delivery_status_id===id).length;
-    if(used) return alert('Нельзя удалить: этот статус доставки указан в '+used+' заказ(ах). Сначала смените его в заказах.');
   }
   if(t==='delivery_types'){
     const used = S.orders.filter(o=>o.delivery_type_id===id).length;
@@ -3125,7 +3120,7 @@ function formModal(title,html,onSave){
 function newOrder(){
   S.draft = { name:'', phone:'', ext_id:'', owner_id:S.user.id, status_id:S.statuses[0]?.id || null,
               payment_type_id:null, parcel_status_id:null,
-              delivery_status_id:null, delivery_type_id:null, amount:0, comment:'',
+              delivery_type_id:null, amount:0, comment:'',
               items:[], addr:{ zip:'',region:'',district:'',city:'',street:'',house:'' } };
   S.orderItems = [];
   drawDraft();
@@ -3136,128 +3131,165 @@ function dSetAmount(v){ S.draft.amount = Math.max(0, +v||0); }
 
 function drawDraft(){
   const d = S.draft;
-  const owner = S.employees.find(e=>e.id===S.user.id);
-  const head  = headOf(S.user.id);
+  const owner = S.employees.find(e=>e.id===(d.owner_id||S.user.id));
+  const head  = headOf(d.owner_id||S.user.id);
   const itemsSum = S.orderItems.reduce((a,r)=>a + (r.qty||0)*(r.price||0), 0);
+  const amount = d.amount>0 ? d.amount : itemsSum;
   const addrAny = Object.values(d.addr).some(Boolean);
+  const boss = S.me.role!=='sales';
+  const nx = nextLevel(amount);
   closeAll();
   document.body.insertAdjacentHTML('beforeend', `
   <div class="scrim" onclick="cancelDraft()"></div>
-  <div class="drawer">
-    <button class="x" onclick="cancelDraft()">×</button>
-    <div class="mono" style="color:var(--mute);font-size:12px">НОВЫЙ ЗАКАЗ · черновик</div>
-    <div class="cust-head">
-      <input id="d_name" class="cust-name" value="${esc(d.name)}" placeholder="Имя клиента"
-        oninput="dSet('name',this.value)">
-      <div class="cust-phone">
-        <input id="d_phone" class="mono" type="tel" inputmode="tel" value="${esc(d.phone)}"
-          placeholder="Телефон" oninput="dSet('phone',this.value)">
-      </div>
-    </div>
-    <div class="mono" style="font-size:26px;font-weight:700;margin:14px 0">${money(d.amount)}</div>
-
-    <div class="ometa">
-      <div class="box"><div class="k">Менеджер</div>
-        <div class="v"><span class="avatar">${ini(owner?.full_name||S.me.full_name)}</span>${esc(owner?.full_name || S.me.full_name || '')}</div></div>
-      <div class="box"><div class="k">Руководитель</div>
-        <div class="v">${head ? `<span class="avatar">${ini(head.full_name)}</span>${esc(head.full_name)}` : '<span style="color:var(--mute);font-weight:500">не назначен</span>'}</div></div>
-    </div>
-
-    <div class="field"><label>Этап сделки</label>
-      <select onchange="dSet('status_id',+this.value)">
-        ${S.statuses.map(s=>`<option value="${s.id}" ${s.id===d.status_id?'selected':''}>${esc(s.name)}</option>`).join('')}
-      </select></div>
-
-    <div class="field"><label>Внешний ID</label>
-      <input value="${esc(d.ext_id||'')}" placeholder="номер из другой системы"
-        oninput="dSet('ext_id',this.value)"></div>
-
-    ${S.me.role!=='sales' ? `<div class="field"><label>Менеджер</label>
-      <select onchange="dSet('owner_id',this.value)">
-        ${S.employees.filter(e=>e.active!==false).map(e=>
-          `<option value="${e.id}" ${e.id===d.owner_id?'selected':''}>${esc(e.full_name||'')}</option>`).join('')}
-      </select></div>` : ''}
-
-    <div class="field"><label>Тип оплаты</label>
-      <select onchange="dSet('payment_type_id',this.value?+this.value:null)">
-        <option value="">— не задан —</option>
-        ${S.paymentTypes.map(x=>`<option value="${x.id}" ${x.id===d.payment_type_id?'selected':''}>${esc(x.name)}</option>`).join('')}
-      </select></div>
-
-    <div class="field"><label>Статус посылки</label>
-      <select onchange="dSet('parcel_status_id',this.value?+this.value:null)">
-        <option value="">— не задан —</option>
-        ${S.parcelStatuses.map(x=>`<option value="${x.id}" ${x.id===d.parcel_status_id?'selected':''}>${esc(x.name)}</option>`).join('')}
-      </select></div>
-
-    <div class="field"><label>Статус доставки</label>
-      <select onchange="dSet('delivery_status_id',this.value?+this.value:null)">
-        <option value="">— не задан —</option>
-        ${S.deliveryStatuses.map(s=>`<option value="${s.id}" ${s.id===d.delivery_status_id?'selected':''}>${esc(s.name)}</option>`).join('')}
-      </select></div>
-
-    <div class="field"><label>Тип доставки</label>
-      <select onchange="dSet('delivery_type_id',this.value?+this.value:null)">
-        <option value="">— не задан —</option>
-        ${S.deliveryTypes.map(t=>`<option value="${t.id}" ${t.id===d.delivery_type_id?'selected':''}>${esc(t.name)}</option>`).join('')}
-      </select></div>
-
-    ${S.bundles.length ? `<div class="field"><label>Готовый набор</label>
-      <button class="btn ghost" style="width:100%" onclick="openPicker({mode:'draft'})">
-        ${d.bundleLabel ? esc(d.bundleLabel) : 'Подобрать набор из прайса'}</button></div>` : ''}
-
-    <div class="card" style="padding:14px;margin-bottom:16px">
-      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
-        <h3 style="font-size:15px">Состав заказа</h3>
-        <div class="row" style="gap:6px">
-          <button class="btn sm" onclick="openCatalog(p=>addOIProduct(p), 'Добавить товар в заказ')">+ Из каталога</button>
-          <button class="btn sm ghost" onclick="addOI();syncDraftSum()">Пустая</button>
+  <div class="ocard">
+    <div class="oc-top">
+      <div class="oc-who">
+        <input id="d_name" class="oc-name" value="${esc(d.name)}" placeholder="Имя клиента"
+          oninput="dSet('name',this.value)">
+        <div class="oc-sub">
+          <span class="mono">НОВЫЙ ЗАКАЗ · черновик</span>
+          <span class="tag" style="background:var(--tint-2);color:var(--paper)">не сохранён</span>
         </div>
       </div>
-      <div id="oiList"></div>
-      <div class="oi-sum"><span>Сумма товаров</span><span class="mono" id="oiSum">${money(itemsSum)}</span></div>
+      <div class="oc-amt mono">${money(amount)}</div>
+      <button class="oc-x" onclick="cancelDraft()" aria-label="Закрыть">✕</button>
     </div>
 
-    <div class="field"><label>Сумма заказа, ₸
-      <span style="text-transform:none;font-weight:400">(0 — подставится сумма товаров)</span></label>
-      <input id="d_amount" type="number" inputmode="numeric" value="${d.amount}"
-        oninput="dSetAmount(this.value)"></div>
+    <div class="oc-body">
+      <div class="oc-col">
+        <div class="oc-box">
+          <div class="oc-lbl">Клиент</div>
+          <div class="oc-phone">
+            <input id="d_phone" class="mono" type="tel" inputmode="tel" value="${esc(d.phone)}"
+              placeholder="Телефон" oninput="dSet('phone',this.value)">
+          </div>
+          <div style="font-size:11px;color:var(--mute);margin-top:7px;line-height:1.45">
+            Если телефон совпадёт с существующим клиентом — заказ привяжется к нему.</div>
+        </div>
 
-    <details class="addr" ${addrAny?'open':''}>
-      <summary><span>Адрес доставки</span>
-        <span class="addr-sub">${addrAny?'заполняется':'не заполнен'}</span></summary>
-      <div class="addr-body">
-        <div class="row" style="gap:10px">
-          <div class="field" style="flex:1 1 100px"><label>Индекс</label>
+        <div class="oc-box">
+          <div class="oc-lbl">Менеджер</div>
+          ${boss ? `<select onchange="dSet('owner_id',this.value)">
+            ${S.employees.filter(e=>e.active!==false).map(e=>
+              `<option value="${e.id}" ${e.id===(d.owner_id||S.user.id)?'selected':''}>${esc(e.full_name||'')}</option>`).join('')}
+          </select>` : `<div class="oc-mgr"><span class="avatar">${ini(owner?.full_name)}</span>
+            <div style="font-weight:600;font-size:13px">${esc(owner?.full_name||'')}</div></div>`}
+          ${head?`<div style="font-size:11px;color:var(--mute);margin-top:7px">рук. ${esc(head.full_name)}</div>`:''}
+        </div>
+
+        <div class="oc-box">
+          <div class="oc-lbl">Этап сделки</div>
+          <select onchange="dSet('status_id',+this.value)">
+            ${S.statuses.map(x=>`<option value="${x.id}" ${x.id===d.status_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+
+      <div class="oc-col">
+        <div class="oc-box grow">
+          <div class="oc-lbl">Состав заказа</div>
+          <div class="oc-items">
+            ${S.orderItems.length ? S.orderItems.map((r,i)=>{
+              const p = S.products.find(x=>x.id===r.product_id);
+              return `<div class="oc-item">
+                <span class="n">${esc(p?p.name:'позиция')}${r.qty>1?' × '+r.qty:''}</span>
+                <span class="p mono">${money((r.qty||0)*(r.price||0))}</span>
+                <span class="x" onclick="delOI(${i});syncDraftSum();drawDraft()">✕</span>
+              </div>`;}).join('')
+            : `<div class="oc-none">Состав не заполнен</div>`}
+          </div>
+          <div class="oc-add">
+            <button class="btn sm" onclick="openCatalog(p=>{addOIProduct(p);drawDraft()},'Добавить товар в заказ')">+ Товар</button>
+            <button class="btn sm ghost" onclick="openPicker({mode:'draft'})">Набор</button>
+          </div>
+        </div>
+
+        ${nx?`<div class="oc-box up">
+          <div class="oc-lbl" style="color:#085041">До следующего уровня</div>
+          <div style="font-size:14px;color:#085041;line-height:1.45;font-weight:700">
+            +${money(nx.gap)} → ${money(nx.price)}${nx.name?' · '+esc(nx.name):''}</div>
+        </div>`:''}
+
+        <div class="oc-box">
+          <div class="field" style="margin:0"><label>Сумма заказа, ₸
+            <span style="text-transform:none;font-weight:400">(0 — сумма товаров)</span></label>
+            <input id="d_amount" type="number" inputmode="numeric" value="${d.amount}"
+              oninput="dSetAmount(this.value);drawDraftSum()"></div>
+        </div>
+
+        <div class="oc-box">
+          <div class="oc-btns col">
+            <button class="btn" id="saveBtn" onclick="saveDraft()">Создать заказ</button>
+            <button class="btn ghost sm" onclick="cancelDraft()">Отмена</button>
+          </div>
+          <div class="err" id="formErr"></div>
+        </div>
+      </div>
+
+      <div class="oc-col wide">
+        <div class="oc-box grow">
+          <div class="oc-tabs" id="ocTabs"></div>
+          <div class="oc-shelf" id="ocShelf"></div>
+        </div>
+      </div>
+    </div>
+
+    <details class="oc-fold">
+      <summary><span>Детали заказа</span>
+        <span class="s">доставка, оплата, внешний ID</span></summary>
+      <div class="oc-fold-b">
+        <div class="oc-grid">
+          <div class="field"><label>Внешний ID</label>
+            <input value="${esc(d.ext_id||'')}" placeholder="номер из другой системы"
+              oninput="dSet('ext_id',this.value)"></div>
+          <div class="field"><label>Тип оплаты</label>
+            <select onchange="dSet('payment_type_id',this.value?+this.value:null)">
+              <option value="">— не задан —</option>
+              ${S.paymentTypes.map(x=>`<option value="${x.id}" ${x.id===d.payment_type_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+          <div class="field"><label>Статус посылки</label>
+            <select onchange="dSet('parcel_status_id',this.value?+this.value:null)">
+              <option value="">— не задан —</option>
+              ${S.parcelStatuses.map(x=>`<option value="${x.id}" ${x.id===d.parcel_status_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+          <div class="field"><label>Тип доставки</label>
+            <select onchange="dSet('delivery_type_id',this.value?+this.value:null)">
+              <option value="">— не задан —</option>
+              ${S.deliveryTypes.map(x=>`<option value="${x.id}" ${x.id===d.delivery_type_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+        </div>
+
+        <div class="oc-lbl" style="margin:14px 0 8px">Адрес доставки</div>
+        <div class="oc-grid">
+          <div class="field"><label>Индекс</label>
             <input value="${esc(d.addr.zip)}" inputmode="numeric" oninput="dSetAddr('zip',this.value)"></div>
-          <div class="field" style="flex:2 1 160px"><label>Область</label>
+          <div class="field"><label>Область</label>
             <input value="${esc(d.addr.region)}" oninput="dSetAddr('region',this.value)"></div>
-        </div>
-        <div class="row" style="gap:10px">
-          <div class="field" style="flex:1 1 140px"><label>Район</label>
+          <div class="field"><label>Район</label>
             <input value="${esc(d.addr.district)}" oninput="dSetAddr('district',this.value)"></div>
-          <div class="field" style="flex:1 1 140px"><label>Населённый пункт</label>
+          <div class="field"><label>Населённый пункт</label>
             <input value="${esc(d.addr.city)}" oninput="dSetAddr('city',this.value)"></div>
-        </div>
-        <div class="row" style="gap:10px">
-          <div class="field" style="flex:2 1 160px"><label>Улица</label>
+          <div class="field"><label>Улица</label>
             <input value="${esc(d.addr.street)}" oninput="dSetAddr('street',this.value)"></div>
-          <div class="field" style="flex:1 1 90px"><label>Дом</label>
+          <div class="field"><label>Дом</label>
             <input value="${esc(d.addr.house)}" oninput="dSetAddr('house',this.value)"></div>
         </div>
+
+        <div class="field" style="margin-top:14px"><label>Комментарий</label>
+          <textarea id="d_comment" rows="2" oninput="dSet('comment',this.value)">${esc(d.comment)}</textarea></div>
       </div>
     </details>
-
-    <div class="field"><label>Комментарий</label>
-      <textarea id="d_comment" rows="2" oninput="dSet('comment',this.value)">${esc(d.comment)}</textarea></div>
-
-    <div class="row" style="margin-top:6px;padding-bottom:6px">
-      <button class="btn" id="saveBtn" onclick="saveDraft()">Создать заказ</button>
-      <button class="btn ghost" onclick="cancelDraft()">Отмена</button>
-    </div>
-    <div class="err" id="formErr"></div>
   </div>`);
-  renderOI();
+
+  S.shelf = { tab:'bundles', orderId:null, draft:true };
+  drawShelf();
+}
+function drawDraftSum(){
+  const d = S.draft;
+  const itemsSum = S.orderItems.reduce((a,r)=>a + (r.qty||0)*(r.price||0), 0);
+  const amount = d.amount>0 ? d.amount : itemsSum;
+  const box = document.querySelector('.ocard .oc-amt');
+  if(box) box.textContent = money(amount);
 }
 function syncDraftSum(){
   const sum = S.orderItems.reduce((a,r)=>a + (r.qty||0)*(r.price||0), 0);
@@ -3308,7 +3340,7 @@ async function saveDraft(){
   const patch = { number:'ORD-'+Date.now(), customer_id:cust.id, owner_id:d.owner_id||S.user.id,
     status_id:d.status_id, amount, comment:(d.comment||'').trim()||null,
     ext_id:(d.ext_id||'').trim()||null, payment_type_id:d.payment_type_id, parcel_status_id:d.parcel_status_id,
-    delivery_status_id:d.delivery_status_id, delivery_type_id:d.delivery_type_id,
+    delivery_type_id:d.delivery_type_id,
     addr_zip:d.addr.zip.trim()||null, addr_region:d.addr.region.trim()||null,
     addr_district:d.addr.district.trim()||null, addr_city:d.addr.city.trim()||null,
     addr_street:d.addr.street.trim()||null, addr_house:d.addr.house.trim()||null };

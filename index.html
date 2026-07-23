@@ -205,6 +205,7 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .bpick-txt{min-width:0}
 .pk-wrap{position:fixed;inset:0;z-index:60;background:var(--tint);display:flex;flex-direction:column;
   padding-top:var(--safe-t)}
+.pk-body{padding-left:16px;padding-right:16px}
 .pk-top{display:flex;align-items:center;gap:12px;padding:14px 20px;border-bottom:1px solid var(--line);
   background:var(--ink-2);flex:none}
 .pk-ttl{font-family:'Bricolage Grotesque';font-size:18px;font-weight:700;display:flex;
@@ -245,7 +246,11 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
   color:var(--mute);margin-bottom:6px}
 .bld-fixed-i{display:flex;align-items:center;gap:8px;font-size:14px;padding:2px 0}
 .bld-fixed-i .lock{font-size:11px;opacity:.6}
-.bld-slot{margin-bottom:12px}
+.bld-slot{margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.bld-slot:last-of-type{border-bottom:none}
+.bld-allow{font-size:11px;color:var(--mute);margin-top:6px}
+.slot-card{border:1px solid var(--line);border-radius:10px;padding:10px 11px;margin-bottom:8px;
+  background:var(--tint)}
 .bld-slot-h{display:flex;align-items:center;gap:9px;margin-bottom:7px}
 .bld-slot-h .lbl{font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--mute)}
 .bld-slot-h .cnt{margin-left:auto;font-size:13px;font-weight:700}
@@ -259,17 +264,19 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .bld-chip b{cursor:pointer;opacity:.65;font-weight:400;font-size:13px}
 .bld-chip b:hover{opacity:1}
 .bld-none{font-size:13px;color:var(--mute)}
-.bld-pool{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px;
+.bld-pool{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:9px;
   align-items:start;margin-bottom:12px}
 .bld-box{border:1px solid var(--line);border-left:3px solid var(--line);border-radius:0 11px 11px 0;
-  overflow:hidden;background:var(--ink-2)}
+  overflow:hidden;background:var(--ink-2);display:flex;flex-direction:column;max-height:320px}
+.bld-box-h{flex:none}
+.bld-box .bld-rows{overflow-y:auto}
 .bld-box-h{padding:7px 11px;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;
   display:flex;justify-content:space-between;align-items:center;gap:8px}
 .bld-box-h span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bld-box-h .cnt{font-weight:400;letter-spacing:0;text-transform:none;flex:none}
 .bld-row{display:flex;align-items:center;gap:8px;padding:7px 11px;border-top:1px solid var(--line);
   cursor:pointer}
-.bld-box .bld-row:first-of-type{border-top:none}
+.bld-rows .bld-row:first-child{border-top:none}
 .bld-row:hover{background:var(--tint)}
 .bld-row.off{opacity:.4;cursor:not-allowed}
 .bld-row.off:hover{background:transparent}
@@ -287,8 +294,8 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .slot-cat i{width:7px;height:7px;border-radius:99px;flex:none}
 .slot-cat.on{font-weight:700}
 .cat-scrim{position:fixed;inset:0;background:rgba(26,29,36,.5);z-index:70}
-.cat-modal{position:fixed;z-index:71;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:min(1100px,94vw);height:min(760px,88vh);background:var(--ink-2);border-radius:16px;
+.cat-modal{position:fixed;z-index:71;left:2vw;right:2vw;top:3vh;bottom:3vh;
+  background:var(--ink-2);border-radius:16px;
   display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(26,29,36,.3)}
 .cat-top{display:flex;align-items:center;padding:15px 20px;border-bottom:1px solid var(--line);flex:none}
 .cat-ttl{font-family:'Bricolage Grotesque';font-size:18px;font-weight:700}
@@ -297,14 +304,15 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .cat-q{width:100%;margin-bottom:10px}
 .cat-tabs{display:flex;gap:6px;flex-wrap:wrap}
 .cat-body{flex:1;min-height:0;overflow-y:auto;padding:16px 20px 20px}
-.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;align-items:start}
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:10px;
+  align-items:start}
 .cat-box{border:1px solid var(--line);border-left:3px solid var(--line);border-radius:0 12px 12px 0;
   overflow:hidden;background:var(--tint)}
 .cat-box-h{padding:8px 12px;font-size:10px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;
   display:flex;justify-content:space-between;align-items:center;gap:8px}
 .cat-box-h span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cat-box-h .cnt{font-weight:400;letter-spacing:0;text-transform:none;flex:none}
-.cat-box-b{background:var(--ink-2)}
+.cat-box-b{background:var(--ink-2);max-height:340px;overflow-y:auto}
 .cat-row{display:flex;align-items:center;gap:9px;padding:8px 12px;border-top:1px solid var(--line);
   cursor:pointer}
 .cat-box-b .cat-row:first-child{border-top:none}
@@ -587,7 +595,7 @@ const FN = {
 const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.co', SUPABASE_ANON || 'placeholder');
 
 const S = { user:null, me:null, tab:'dash', statuses:[], deliveryStatuses:[], deliveryTypes:[], employees:[], products:[],
-            bundles:[], bundleOptions:[], bundleItems:[], bOpen:null, draft:null, pick:null, cat:null,
+            bundles:[], bundleOptions:[], bundleItems:[], bundleSlots:[], bOpen:null, draft:null, pick:null, cat:null,
             orders:[], customers:[], sources:[], categories:[], departments:[], ai:[],
             pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 }, pOpenCat:null,
             eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 }, eOpenDep:null,
@@ -676,12 +684,15 @@ async function loadAll(){
     sb.from('bundles').select('*').order('price'),
     sb.from('bundle_options').select('*').order('sort'),
     sb.from('bundle_items').select('*, products(name,sku)').order('sort'),
+    sb.from('bundle_slots').select('*').order('sort'),
   ];
-  const [st,em,pr,so,ca,dp,cu,or_,ds,dtp,bn,bo,bi] = await Promise.all(q);
+  const settled = await Promise.all(q.map(x=>x.then(r=>r, e=>({data:[],error:e}))));
+  const [st,em,pr,so,ca,dp,cu,or_,ds,dtp,bn,bo,bi,bs] = settled;
+  settled.forEach(r=>{ if(r && r.error) console.warn('CRM load:', r.error.message||r.error); });
   S.statuses=st.data||[]; S.employees=em.data||[]; S.products=pr.data||[];
   S.sources=so.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
   S.customers=cu.data||[]; S.orders=or_.data||[]; S.deliveryStatuses=ds.data||[]; S.deliveryTypes=dtp.data||[];
-  S.bundles=bn.data||[]; S.bundleOptions=bo.data||[]; S.bundleItems=bi.data||[];
+  S.bundles=bn.data||[]; S.bundleOptions=bo.data||[]; S.bundleItems=bi.data||[]; S.bundleSlots=bs.data||[];
   S.me = S.employees.find(e=>e.id===S.user.id) || { full_name:S.user.email, role:'sales' };
   el('me').innerHTML = `<b>${esc(S.me.full_name)}</b>${({sales:'Менеджер',head:'Руководитель',admin:'Администратор'})[S.me.role]||S.me.role} ·
     <a href="#" onclick="signOut();return false" style="color:var(--mute)">выйти</a>`;
@@ -1781,9 +1792,12 @@ function bundleCard(b, isAdmin){
           <div class="bopt2-items">
             ${bItemsOf(o.id).map(i=>`<div class="bopt2-i">
               <span class="q mono">${i.qty||1}×</span> ${esc(itemLabel(i))}</div>`).join('')}
-            ${slotQtyOf(o) ? `<div class="bopt2-slot">+ ${slotQtyOf(o)} на выбор${
-              slotCatsOf(o).length ? ': '+slotCatsOf(o).map(id=>esc(S.categories.find(c=>c.id===id)?.name||'')).filter(Boolean).join(', ') : ''}</div>` : ''}
-            ${!bItemsOf(o.id).length && !slotQtyOf(o) ? '<div class="bopt2-i" style="color:var(--mute)">состав не заполнен</div>' : ''}
+            ${slotsOf(o.id).map(sl=>{
+              const cats = slotCatsOf(sl);
+              return `<div class="bopt2-slot">+ ${sl.qty} на выбор${
+                cats.length ? ': '+cats.map(id=>esc(S.categories.find(c=>c.id===id)?.name||'')).filter(Boolean).join(', ') : ''}</div>`;
+            }).join('')}
+            ${!bItemsOf(o.id).length && !slotsOf(o.id).length ? '<div class="bopt2-i" style="color:var(--mute)">состав не заполнен</div>' : ''}
           </div>
           <div class="bopt2-act">
             <button class="btn sm" onclick="fromShowcase(${b.id},${o.id})">В заказ</button>
@@ -1925,15 +1939,16 @@ function closePicker(){
   else if(t?.mode==='draft') drawDraft();
 }
 /* ─────────── СБОРКА НАБОРА (внутри карточки) ─────────── */
-const slotQtyOf = o => +o.slot_qty || 0;
-const slotCatsOf = o => (o.slot_categories ? String(o.slot_categories).split(',').filter(Boolean).map(Number) : []);
-const pickedQty = () => (S.pick.slot||[]).reduce((a,x)=>a+x.qty,0);
+const slotsOf = oid => S.bundleSlots.filter(x=>x.option_id===oid)
+  .sort((a,b)=>(a.sort||0)-(b.sort||0));
+const slotCatsOf = sl => (sl.categories ? String(sl.categories).split(',').filter(Boolean).map(Number) : []);
+const slotTaken = sid => (S.pick.slot||[]).filter(x=>x.slot_id===sid).reduce((a,x)=>a+x.qty,0);
+const slotFull = sl => slotTaken(sl.id) >= (+sl.qty||0);
+const allSlotsFull = () => slotsOf(S.pick.option).every(slotFull);
 
-// категории, разрешённые для добора в текущей комплектации
-function slotGroups(){
-  const o = S.bundleOptions.find(x=>x.id===S.pick.option);
-  if(!o) return [];
-  const allow = slotCatsOf(o);
+// товары, доступные для конкретного слота
+function slotGroups(sl){
+  const allow = slotCatsOf(sl);
   const live = S.products.filter(p=>p.active!==false);
   return S.categories.map((c,i)=>({
       key:c.id, name:c.name, col:catColor(c,i),
@@ -1941,37 +1956,29 @@ function slotGroups(){
                  .sort((a,b)=>(a.name||'').localeCompare(b.name||'','ru')) }))
     .filter(g=>g.items.length && (!allow.length || allow.includes(g.key)));
 }
-function slotAdd(pid){
-  const o = S.bundleOptions.find(x=>x.id===S.pick.option);
-  const lim = slotQtyOf(o);
-  if(pickedQty() >= lim) return;
+function slotAdd(slotId, pid){
+  const sl = S.bundleSlots.find(x=>x.id===slotId); if(!sl) return;
+  if(slotTaken(slotId) >= (+sl.qty||0)) return;
   const p = S.products.find(x=>x.id==pid); if(!p) return;
   S.pick.slot = S.pick.slot || [];
-  const ex = S.pick.slot.find(x=>x.product_id===p.id);
+  const ex = S.pick.slot.find(x=>x.slot_id===slotId && x.product_id===p.id);
   if(ex) ex.qty++;
-  else S.pick.slot.push({ product_id:p.id, name:p.name, qty:1, price:+p.price||0,
-                          cat:p.category_id });
+  else S.pick.slot.push({ slot_id:slotId, product_id:p.id, name:p.name,
+                          qty:1, price:+p.price||0, cat:p.category_id });
   drawPickerSide();
 }
-function slotDel(ix){
-  S.pick.slot.splice(ix,1);
-  drawPickerSide();
-}
-function slotSub(ix){
-  const it = S.pick.slot[ix]; if(!it) return;
-  it.qty--; if(!it.qty) S.pick.slot.splice(ix,1);
+function slotSub(slotId, pid){
+  const ix = S.pick.slot.findIndex(x=>x.slot_id===slotId && x.product_id===pid);
+  if(ix<0) return;
+  S.pick.slot[ix].qty--;
+  if(!S.pick.slot[ix].qty) S.pick.slot.splice(ix,1);
   drawPickerSide();
 }
 function builderHtml(){
   const k = S.pick;
   if(!k.option) return `<div class="pk-empty">Выберите комплектацию — здесь её можно собрать под клиента.</div>`;
-  const o = S.bundleOptions.find(x=>x.id===k.option);
-  const lim = slotQtyOf(o);
-  const got = pickedQty();
-  const left = lim - got;
-  const full = lim>0 ? got>=lim : true;
-  const groups = slotGroups();
-  const catOf = id => S.categories.find(c=>c.id===id);
+  const slots = slotsOf(k.option);
+  const ready = allSlotsFull();
   const colOf = id => { const i = S.categories.findIndex(c=>c.id===id);
                         return i<0 ? CAT_PAL[CAT_PAL.length-1] : catColor(S.categories[i], i); };
 
@@ -1987,42 +1994,47 @@ function builderHtml(){
         <span class="lock">🔒</span><span>${i.qty}× ${esc(i.name)}</span></div>`).join('')}
     </div>` : ''}
 
-    ${lim>0 ? `
-    <div class="bld-slot">
-      <div class="bld-slot-h">
-        <span class="lbl">Добрать товары</span>
-        <span class="cnt ${full?'full':''}">${got} из ${lim}</span>
-      </div>
-      <div class="bld-bar"><i class="${full?'full':''}" style="width:${lim?Math.min(100,got/lim*100):0}%"></i></div>
-      <div class="bld-chips">
-        ${(k.slot||[]).length ? k.slot.map((x,ix)=>{
-          const c = colOf(x.cat);
-          return `<span class="bld-chip" style="background:${c.b};color:${c.t}">
-            <i style="background:${c.s}"></i>${esc(x.name)}${x.qty>1?' × '+x.qty:''}
-            <b onclick="slotSub(${ix})">✕</b></span>`;}).join('')
-        : `<span class="bld-none">Пока ничего не добрано${full?'':' — доступно '+left}</span>`}
-      </div>
-    </div>
-
-    <div class="bld-pool">
-      ${groups.map(g=>`
-        <div class="bld-box" style="border-left-color:${g.col.s}">
-          <div class="bld-box-h" style="background:${g.col.b};color:${g.col.t}">
-            <span>${esc(g.name)}</span><span class="cnt">${g.items.length}</span></div>
-          ${g.items.map(p=>`<div class="bld-row ${full?'off':''}"
-            ${full?'':`onclick="slotAdd(${p.id})"`}>
-            <span class="n">${esc(p.name)}</span>
-            <span class="pr mono">${p.price?money(p.price):''}</span>
-            <span class="plus" style="color:${full?'var(--mute)':g.col.s}">+</span>
-          </div>`).join('')}
-        </div>`).join('')}
-    </div>` : ''}
+    ${slots.map(sl=>{
+      const lim = +sl.qty||0, got = slotTaken(sl.id), left = lim-got, full = got>=lim;
+      const mine = (k.slot||[]).filter(x=>x.slot_id===sl.id);
+      const groups = slotGroups(sl);
+      const cats = slotCatsOf(sl);
+      return `<div class="bld-slot">
+        <div class="bld-slot-h">
+          <span class="lbl">${esc(sl.name || 'Добрать товары')}</span>
+          <span class="cnt ${full?'full':''}">${got} из ${lim}</span>
+        </div>
+        <div class="bld-bar"><i class="${full?'full':''}" style="width:${lim?Math.min(100,got/lim*100):0}%"></i></div>
+        ${cats.length?`<div class="bld-allow">из категорий: ${cats.map(id=>esc(S.categories.find(c=>c.id===id)?.name||'')).filter(Boolean).join(', ')}</div>`:''}
+        <div class="bld-chips">
+          ${mine.length ? mine.map(x=>{
+            const c = colOf(x.cat);
+            return `<span class="bld-chip" style="background:${c.b};color:${c.t}">
+              <i style="background:${c.s}"></i>${esc(x.name)}${x.qty>1?' × '+x.qty:''}
+              <b onclick="slotSub(${sl.id},${x.product_id})">✕</b></span>`;}).join('')
+          : `<span class="bld-none">${full?'':'нужно добрать '+left}</span>`}
+        </div>
+        ${full ? '' : `<div class="bld-pool">
+          ${groups.map(g=>`
+            <div class="bld-box" style="border-left-color:${g.col.s}">
+              <div class="bld-box-h" style="background:${g.col.b};color:${g.col.t}">
+                <span>${esc(g.name)}</span><span class="cnt">${g.items.length}</span></div>
+              <div class="bld-rows">
+                ${g.items.map(p=>`<div class="bld-row" onclick="slotAdd(${sl.id},${p.id})">
+                  <span class="n">${esc(p.name)}</span>
+                  <span class="pr mono">${p.price?money(p.price):''}</span>
+                  <span class="plus" style="color:${g.col.s}">+</span>
+                </div>`).join('')}
+              </div>
+            </div>`).join('')}
+        </div>`}
+      </div>`;}).join('')}
 
     <div class="bld-foot">
       <span class="lbl">Итог</span>
       <span class="sum mono">${money(k.price)}</span>
-      <button class="btn ${full?'':'off'}" ${full?'':'disabled'} onclick="applyPick()">
-        ${full ? 'Подставить в заказ' : 'Добавьте ещё '+left}</button>
+      <button class="btn ${ready?'':'off'}" ${ready?'':'disabled'} onclick="applyPick()">
+        ${ready ? 'Подставить в заказ' : 'Заполните все слоты'}</button>
     </div>`;
 }
 function drawPickerSide(){
@@ -2165,7 +2177,8 @@ async function delBundle(id){
 function editOption(bundleId, optionId){
   const o = optionId ? S.bundleOptions.find(x=>x.id===optionId) : null;
   S.biDraft = o ? bItemsOf(o.id).map(i=>({ product_id:i.product_id, label:i.label, qty:i.qty||1 })) : [];
-  S.slotCats = o && o.slot_categories ? String(o.slot_categories).split(',').filter(Boolean).map(Number) : [];
+  S.slotDraft = o ? slotsOf(o.id).map(sl=>({ qty:+sl.qty||1, name:sl.name||'',
+                      cats: sl.categories ? String(sl.categories).split(',').filter(Boolean).map(Number) : [] })) : [];
   const b = S.bundles.find(x=>x.id===bundleId);
   formModal((o?'Комплектация':'Новая комплектация')+' · '+money(b?.price||0),`
     <div class="field"><label>Название</label>
@@ -2182,40 +2195,31 @@ function editOption(bundleId, optionId){
     </div>
 
     <div style="border-top:1px solid var(--line);margin:14px 0 12px;padding-top:14px">
-      <label style="margin-bottom:6px;display:block">Слот добора
-        <span style="text-transform:none;font-weight:400">— сколько позиций менеджер добирает сам</span></label>
-      <div class="field" style="margin-bottom:10px">
-        <input id="o_slot" type="number" inputmode="numeric" min="0"
-          value="${o?(o.slot_qty||0):0}" placeholder="0 — добор не нужен"></div>
-      <label style="margin-bottom:6px;display:block;font-size:11px">Разрешённые категории</label>
-      <div class="slot-cats">
-        ${S.categories.map((c,i)=>{
-          const on = S.slotCats.includes(c.id);
-          const k = catColor(c,i);
-          return `<label class="slot-cat ${on?'on':''}" style="${on?`border-color:${k.s};background:${k.b};color:${k.t}`:''}">
-            <input type="checkbox" value="${c.id}" ${on?'checked':''} onchange="toggleSlotCat(${c.id},this)">
-            <i style="background:${k.s}"></i>${esc(c.name)}</label>`;}).join('')}
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+        <label style="margin:0">Слоты добора
+          <span style="text-transform:none;font-weight:400">— что менеджер выбирает сам</span></label>
+        <button class="btn sm ghost" onclick="addSlot()">+ Слот</button>
       </div>
-      <div style="font-size:12px;color:var(--mute);margin-top:8px">
-        Если не отметить ни одной — можно брать из любой категории.</div>
+      <div id="slotList"></div>
     </div>
 
     ${o?`<button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert);margin-top:6px"
       onclick="delOption(${o.id})">Удалить комплектацию</button>`:''}`,
   async()=>{
     const fixed = S.biDraft.filter(r=>r.product_id || (r.label||'').trim());
-    const slotQty = +el('o_slot').value||0;
-    if(!fixed.length && !slotQty)
-      return el('formErr').textContent='Задайте фиксированную часть или слот добора';
+    const slots = S.slotDraft.filter(sl=>sl.qty>0);
+    if(!fixed.length && !slots.length)
+      return el('formErr').textContent='Задайте фиксированную часть или хотя бы один слот';
     const name = el('o_name').value.trim()||null;
-    const patch = { name, slot_qty:slotQty, slot_categories:S.slotCats.join(',')||null };
     let oid = o?.id;
-    if(o){ await sb.from('bundle_options').update(patch).eq('id',o.id);
-           await sb.from('bundle_items').delete().eq('option_id',o.id); }
-    else {
+    if(o){
+      await sb.from('bundle_options').update({name}).eq('id',o.id);
+      await sb.from('bundle_items').delete().eq('option_id',o.id);
+      await sb.from('bundle_slots').delete().eq('option_id',o.id);
+    } else {
       const sort = (bOptionsOf(bundleId).at(-1)?.sort||0)+1;
       const { data, error } = await sb.from('bundle_options')
-        .insert({bundle_id:bundleId, sort, ...patch}).select().single();
+        .insert({bundle_id:bundleId, name, sort}).select().single();
       if(error) return el('formErr').textContent='Не удалось сохранить: '+error.message;
       oid = data.id;
     }
@@ -2225,19 +2229,55 @@ function editOption(bundleId, optionId){
         qty:r.qty||1, sort:idx })));
       if(e2) return el('formErr').textContent='Не удалось сохранить состав: '+e2.message;
     }
+    if(slots.length){
+      const { error:e3 } = await sb.from('bundle_slots').insert(slots.map((sl,idx)=>({
+        option_id:oid, qty:sl.qty, name:sl.name.trim()||null,
+        categories:sl.cats.join(',')||null, sort:idx })));
+      if(e3) return el('formErr').textContent='Не удалось сохранить слоты: '+e3.message;
+    }
     closeAll(); await loadAll(); go('bundles');
   });
   renderBI();
+  renderSlots();
 }
-function toggleSlotCat(id, box){
-  if(box.checked){ if(!S.slotCats.includes(id)) S.slotCats.push(id); }
-  else S.slotCats = S.slotCats.filter(x=>x!==id);
-  const lab = box.closest('.slot-cat');
-  const idx = S.categories.findIndex(c=>c.id===id);
-  const k = catColor(S.categories[idx], idx);
-  if(box.checked){ lab.classList.add('on');
-    lab.style.borderColor=k.s; lab.style.background=k.b; lab.style.color=k.t; }
-  else { lab.classList.remove('on'); lab.style.cssText=''; }
+function addSlot(){
+  S.slotDraft.push({ qty:1, name:'', cats:[] });
+  renderSlots();
+}
+function delSlot(ix){ S.slotDraft.splice(ix,1); renderSlots(); }
+function setSlotQty(ix,v){ S.slotDraft[ix].qty = Math.max(1,+v||1); }
+function setSlotName(ix,v){ S.slotDraft[ix].name = v; }
+function toggleSlotCat(ix, id, box){
+  const sl = S.slotDraft[ix];
+  if(box.checked){ if(!sl.cats.includes(id)) sl.cats.push(id); }
+  else sl.cats = sl.cats.filter(x=>x!==id);
+  renderSlots();
+}
+function renderSlots(){
+  const box = el('slotList'); if(!box) return;
+  box.innerHTML = S.slotDraft.length ? S.slotDraft.map((sl,ix)=>`
+    <div class="slot-card">
+      <div class="row" style="gap:8px;align-items:center;margin-bottom:8px;flex-wrap:nowrap">
+        <input class="qty mono" type="number" min="1" value="${sl.qty}" title="Сколько позиций"
+          style="width:64px" oninput="setSlotQty(${ix},this.value)">
+        <input value="${esc(sl.name)}" placeholder="название слота (необязательно)"
+          style="flex:1;min-width:0" oninput="setSlotName(${ix},this.value)">
+        <button class="del" onclick="delSlot(${ix})" title="Убрать слот">×</button>
+      </div>
+      <div class="slot-cats">
+        ${S.categories.map((c,i)=>{
+          const on = sl.cats.includes(c.id);
+          const k = catColor(c,i);
+          return `<label class="slot-cat ${on?'on':''}"
+            style="${on?`border-color:${k.s};background:${k.b};color:${k.t}`:''}">
+            <input type="checkbox" ${on?'checked':''} onchange="toggleSlotCat(${ix},${c.id},this)">
+            <i style="background:${k.s}"></i>${esc(c.name)}</label>`;}).join('')}
+      </div>
+      <div style="font-size:11px;color:var(--mute);margin-top:6px">
+        ${sl.cats.length ? '' : 'Категории не отмечены — можно брать любые товары.'}</div>
+    </div>`).join('')
+    : `<div style="color:var(--mute);font-size:13px;padding:4px 0 8px">
+        Слотов нет — набор будет строго из фиксированной части.</div>`;
 }
 function addBIFromCatalog(){
   openCatalog(p=>{ S.biDraft.push({ product_id:p.id, qty:1 }); renderBI(); }, 'Фиксированный товар набора');

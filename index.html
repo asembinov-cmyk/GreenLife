@@ -791,7 +791,20 @@ async function openOrder(id){
       <div class="b">${a.type==='call'?'📞 ':a.type==='whatsapp'?'💬 ':''}${esc(a.body||'')}${a.duration?` <span style="color:var(--mute)">(${a.duration} с)</span>`:''}</div>
       ${a.recording_url?`<audio controls src="${esc(a.recording_url)}" style="width:100%;margin-top:6px;height:34px"></audio>`:''}
     </div>`).join('') || '<div class="ev"><div class="b" style="color:var(--mute)">Пока пусто</div></div>'}</div>
+    ${S.me.role==='admin' ? `<div style="border-top:1px solid var(--line);margin-top:22px;padding-top:16px">
+      <button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert)"
+        onclick="deleteOrder(${id})">Удалить заказ</button></div>` : ''}
   </div>`);
+}
+async function deleteOrder(id){
+  const o = S.orders.find(x=>x.id===id);
+  const label = o ? (o.customers?.name || o.number || id) : id;
+  if(!confirm(`Удалить заказ «${label}»? Действие необратимо: состав заказа и история тоже будут удалены.`)) return;
+  await sb.from('order_items').delete().eq('order_id',id);
+  await sb.from('activities').delete().eq('order_id',id);
+  const { error } = await sb.from('orders').delete().eq('id',id);
+  if(error) return alert('Не удалось удалить заказ: '+error.message);
+  closeAll(); await loadAll(); go(S.tab);
 }
 function closeAll(){ document.querySelectorAll('.scrim,.drawer,.modal,.mmenu').forEach(n=>n.remove()); S.openOrder=null; }
 async function setStatus(id,sid){
@@ -1683,16 +1696,57 @@ function formModal(title,html,onSave){
     <div class="err" id="formErr"></div></div></div>`);
   el('saveBtn').onclick = onSave;
 }
-async function newOrder(){
-  const { data:cust, error:e1 } = await sb.from('customers')
-    .insert({ name:'Новый клиент', owner_id:S.user.id }).select().single();
-  if(e1) return alert('Не удалось создать заказ: '+e1.message);
-  const { data:ord, error:e2 } = await sb.from('orders').insert({
-    number:'ORD-'+Date.now(), customer_id:cust.id, owner_id:S.user.id,
-    status_id:S.statuses[0]?.id, amount:0 }).select().single();
-  if(e2) return alert('Не удалось создать заказ: '+e2.message);
-  await loadAll(); go(S.tab);
-  openOrder(ord.id);
+function newOrder(){
+  S.orderItems = [];
+  formModal('Новый заказ',`
+    <div class="field"><label>Имя клиента</label><input id="f_name"></div>
+    <div class="field"><label>Телефон</label><input id="f_phone" type="tel" inputmode="tel" placeholder="+7"></div>
+    <div class="field"><label>Источник</label><select id="f_src"><option value="">—</option>
+      ${S.sources.map(s=>`<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select></div>
+
+    <div style="border-top:1px solid var(--line);margin:14px 0 12px;padding-top:14px">
+      <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:8px">
+        <label style="margin:0">Товары в заказе</label>
+        <button class="btn sm ghost" onclick="addOI()">+ Позиция</button>
+      </div>
+      <div id="oiList"></div>
+      <div class="oi-sum"><span>Сумма товаров</span><span class="mono" id="oiSum">0 ₸</span></div>
+    </div>
+
+    <div class="field"><label>Сумма заказа, ₸
+      <span style="text-transform:none;font-weight:400">(можно оставить как есть — подставится сумма товаров)</span></label>
+      <input id="f_amount" type="number" inputmode="numeric" value="0"></div>
+    <div class="field"><label>Комментарий</label><textarea id="f_comment" rows="2"></textarea></div>`,
+  async()=>{
+    const name=el('f_name').value.trim(); if(!name) return el('formErr').textContent='Укажите имя клиента';
+    const phone=el('f_phone').value.trim();
+    const clean = S.orderItems.filter(r=>r.product_id);
+    const itemsSum = clean.reduce((a,r)=>a + r.qty*r.price, 0);
+    const manual = +el('f_amount').value||0;
+    const amount = itemsSum > 0 ? itemsSum : manual;
+
+    el('saveBtn').textContent='Сохраняю…'; el('saveBtn').disabled=true;
+
+    let cust = phone ? S.customers.find(c=>c.phone===phone) : null;
+    if(!cust){ const {data} = await sb.from('customers').insert({name,phone,owner_id:S.user.id,
+      source_id:+el('f_src').value||null}).select().single(); cust=data; }
+
+    const { data:ord, error } = await sb.from('orders').insert({ number:'ORD-'+Date.now(), customer_id:cust.id,
+      owner_id:S.user.id, status_id:S.statuses[0]?.id, amount,
+      source_id:+el('f_src').value||null, comment:el('f_comment').value.trim() }).select().single();
+    if(error){ el('saveBtn').textContent='Сохранить'; el('saveBtn').disabled=false;
+      return el('formErr').textContent='Не удалось сохранить: '+error.message; }
+
+    if(clean.length){
+      const { error:e2 } = await sb.from('order_items').insert(clean.map(r=>({
+        order_id:ord.id, product_id:r.product_id, qty:r.qty, price:r.price })));
+      if(e2) console.warn('order_items:', e2.message);
+    }
+    S.orderItems = [];
+    closeAll(); await loadAll(); go(S.tab);
+    openOrder(ord.id);
+  });
+  renderOI();
 }
 function newCustomer(){
   formModal('Новый клиент',`

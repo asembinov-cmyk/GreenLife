@@ -371,8 +371,8 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .oc-x{font-size:17px;color:var(--mute);padding:2px 6px;flex:none}
 .oc-body{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1fr) minmax(0,1.3fr);
   gap:11px;padding:14px 20px;align-items:start}
-.oc-col{display:flex;flex-direction:column;gap:10px;min-width:0}
-.oc-box{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px 13px}
+.oc-col{display:flex;flex-direction:column;gap:10px;min-width:0;position:relative;z-index:1}
+.oc-box{background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:12px 13px;position:relative}
 .oc-box.grow{display:flex;flex-direction:column}
 .oc-box.warn{background:#FAEEDA;border-color:#EF9F27}
 .oc-box.up{background:#E1F5EE;border-color:#5DCAA5}
@@ -410,6 +410,17 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .sh-n{font-size:13px;font-weight:700;margin-bottom:3px;line-height:1.35}
 .sh-s{font-size:11px;color:var(--mute);margin-bottom:8px}
 .sh-card .btn{width:100%;text-align:center}
+.mgr{position:relative}
+.mgr-in{width:100%}
+.mgr-drop{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:5;
+  background:var(--ink-2);border:1px solid var(--line);border-radius:11px;
+  box-shadow:0 8px 24px rgba(26,29,36,.14);max-height:260px;overflow-y:auto;padding:5px}
+.mgr-drop.on{display:block}
+.mgr-row{display:flex;align-items:center;gap:9px;padding:7px 9px;border-radius:8px;cursor:pointer}
+.mgr-row:hover{background:var(--tint)}
+.mgr-row .n{font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mgr-row .s{font-size:11px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mgr-none{padding:12px;text-align:center;color:var(--mute);font-size:13px}
 .oc-bundle{background:var(--tint-2);border-radius:9px;padding:9px 11px;margin-bottom:10px}
 .oc-bundle-n{font-size:13px;font-weight:700;color:var(--paper);margin-bottom:7px;line-height:1.35}
 .oc-bundle-a{display:flex;gap:6px}
@@ -1218,10 +1229,7 @@ async function openOrder(id){
           <div class="field"><label>Внешний ID</label>
             <input value="${esc(o.ext_id||'')}" onchange="setOrderText(${id},'ext_id',this.value)"></div>
           ${boss?`<div class="field"><label>Менеджер</label>
-            <select onchange="setOrderField(${id},'owner_id',this.value,1)">
-              ${S.employees.filter(e=>e.active!==false).map(e=>
-                `<option value="${e.id}" ${e.id===o.owner_id?'selected':''}>${esc(e.full_name||'')}</option>`).join('')}
-            </select></div>`:''}
+            ${mgrPicker({kind:'order',id:id}, o.owner_id)}</div>`:''}
           <div class="field"><label>Сумма заказа, ₸</label>
             <input type="number" inputmode="numeric" value="${+o.amount||0}"
               onchange="setOrderField(${id},'amount',this.value)"></div>
@@ -1367,6 +1375,57 @@ async function setDeliveryType(id,tid){
   await sb.from('activities').insert({order_id:id,employee_id:S.user.id,type:'status',
     body:'Тип доставки: '+(t?t.name:'не задан')});
   await loadAll(); openOrder(id);
+}
+/* ─────────── ВЫБОР МЕНЕДЖЕРА С ПОИСКОМ ─────────── */
+// mode: {kind:'order', id} | {kind:'draft'}
+function mgrPicker(mode, currentId){
+  const cur = S.employees.find(e=>e.id===currentId);
+  const key = mode.kind==='order' ? 'mgr_o_'+mode.id : 'mgr_d';
+  return `<div class="mgr" data-key="${key}">
+    <input class="mgr-in" id="${key}" value="${esc(cur?.full_name||'')}"
+      placeholder="Начните вводить имя" autocomplete="off"
+      oninput="mgrSearch('${key}',this.value)"
+      onfocus="mgrSearch('${key}',this.value,1)"
+      onblur="setTimeout(()=>mgrClose('${key}'),180)">
+    <div class="mgr-drop" id="${key}_d"></div>
+  </div>`;
+}
+function mgrSearch(key, q, showAll){
+  const box = el(key+'_d'); if(!box) return;
+  const term = (q||'').trim().toLowerCase();
+  let list = S.employees.filter(e=>e.active!==false);
+  if(term && !showAll){
+    list = list.filter(e=>{
+      const byName = (e.full_name||'').toLowerCase().includes(term);
+      const qd = term.replace(/\D/g,'');
+      const byPhone = qd && ((e.login_phone||'')+(e.phone||'')).includes(qd);
+      return byName || byPhone;
+    });
+  }
+  list = list.slice(0, 40);
+  box.innerHTML = list.length ? list.map(e=>{
+    const dep = S.departments.find(d=>d.id===e.department_id);
+    return `<div class="mgr-row" onmousedown="mgrPick('${key}','${e.id}')">
+      <span class="avatar">${ini(e.full_name)}</span>
+      <div style="min-width:0;flex:1">
+        <div class="n">${esc(e.full_name||'')}</div>
+        <div class="s">${esc(ROLE_NAME[e.role]||e.role||'')}${dep?' · '+esc(dep.name):''}</div>
+      </div>
+    </div>`;}).join('')
+    : `<div class="mgr-none">Никого не нашлось</div>`;
+  box.classList.add('on');
+}
+function mgrClose(key){ el(key+'_d')?.classList.remove('on'); }
+function mgrPick(key, empId){
+  const e = S.employees.find(x=>x.id===empId);
+  const inp = el(key);
+  if(inp) inp.value = e?.full_name || '';
+  mgrClose(key);
+  if(key==='mgr_d'){ dSet('owner_id', empId); drawDraft(); }
+  else {
+    const oid = +key.replace('mgr_o_','');
+    setOrderField(oid, 'owner_id', empId, 1);
+  }
 }
 async function setOrderField(id, field, val, isText){
   const v = val==='' ? null : (isText ? val : +val);
@@ -3198,10 +3257,8 @@ function drawDraft(){
 
         <div class="oc-box">
           <div class="oc-lbl">Менеджер</div>
-          ${boss ? `<select onchange="dSet('owner_id',this.value)">
-            ${S.employees.filter(e=>e.active!==false).map(e=>
-              `<option value="${e.id}" ${e.id===(d.owner_id||S.user.id)?'selected':''}>${esc(e.full_name||'')}</option>`).join('')}
-          </select>` : `<div class="oc-mgr"><span class="avatar">${ini(owner?.full_name)}</span>
+          ${boss ? mgrPicker({kind:'draft'}, d.owner_id||S.user.id)
+            : `<div class="oc-mgr"><span class="avatar">${ini(owner?.full_name)}</span>
             <div style="font-weight:600;font-size:13px">${esc(owner?.full_name||'')}</div></div>`}
           ${head?`<div style="font-size:11px;color:var(--mute);margin-top:7px">рук. ${esc(head.full_name)}</div>`:''}
         </div>

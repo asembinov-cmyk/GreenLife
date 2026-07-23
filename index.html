@@ -410,6 +410,16 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .sh-n{font-size:13px;font-weight:700;margin-bottom:3px;line-height:1.35}
 .sh-s{font-size:11px;color:var(--mute);margin-bottom:8px}
 .sh-card .btn{width:100%;text-align:center}
+.oc-bundle{background:var(--tint-2);border-radius:9px;padding:9px 11px;margin-bottom:10px}
+.oc-bundle-n{font-size:13px;font-weight:700;color:var(--paper);margin-bottom:7px;line-height:1.35}
+.oc-bundle-a{display:flex;gap:6px}
+.oc-bundle-a .btn{flex:1;text-align:center}
+.oc-del{color:var(--alert);border-color:var(--alert)}
+.oc-tabs .pk-tab{font-size:11px;padding:4px 10px;border-radius:99px;border:1px solid var(--line);
+  background:var(--tint);color:var(--mute);cursor:pointer;white-space:nowrap;
+  display:inline-flex;align-items:center;gap:5px}
+.oc-tabs .pk-tab:hover{border-color:var(--signal)}
+.oc-tabs .pk-tab.on{border-color:var(--signal);color:var(--signal);background:var(--tint-2);font-weight:700}
 .oc-fold{border-top:1px solid var(--line);background:var(--ink-2)}
 .oc-fold>summary{list-style:none;cursor:pointer;padding:13px 20px;display:flex;align-items:center;
   gap:10px;font-weight:700;font-size:14px;user-select:none}
@@ -820,7 +830,7 @@ async function loadAll(){
     sb.from('categories').select('*'),
     sb.from('departments').select('*').order('name'),
     sb.from('customers').select('*').order('created_at',{ascending:false}).limit(500),
-    sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color), payment_types(name), parcel_statuses(name,color)')
+    sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color), payment_types(name), parcel_statuses(name,color), bundles(price,name)')
       .order('created_at',{ascending:false}).limit(600),
     sb.from('delivery_types').select('*').order('sort'),
     sb.from('bundles').select('*').order('price'),
@@ -1142,20 +1152,23 @@ async function openOrder(id){
       <div class="oc-col">
         <div class="oc-box grow">
           <div class="oc-lbl">Состав заказа</div>
+          ${o.bundle_id ? `<div class="oc-bundle">
+            <div class="oc-bundle-n">${esc(o.bundles?.name || money(o.bundles?.price||o.amount))}</div>
+            <div class="oc-bundle-a">
+              <button class="btn sm ghost" onclick="editOrderBundle(${id})">Изменить</button>
+              <button class="btn sm ghost oc-del" onclick="clearOrderBundle(${id})">Удалить</button>
+            </div>
+          </div>` : ''}
           <div class="oc-items">
             ${list.length ? list.map(i=>`<div class="oc-item">
               <span class="n">${esc(i.products?.name||'Товар удалён')}${i.qty>1?' × '+i.qty:''}</span>
-              <span class="p mono">${money((+i.qty||0)*(+i.price||0))}</span>
               <span class="x" onclick="delOrderItem(${id},${i.id})">✕</span>
             </div>`).join('')
             : `<div class="oc-none">Состав не заполнен</div>`}
           </div>
-          ${list.length && Math.abs(itemsSum-(+o.amount||0))>0.5 ? `<div class="oc-warn">
-            Товаров на ${money(itemsSum)}, в заказе ${money(o.amount)}.
-            <a href="#" onclick="syncOrderAmount(${id},${itemsSum});return false">Приравнять</a></div>`:''}
           <div class="oc-add">
-            <button class="btn sm" onclick="openCatalog(p=>addProductToOrder(${id},p),'Добавить товар в заказ')">+ Товар</button>
-            <button class="btn sm ghost" onclick="openPicker({mode:'order',id:${id}})">Набор</button>
+            <button class="btn sm" onclick="openPicker({mode:'order',id:${id}})">
+              ${o.bundle_id?'Другой набор':'Подобрать набор'}</button>
           </div>
         </div>
 
@@ -1323,6 +1336,19 @@ async function deleteOrder(id){
   const { error } = await sb.from('orders').delete().eq('id',id);
   if(error) return alert('Не удалось удалить заказ: '+error.message);
   closeAll(); await loadAll(); go(S.tab);
+}
+function editOrderBundle(orderId){
+  const o = S.orders.find(x=>x.id===orderId);
+  openPicker({mode:'order', id:orderId});
+  if(o?.bundle_id && o?.bundle_option_id) pickOption(o.bundle_id, o.bundle_option_id);
+}
+async function clearOrderBundle(orderId){
+  if(!confirm('Удалить набор из заказа? Состав будет очищен, сумма обнулится.')) return;
+  await sb.from('order_items').delete().eq('order_id',orderId);
+  await sb.from('orders').update({ amount:0, bundle_id:null, bundle_option_id:null }).eq('id',orderId);
+  await sb.from('activities').insert({ order_id:orderId, employee_id:S.user.id, type:'note',
+    body:'Набор удалён из заказа' });
+  await loadAll(); openOrder(orderId);
 }
 async function delOrderItem(orderId, itemId){
   await sb.from('order_items').delete().eq('id',itemId);
@@ -2440,6 +2466,8 @@ async function applyPick(){
     S.orderItems = linked.map(i=>({ product_id:i.product_id, qty:i.qty, price:i.price }));
     S.draft.amount = k.price;
     S.draft.bundleLabel = label;
+    S.draft.bundle_id = k.bundle;
+    S.draft.bundle_option_id = k.option;
     if(textOnly) S.draft.comment = (S.draft.comment?S.draft.comment+'\n':'') + `Набор: ${textOnly}`;
     S.pick = null;
     document.querySelectorAll('.pk-wrap').forEach(n=>n.remove());
@@ -2454,7 +2482,8 @@ async function applyPick(){
       order_id:oid, product_id:i.product_id, qty:i.qty, price:i.price })));
     if(error) return alert('Не удалось добавить состав: '+error.message);
   }
-  await sb.from('orders').update({ amount:k.price }).eq('id',oid);
+  await sb.from('orders').update({ amount:k.price,
+    bundle_id:k.bundle, bundle_option_id:k.option }).eq('id',oid);
   await sb.from('activities').insert({ order_id:oid, employee_id:S.user.id, type:'note',
     body:`Подобран набор ${label}` + (textOnly?`. Позиции без каталога: ${textOnly}`:'') });
   S.pick = null;
@@ -3188,6 +3217,9 @@ function drawDraft(){
       <div class="oc-col">
         <div class="oc-box grow">
           <div class="oc-lbl">Состав заказа</div>
+          ${d.bundleLabel?`<div class="oc-bundle">
+            <div class="oc-bundle-n">${esc(d.bundleLabel)}</div>
+          </div>`:''}
           <div class="oc-items">
             ${S.orderItems.length ? S.orderItems.map((r,i)=>{
               const p = S.products.find(x=>x.id===r.product_id);
@@ -3199,8 +3231,9 @@ function drawDraft(){
             : `<div class="oc-none">Состав не заполнен</div>`}
           </div>
           <div class="oc-add">
-            <button class="btn sm" onclick="openCatalog(p=>{addOIProduct(p);drawDraft()},'Добавить товар в заказ')">+ Товар</button>
-            <button class="btn sm ghost" onclick="openPicker({mode:'draft'})">Набор</button>
+            <button class="btn sm" onclick="openPicker({mode:'draft'})">
+              ${d.bundleLabel?'Другой набор':'Подобрать набор'}</button>
+            ${d.bundleLabel?`<button class="btn sm ghost oc-del" onclick="clearDraftBundle()">Удалить</button>`:''}
           </div>
         </div>
 
@@ -3284,6 +3317,15 @@ function drawDraft(){
   S.shelf = { tab:'bundles', orderId:null, draft:true };
   drawShelf();
 }
+function clearDraftBundle(){
+  if(!confirm('Удалить набор? Состав будет очищен, сумма обнулится.')) return;
+  S.orderItems = [];
+  S.draft.amount = 0;
+  S.draft.bundleLabel = null;
+  S.draft.bundle_id = null;
+  S.draft.bundle_option_id = null;
+  drawDraft();
+}
 function drawDraftSum(){
   const d = S.draft;
   const itemsSum = S.orderItems.reduce((a,r)=>a + (r.qty||0)*(r.price||0), 0);
@@ -3340,7 +3382,7 @@ async function saveDraft(){
   const patch = { number:'ORD-'+Date.now(), customer_id:cust.id, owner_id:d.owner_id||S.user.id,
     status_id:d.status_id, amount, comment:(d.comment||'').trim()||null,
     ext_id:(d.ext_id||'').trim()||null, payment_type_id:d.payment_type_id, parcel_status_id:d.parcel_status_id,
-    delivery_type_id:d.delivery_type_id,
+    delivery_type_id:d.delivery_type_id, bundle_id:d.bundle_id||null, bundle_option_id:d.bundle_option_id||null,
     addr_zip:d.addr.zip.trim()||null, addr_region:d.addr.region.trim()||null,
     addr_district:d.addr.district.trim()||null, addr_city:d.addr.city.trim()||null,
     addr_street:d.addr.street.trim()||null, addr_house:d.addr.house.trim()||null };

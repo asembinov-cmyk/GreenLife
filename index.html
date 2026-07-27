@@ -855,7 +855,7 @@ async function loadAll(){
     sb.from('script_steps').select('*').order('sort'),
   ];
   const settled = await Promise.all(q.map(x=>x.then(r=>r, e=>({data:[],error:e}))));
-  const [st,em,pr,pt,ps,ca,dp,cu,or_,dtp,bn,bo,bi,bs,sc,ss,pk,sn] = settled;
+  const [st,em,pr,pt,ps,pk,sn,ca,dp,cu,or_,dtp,bn,bo,bi,bs,sc,ss] = settled;
   settled.forEach(r=>{ if(r && r.error) console.warn('CRM load:', r.error.message||r.error); });
   S.statuses=st.data||[]; S.employees=em.data||[]; S.products=pr.data||[];
   S.paymentTypes=pt.data||[]; S.parcelStatuses=ps.data||[]; S.paymentKinds=pk.data||[]; S.senders=sn.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
@@ -980,7 +980,7 @@ function vDash(){
   });
   const mx = Math.max(1,...buckets.map(b=>b.n));
 
-  setTimeout(diagOrders, 100); el('view').innerHTML = `<div id='diagBox' style='background:#fffbe6;border:2px solid #f0c000;border-radius:10px;padding:14px;margin-bottom:14px;font-size:14px'>Проверяю базу…</div>` + H('Дашборд', `Сегодня ${new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'long'})}`,
+  el('view').innerHTML = H('Дашборд', `Сегодня ${new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'long'})}`,
     `<button class="btn" onclick="newOrder()">Новый заказ</button>`) +
   `<div class="grid kpis" style="margin-bottom:14px">
     <div class="card kpi"><div class="lbl">Выручка за месяц</div><div class="val up">${M(rev)}</div>

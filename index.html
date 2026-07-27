@@ -927,7 +927,7 @@ function go(k){
 }
 const H = (t,s,r='') => `<div class="head"><div><h1>${t}</h1><p>${s}</p></div><div class="row">${r}</div></div>`;
 
-function myOrders(){ return S.me.role==='sales' ? S.orders.filter(o=>o.owner_id===S.user.id) : S.orders; }
+function myOrders(){ return S.orders; }
 function vDash(){
   const os = myOrders(), m0 = new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
   const mth = os.filter(o=>new Date(o.created_at)>=m0);
@@ -1012,7 +1012,7 @@ function vOrders(){
   const won = os.filter(o=>o.statuses?.code==='won').length;
   const active = os.filter(o=>!['won','lost'].includes(o.statuses?.code)).length;
   el('view').innerHTML = H('Заказы',
-    `Всего заказов: ${os.length} · в работе: ${active} · закрыто: ${won} · [v3 · в базе ${S.orders.length}]`,
+    `Всего заказов: ${os.length} · в работе: ${active} · закрыто: ${won}`,
     `<input id="q" placeholder="Поиск: имя, номер, внешний ID" style="width:250px" oninput="drawOrders()">
      <button class="btn" onclick="newOrder()">Новый заказ</button>`) +
   `<div class="card" style="padding:14px"><div id="tbl"></div></div>`;

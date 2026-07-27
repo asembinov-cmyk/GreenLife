@@ -861,15 +861,17 @@ async function loadAll(){
   S.paymentTypes=pt.data||[]; S.parcelStatuses=ps.data||[]; S.paymentKinds=pk.data||[]; S.senders=sn.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
   S.customers=cu.data||[]; S.deliveryTypes=dtp.data||[];
   // сырые заказы + подстановка связей из загруженных списков (без inner join, чтобы ни один заказ не выпал)
+  S.bundles=bn.data||[]; S.bundleOptions=bo.data||[]; S.bundleItems=bi.data||[]; S.bundleSlots=bs.data||[]; S.scripts=sc.data||[]; S.scriptSteps=ss.data||[];
+  // обработка заказов ПОСЛЕ загрузки всех списков, с защитой от undefined
+  const _find = (arr,id)=> (Array.isArray(arr)?arr:[]).find(x=>x.id===id) || null;
   S.orders = (or_.data||[]).map(o=>({
     ...o,
-    customers: S.customers.find(c=>c.id===o.customer_id) || null,
-    statuses: S.statuses.find(x=>x.id===o.status_id) || null,
-    payment_types: S.paymentTypes.find(x=>x.id===o.payment_type_id) || null,
-    parcel_statuses: S.parcelStatuses.find(x=>x.id===o.parcel_status_id) || null,
-    bundles: S.bundles.find(x=>x.id===o.bundle_id) || null,
+    customers: _find(S.customers, o.customer_id),
+    statuses: _find(S.statuses, o.status_id),
+    payment_types: _find(S.paymentTypes, o.payment_type_id),
+    parcel_statuses: _find(S.parcelStatuses, o.parcel_status_id),
+    bundles: _find(S.bundles, o.bundle_id),
   }));
-  S.bundles=bn.data||[]; S.bundleOptions=bo.data||[]; S.bundleItems=bi.data||[]; S.bundleSlots=bs.data||[]; S.scripts=sc.data||[]; S.scriptSteps=ss.data||[];
   S.me = S.employees.find(e=>e.id===S.user.id) || { full_name:S.user.email, role:'sales' };
   el('me').innerHTML = `<b>${esc(S.me.full_name)}</b>${({sales:'Менеджер',head:'Руководитель',admin:'Администратор'})[S.me.role]||S.me.role} ·
     <a href="#" onclick="signOut();return false" style="color:var(--mute)">выйти</a>`;

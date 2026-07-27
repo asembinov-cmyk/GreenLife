@@ -1582,6 +1582,38 @@ async function findIndex(){
     el('idxResult').innerHTML = '<span style="color:var(--alert);font-size:13px">Не удалось найти: '+esc(e.message)+'</span>';
   }
 }
+async function findIndexDraft(){
+  const d = S.draft.addr;
+  if(!d.city && !d.street){
+    el('idxResultD').innerHTML = '<span style="color:var(--alert);font-size:13px">Заполните хотя бы город и улицу</span>';
+    return;
+  }
+  const q = [d.city, d.street, d.house].filter(Boolean).join(' ');
+  el('idxResultD').innerHTML = '<span style="color:var(--mute);font-size:13px">Ищу индекс…</span>';
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    const r = await fetch(SUPABASE_URL + '/functions/v1/find-index?q=' + encodeURIComponent(q), {
+      headers: { 'Authorization':'Bearer '+session.access_token, 'apikey':SUPABASE_ANON } });
+    const res = (await r.json());
+    if(!r.ok || res.error) throw new Error(res.error || 'Сервис недоступен');
+    const list = res.results || [];
+    if(!list.length){
+      el('idxResultD').innerHTML = '<span style="color:var(--amber);font-size:13px">Адрес не найден в базе Казпочты. Впишите индекс вручную.</span>';
+      return;
+    }
+    if(list.length===1 && list[0].index){
+      S.draft.addr.zip = list[0].index; drawDraft(); return;
+    }
+    el('idxResultD').innerHTML = '<div style="font-size:12px;color:var(--mute);margin-bottom:6px">Выберите точный адрес:</div>' +
+      list.map(x=>`<div class="mgr-row" style="cursor:pointer" onmousedown="pickIndexDraft('${esc(x.index)}')">
+        <span class="mono" style="font-weight:700;flex:none">${esc(x.index||'—')}</span>
+        <span style="font-size:12px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.address||'')}</span>
+      </div>`).join('');
+  }catch(e){
+    el('idxResultD').innerHTML = '<span style="color:var(--alert);font-size:13px">Не удалось найти: '+esc(e.message)+'</span>';
+  }
+}
+function pickIndexDraft(idx){ S.draft.addr.zip = idx; drawDraft(); }
 function pickIndex(idx){
   if(el('a_zip')) el('a_zip').value = idx;
   el('idxResult').innerHTML = '<span style="color:var(--signal);font-size:13px">Индекс подставлен: '+esc(idx)+'</span>';
@@ -2250,6 +2282,9 @@ function editEmployee(id){
       <div style="font-size:12px;color:var(--mute);margin-top:4px">Номер входа менять нельзя</div></div>
     <div class="field"><label>Отдел</label><select id="e_dep">${depOptions(e.department_id)}</select></div>
     <div class="field"><label>План на месяц, ₸</label><input id="e_plan" type="number" inputmode="numeric" value="${e.plan_month||0}"></div>
+    <div class="field"><label>Внешний логин (ID из другой системы)
+        <span style="text-transform:none;font-weight:400">— для приёма заказов по API</span></label>
+      <input id="e_ext" value="${esc(e.ext_login||'')}" placeholder="например, 102"></div>
     <div class="field"><label>Доступ в систему</label>
       <select id="e_active" ${self?'disabled':''}>
         <option value="1" ${e.active!==false?'selected':''}>Открыт</option>
@@ -2266,7 +2301,8 @@ function editEmployee(id){
     const pw = el('e_pw').value;
     if(pw && pw.length < 6) return el('formErr').textContent = 'Пароль должен быть от 6 символов';
     const patch = { full_name:el('e_name').value.trim(),
-                    department_id:+el('e_dep').value||null, plan_month:+el('e_plan').value||0 };
+                    department_id:+el('e_dep').value||null, plan_month:+el('e_plan').value||0,
+                    ext_login:(el('e_ext').value||'').trim()||null };
     if(!self){ patch.role = el('e_role').value; patch.active = el('e_active').value==='1'; }
     el('saveBtn').textContent = 'Сохраняю…'; el('saveBtn').disabled = true;
     const done = m => { el('saveBtn').textContent='Сохранить'; el('saveBtn').disabled=false;
@@ -3373,8 +3409,8 @@ function drawDraft(){
         <input id="d_name" class="oc-name" value="${esc(d.name)}" placeholder="Имя клиента"
           oninput="dSet('name',this.value)">
         <div class="oc-sub">
-          <span class="mono">НОВЫЙ ЗАКАЗ · черновик</span>
-          <span class="tag" style="background:var(--tint-2);color:var(--paper)">не сохранён</span>
+          <span class="mono">Новый заказ</span>
+          <span class="tag" style="background:var(--tint-2);color:var(--paper)">${S.statuses.find(x=>x.id===d.status_id)?.name || 'Новый'}</span>
         </div>
       </div>
       <div class="oc-amt mono">${money(amount)}</div>
@@ -3505,6 +3541,8 @@ function drawDraft(){
           <div class="field"><label>Дом</label>
             <input value="${esc(d.addr.house)}" oninput="dSetAddr('house',this.value)"></div>
         </div>
+        <button class="btn sm ghost" style="margin-top:8px" onclick="findIndexDraft()">Найти индекс по адресу</button>
+        <div id="idxResultD" style="margin-top:8px"></div>
 
         <div class="field" style="margin-top:14px"><label>Комментарий</label>
           <textarea id="d_comment" rows="2" oninput="dSet('comment',this.value)">${esc(d.comment)}</textarea></div>
@@ -3552,7 +3590,7 @@ function fromShowcase(bid, oid){
 function cancelDraft(){
   const d = S.draft;
   const touched = d && (d.name || d.phone || S.orderItems.length || d.amount || d.comment);
-  if(touched && !confirm('Закрыть черновик? Введённые данные не сохранятся.')) return;
+  if(touched && !confirm('Закрыть карточку? Заказ ещё не создан, введённые данные не сохранятся.')) return;
   S.draft = null; S.orderItems = [];
   closeAll();
 }

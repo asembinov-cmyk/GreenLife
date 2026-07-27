@@ -216,6 +216,8 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .pk-body{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,560px);
   gap:16px;padding:16px 20px 20px;overflow:hidden}
 .pk-grid{overflow-y:auto;display:flex;flex-direction:column;gap:11px;padding-right:4px}
+.pk-back{font-size:12px;color:var(--signal);font-weight:700;padding:6px 0;margin-bottom:6px;
+  background:none;border:none;cursor:pointer;text-align:left}
 .pk-lvl{background:var(--ink-2);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
 .pk-lvl-h{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
 .pk-price{font-family:'Bricolage Grotesque';font-size:19px;font-weight:800;color:var(--paper)}
@@ -1004,8 +1006,12 @@ async function drop(e,statusId){
 }
 
 function vOrders(){
-  el('view').innerHTML = H('Заказы','Все сделки и заявки',
-    `<input id="q" placeholder="Поиск по клиенту или номеру" style="width:250px" oninput="drawOrders()">
+  const os = myOrders();
+  const won = os.filter(o=>o.statuses?.code==='won').length;
+  const active = os.filter(o=>!['won','lost'].includes(o.statuses?.code)).length;
+  el('view').innerHTML = H('Заказы',
+    `Всего ${os.length} · в работе ${active} · закрыто ${won}`,
+    `<input id="q" placeholder="Поиск: имя, номер, внешний ID" style="width:250px" oninput="drawOrders()">
      <button class="btn" onclick="newOrder()">Новый заказ</button>`) +
   `<div class="card" style="padding:14px"><div id="tbl"></div></div>`;
   drawOrders();
@@ -1019,13 +1025,17 @@ function drawOrders(){
   }
   el('tbl').innerHTML = `
   <div class="tw"><table><thead><tr>
-    <th>Номер</th><th>Клиент</th><th>Сумма</th><th>Этап</th><th>Менеджер</th><th>Создан</th></tr></thead><tbody>
+    <th>Номер</th><th>Внеш. ID</th><th>Клиент</th><th>Сумма</th><th>Этап</th>
+    <th>Оплата</th><th>Посылка</th><th>Менеджер</th><th>Создан</th></tr></thead><tbody>
     ${rows.map(o=>`<tr onclick="openOrder(${o.id})">
       <td class="mono" style="color:var(--mute)">${esc(o.number||o.id)}</td>
+      <td class="mono" style="color:var(--mute);font-size:12px">${esc(o.ext_id||'—')}</td>
       <td><div style="font-weight:600">${esc(o.customers?.name||'Без имени')}</div>
           <div style="font-size:12px;color:var(--mute)">${esc(o.customers?.phone||'')}</div></td>
       <td class="mono" style="font-weight:700">${money(o.amount)}</td>
       <td><span class="tag" style="background:${o.statuses?.color}22;color:${o.statuses?.color}">${esc(o.statuses?.name||'—')}</span></td>
+      <td style="font-size:13px">${esc(o.payment_types?.name||'—')}</td>
+      <td>${o.parcel_statuses?.name?`<span class="tag" style="background:${o.parcel_statuses.color||'#6f7687'}22;color:${o.parcel_statuses.color||'#6f7687'}">${esc(o.parcel_statuses.name)}</span>`:'<span style="color:var(--mute)">—</span>'}</td>
       <td><span class="avatar">${ini(o.employees?.full_name)}</span></td>
       <td style="color:var(--mute);font-size:13px">${dt(o.created_at)}</td></tr>`).join('')}
     </tbody></table></div>
@@ -1075,6 +1085,68 @@ function custStats(customerId){
   const rev = won.reduce((a,o)=>a + +o.amount, 0);
   return { n:os.length, w:won.length, rev, avg: won.length ? rev/won.length : 0 };
 }
+
+/* ─────────── ГОРОДА КАЗАХСТАНА ─────────── */
+// [город, область, индекс]
+const KZ_CITIES = [
+  ['Алматы','Алматы','050000'],['Астана','Астана','010000'],['Шымкент','Шымкент','160000'],
+  ['Актобе','Актюбинская область','030000'],['Караганда','Карагандинская область','100000'],
+  ['Тараз','Жамбылская область','080000'],['Павлодар','Павлодарская область','140000'],
+  ['Усть-Каменогорск','Восточно-Казахстанская область','070000'],
+  ['Семей','Абайская область','071400'],['Атырау','Атырауская область','060000'],
+  ['Костанай','Костанайская область','110000'],['Кызылорда','Кызылординская область','120000'],
+  ['Уральск','Западно-Казахстанская область','090000'],['Петропавловск','Северо-Казахстанская область','150000'],
+  ['Актау','Мангистауская область','130000'],['Темиртау','Карагандинская область','101400'],
+  ['Туркестан','Туркестанская область','161200'],['Кокшетау','Акмолинская область','020000'],
+  ['Талдыкорган','Жетысуская область','040000'],['Экибастуз','Павлодарская область','141200'],
+  ['Рудный','Костанайская область','111500'],['Жезказган','Улытауская область','100600'],
+  ['Жанаозен','Мангистауская область','130200'],['Балхаш','Карагандинская область','100300'],
+  ['Кентау','Туркестанская область','161500'],['Сатпаев','Улытауская область','101300'],
+  ['Кокшетау','Акмолинская область','020000'],['Риддер','Восточно-Казахстанская область','071300'],
+  ['Степногорск','Акмолинская область','021500'],['Щучинск','Акмолинская область','021700'],
+  ['Аксай','Западно-Казахстанская область','090300'],['Капшагай','Алматинская область','040800'],
+  ['Каскелен','Алматинская область','040900'],['Талгар','Алматинская область','041600'],
+  ['Есик','Алматинская область','040400'],['Жаркент','Жетысуская область','041200'],
+  ['Аягоз','Абайская область','071700'],['Зайсан','Восточно-Казахстанская область','070900'],
+  ['Аральск','Кызылординская область','120200'],['Шу','Жамбылская область','080400'],
+  ['Каратау','Жамбылская область','080600'],['Сарыагаш','Туркестанская область','160900'],
+  ['Арыс','Туркестанская область','160300'],['Ленгер','Туркестанская область','160600'],
+  ['Житикара','Костанайская область','111700'],['Лисаковск','Костанайская область','111200'],
+  ['Аркалык','Костанайская область','110300'],['Кульсары','Атырауская область','060100'],
+  ['Форт-Шевченко','Мангистауская область','130400'],['Байконур','Кызылординская область','120700'],
+  ['Шахтинск','Карагандинская область','101600'],['Абай','Карагандинская область','100100'],
+  ['Каражал','Улытауская область','100800'],['Приозёрск','Карагандинская область','101000'],
+];
+function citySearch(key, q){
+  const box = el(key+'_cd'); if(!box) return;
+  const term = (q||'').trim().toLowerCase();
+  let list = KZ_CITIES;
+  if(term) list = list.filter(c=>c[0].toLowerCase().includes(term) || c[1].toLowerCase().includes(term));
+  list = list.slice(0, 30);
+  box.innerHTML = list.length ? list.map(c=>
+    `<div class="mgr-row" onmousedown="cityPick('${key}','${esc(c[0])}','${esc(c[1])}','${c[2]}')">
+      <div style="min-width:0;flex:1">
+        <div class="n">${esc(c[0])}</div>
+        <div class="s">${esc(c[1])} · ${c[2]}</div>
+      </div>
+    </div>`).join('')
+    : `<div class="mgr-none">Города нет в списке — впишите вручную</div>`;
+  box.classList.add('on');
+}
+function cityPick(key, city, region, zip){
+  if(key==='a'){
+    el('a_city').value = city;
+    if(el('a_region') && !el('a_region').value) el('a_region').value = region;
+    if(el('a_zip') && !el('a_zip').value) el('a_zip').value = zip;
+  } else {
+    S.draft.addr.city = city;
+    if(!S.draft.addr.region) S.draft.addr.region = region;
+    if(!S.draft.addr.zip) S.draft.addr.zip = zip;
+    drawDraft();
+  }
+  cityClose(key);
+}
+function cityClose(key){ setTimeout(()=>el(key+'_cd')?.classList.remove('on'), 180); }
 
 async function openOrder(id){
   S.openOrder = id;
@@ -1240,7 +1312,10 @@ async function openOrder(id){
           <div class="field"><label>Индекс</label><input id="a_zip" value="${esc(o.addr_zip||'')}"></div>
           <div class="field"><label>Область</label><input id="a_region" value="${esc(o.addr_region||'')}"></div>
           <div class="field"><label>Район</label><input id="a_district" value="${esc(o.addr_district||'')}"></div>
-          <div class="field"><label>Населённый пункт</label><input id="a_city" value="${esc(o.addr_city||'')}"></div>
+          <div class="field mgr" style="position:relative"><label>Населённый пункт</label>
+            <input id="a_city" value="${esc(o.addr_city||'')}" autocomplete="off"
+              oninput="citySearch('a',this.value)" onfocus="citySearch('a',this.value)" onblur="cityClose('a')">
+            <div class="mgr-drop" id="a_cd"></div></div>
           <div class="field"><label>Улица</label><input id="a_street" value="${esc(o.addr_street||'')}"></div>
           <div class="field"><label>Дом</label><input id="a_house" value="${esc(o.addr_house||'')}"></div>
         </div>
@@ -2468,13 +2543,22 @@ function drawPicker(){
     </div>
   </div>`);
 }
+function pickBack(){
+  S.pick.option = null; S.pick.fixed = []; S.pick.slot = [];
+  const g = el('pkGrid'); if(g) g.innerHTML = pickerGridHtml();
+  drawPickerSide();
+}
 function pickerGridHtml(){
   const k = S.pick;
   const any = S.bundles.some(b=>bOptionsOf(b.id).length);
   if(!any) return `<div class="pk-empty" style="padding:40px 16px">
     <b style="display:block;margin-bottom:6px">Комплектаций пока нет</b>
     Откройте раздел «Наборы» и добавьте комплектацию — тогда её можно будет подобрать в заказ.</div>`;
-  return S.bundles.map(b=>{
+  // пункт 7: когда комплектация выбрана — показываем только её набор
+  const chosenBundle = k.option ? S.bundleOptions.find(x=>x.id===k.option)?.bundle_id : null;
+  const shown = chosenBundle ? S.bundles.filter(b=>b.id===chosenBundle) : S.bundles;
+  return `${chosenBundle?`<button class="pk-back" onclick="pickBack()">← Все наборы</button>`:''}` +
+    shown.map(b=>{
     const opts = bOptionsOf(b.id);
     if(!opts.length) return '';
     return `<div class="pk-lvl">
@@ -3324,7 +3408,7 @@ function drawDraft(){
       </div>
     </div>
 
-    <details class="oc-fold">
+    <details class="oc-fold" open>
       <summary><span>Детали заказа</span>
         <span class="s">доставка, оплата, внешний ID</span></summary>
       <div class="oc-fold-b">
@@ -3357,8 +3441,11 @@ function drawDraft(){
             <input value="${esc(d.addr.region)}" oninput="dSetAddr('region',this.value)"></div>
           <div class="field"><label>Район</label>
             <input value="${esc(d.addr.district)}" oninput="dSetAddr('district',this.value)"></div>
-          <div class="field"><label>Населённый пункт</label>
-            <input value="${esc(d.addr.city)}" oninput="dSetAddr('city',this.value)"></div>
+          <div class="field mgr" style="position:relative"><label>Населённый пункт</label>
+            <input id="d_city" value="${esc(d.addr.city)}" autocomplete="off"
+              oninput="dSetAddr('city',this.value);citySearch('d',this.value)"
+              onfocus="citySearch('d',this.value)" onblur="cityClose('d')">
+            <div class="mgr-drop" id="d_cd"></div></div>
           <div class="field"><label>Улица</label>
             <input value="${esc(d.addr.street)}" oninput="dSetAddr('street',this.value)"></div>
           <div class="field"><label>Дом</label>
@@ -3457,7 +3544,7 @@ async function saveDraft(){
       body:'Подобран набор '+d.bundleLabel });
   }
   S.draft = null; S.orderItems = [];
-  closeAll(); await loadAll(); go(S.tab); openOrder(ord.id);
+  closeAll(); await loadAll(); go('orders');
 }
 function newCustomer(){
   formModal('Новый клиент',`

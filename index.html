@@ -845,7 +845,7 @@ async function loadAll(){
     sb.from('categories').select('*'),
     sb.from('departments').select('*').order('name'),
     sb.from('customers').select('*').order('created_at',{ascending:false}).limit(500),
-    sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color), payment_types(name), parcel_statuses(name,color), bundles(price,name)')
+    sb.from('orders').select('*, customers(name,phone), owner:employees!owner_id(full_name), statuses(code,name,color), payment_types(name), parcel_statuses(name,color), bundles(price,name)')
       .order('created_at',{ascending:false}).limit(600),
     sb.from('delivery_types').select('*').order('sort'),
     sb.from('bundles').select('*').order('price'),
@@ -994,7 +994,7 @@ function vPipe(){
           onclick="openOrder(${o.id})" style="border-left-color:${st.color}">
         <div class="nm">${esc(o.customers?.name||'Без имени')}</div>
         <div class="amt">${M(o.amount)}</div>
-        <div class="meta"><span>${esc(o.employees?.full_name||'—')}</span><span>${days(o.created_at)} дн.</span></div>
+        <div class="meta"><span>${esc(o.owner?.full_name||'—')}</span><span>${days(o.created_at)} дн.</span></div>
       </div>`).join('') : `<div style="color:var(--mute);font-size:13px;padding:6px 2px">Пусто</div>`}
     </div>`;}).join('')}</div>`;
 }
@@ -1012,7 +1012,7 @@ function vOrders(){
   const won = os.filter(o=>o.statuses?.code==='won').length;
   const active = os.filter(o=>!['won','lost'].includes(o.statuses?.code)).length;
   el('view').innerHTML = H('Заказы',
-    `Всего заказов: ${os.length} · в работе: ${active} · закрыто: ${won}`,
+    `Всего заказов: ${os.length} · в работе: ${active} · закрыто: ${won} · [v3 · в базе ${S.orders.length}]`,
     `<input id="q" placeholder="Поиск: имя, номер, внешний ID" style="width:250px" oninput="drawOrders()">
      <button class="btn" onclick="newOrder()">Новый заказ</button>`) +
   `<div class="card" style="padding:14px"><div id="tbl"></div></div>`;
@@ -1039,7 +1039,7 @@ function drawOrders(){
       <td><span class="tag" style="background:${o.statuses?.color}22;color:${o.statuses?.color}">${esc(o.statuses?.name||'—')}</span></td>
       <td style="font-size:13px">${esc(o.payment_types?.name||'—')}</td>
       <td>${o.parcel_statuses?.name?`<span class="tag" style="background:${o.parcel_statuses.color||'#6f7687'}22;color:${o.parcel_statuses.color||'#6f7687'}">${esc(o.parcel_statuses.name)}</span>`:'<span style="color:var(--mute)">—</span>'}</td>
-      <td><span class="avatar">${ini(o.employees?.full_name)}</span></td>
+      <td><span class="avatar">${ini(o.owner?.full_name)}</span></td>
       <td style="color:var(--mute);font-size:13px">${dt(o.created_at)}</td></tr>`).join('')}
     </tbody></table></div>
   <div class="clist">${rows.map(o=>`
@@ -1054,7 +1054,7 @@ function drawOrders(){
       </div>
       <div class="right">
         <div class="mono" style="font-weight:700;font-size:15px">${moneyShort(o.amount)}</div>
-        <span class="avatar">${ini(o.employees?.full_name)}</span>
+        <span class="avatar">${ini(o.owner?.full_name)}</span>
       </div>
     </div>`).join('')}</div>`;
 }

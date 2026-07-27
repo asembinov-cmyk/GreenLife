@@ -1016,14 +1016,18 @@ function renderSoldList(elId, agg){
 }
 function vDash(){
   const os = myOrders(), m0 = new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
+  // "оплачено" = тип оплаты "Полная предоплата"
+  const payFull = S.paymentTypes.find(p=>(p.name||'').toLowerCase().includes('полная предоплата'));
+  const payId = payFull ? payFull.id : null;
+  const isPaid = o => payId && o.payment_type_id===payId;
   const mth = os.filter(o=>new Date(o.created_at)>=m0);
-  const won = mth.filter(o=>o.statuses?.code==='won');
+  const won = mth.filter(isPaid);
   const rev = won.reduce((s,o)=>s+ +o.amount,0);
   const turnover = mth.reduce((s,o)=>s+ +o.amount,0);  // оборот всех заказов за месяц
   const d0 = new Date(); d0.setHours(0,0,0,0);
   const today = os.filter(o=>new Date(o.created_at)>=d0);
   const todayTurnover = today.reduce((s,o)=>s+ +o.amount,0);
-  const todayWon = today.filter(o=>o.statuses?.code==='won');
+  const todayWon = today.filter(isPaid);
   const todayRev = todayWon.reduce((s,o)=>s+ +o.amount,0);
   const conv = mth.length ? (won.length/mth.length*100).toFixed(1) : '0.0';
   const avg = won.length ? rev/won.length : 0;

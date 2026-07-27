@@ -1367,7 +1367,7 @@ function drawShelf(){
       return `<div class="sh-card">
         <div class="sh-t mono">${money(b.price)}</div>
         <div class="sh-s">${b.name?esc(b.name):''} · ${opts.length} ${plural(opts.length,'вариант','варианта','вариантов')}</div>
-        <button class="btn sm" onclick="openPicker(S.shelf.draft?{mode:'draft'}:{mode:'order',id:${oid}})">Подобрать</button>
+        <button class="btn sm" onclick="openPicker(S.shelf.draft?{mode:'draft',focus:${b.id}}:{mode:'order',id:${oid},focus:${b.id}})">Подобрать</button>
       </div>`;}).join('')
       : `<div class="oc-none">Наборы не заведены</div>`;
   } else {
@@ -2412,7 +2412,7 @@ function optionTitle(o){
 function openPicker(target){
   if(!S.bundles.length) return alert('Наборы не заведены. Раздел «Наборы» — там их создаёт администратор.');
   if(!S.bundleOptions.length) return alert('У наборов нет ни одной комплектации.\n\nОткройте раздел «Наборы» и добавьте комплектацию — тогда набор можно будет подобрать.');
-  S.pick = { target, bundle:null, option:null, fixed:[], slot:[], price:0 };
+  S.pick = { target, bundle:null, option:null, fixed:[], slot:[], price:0, focus: target.focus||null };
   drawPicker();
 }
 function closePicker(){
@@ -2544,7 +2544,7 @@ function drawPicker(){
   </div>`);
 }
 function pickBack(){
-  S.pick.option = null; S.pick.fixed = []; S.pick.slot = [];
+  S.pick.option = null; S.pick.fixed = []; S.pick.slot = []; S.pick.focus = null;
   const g = el('pkGrid'); if(g) g.innerHTML = pickerGridHtml();
   drawPickerSide();
 }
@@ -2554,8 +2554,9 @@ function pickerGridHtml(){
   if(!any) return `<div class="pk-empty" style="padding:40px 16px">
     <b style="display:block;margin-bottom:6px">Комплектаций пока нет</b>
     Откройте раздел «Наборы» и добавьте комплектацию — тогда её можно будет подобрать в заказ.</div>`;
-  // пункт 7: когда комплектация выбрана — показываем только её набор
-  const chosenBundle = k.option ? S.bundleOptions.find(x=>x.id===k.option)?.bundle_id : null;
+  // показываем только выбранный набор: либо по клику «Подобрать» на витрине (focus),
+  // либо когда комплектация уже выбрана
+  const chosenBundle = k.option ? S.bundleOptions.find(x=>x.id===k.option)?.bundle_id : (k.focus||null);
   const shown = chosenBundle ? S.bundles.filter(b=>b.id===chosenBundle) : S.bundles;
   return `${chosenBundle?`<button class="pk-back" onclick="pickBack()">← Все наборы</button>`:''}` +
     shown.map(b=>{

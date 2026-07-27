@@ -845,7 +845,7 @@ async function loadAll(){
     sb.from('categories').select('*'),
     sb.from('departments').select('*').order('name'),
     sb.from('customers').select('*').order('created_at',{ascending:false}).limit(500),
-    sb.from('orders').select('*, customers(name,phone), employees!owner_id(full_name), statuses(code,name,color), payment_types(name), parcel_statuses(name,color), bundles(price,name)')
+    sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color), payment_types(name), parcel_statuses(name,color), bundles(price,name)')
       .order('created_at',{ascending:false}).limit(600),
     sb.from('delivery_types').select('*').order('sort'),
     sb.from('bundles').select('*').order('price'),
@@ -1320,8 +1320,6 @@ async function openOrder(id){
             <input value="${esc(o.ext_id||'')}" onchange="setOrderText(${id},'ext_id',this.value)"></div>
           ${boss?`<div class="field"><label>Менеджер</label>
             ${mgrPicker({kind:'order',id:id}, o.owner_id)}</div>`:''}
-          <div class="field"><label>Отчётник</label>
-            ${repPicker({kind:'order',id:id}, o.reporter_id)}</div>
           <div class="field"><label>Сумма заказа, ₸</label>
             <input type="number" inputmode="numeric" value="${+o.amount||0}"
               onchange="setOrderField(${id},'amount',this.value)"></div>
@@ -1489,56 +1487,6 @@ function mgrPicker(mode, currentId){
       onblur="setTimeout(()=>mgrClose('${key}'),180)">
     <div class="mgr-drop" id="${key}_d"></div>
   </div>`;
-}
-// ── выбор отчётника (сотрудник из отдела «Отчётники») ──
-function repPicker(mode, currentId){
-  const cur = S.employees.find(e=>e.id===currentId);
-  const key = mode.kind==='order' ? 'rep_o_'+mode.id : 'rep_d';
-  return `<div class="mgr" data-key="${key}">
-    <input class="mgr-in" id="${key}" value="${esc(cur?.full_name||'')}"
-      placeholder="Начните вводить имя" autocomplete="off"
-      oninput="repSearch('${key}',this.value)"
-      onfocus="repSearch('${key}',this.value,1)"
-      onblur="setTimeout(()=>mgrClose('${key}'),180)">
-    <div class="mgr-drop" id="${key}_d"></div>
-  </div>`;
-}
-function repSearch(key, q, showAll){
-  const box = el(key+'_d'); if(!box) return;
-  const term = (q||'').trim().toLowerCase();
-  // только отдел «Отчётники»
-  const dep = S.departments.find(d=>(d.name||'').toLowerCase().includes('отчётник') || (d.name||'').toLowerCase().includes('отчетник'));
-  let list = S.employees.filter(e=>e.active!==false && dep && e.department_id===dep.id);
-  if(term && !showAll){
-    list = list.filter(e=>{
-      const byName = (e.full_name||'').toLowerCase().includes(term);
-      const qd = term.replace(/\D/g,'');
-      const byPhone = qd && ((e.login_phone||'')+(e.phone||'')).includes(qd);
-      return byName || byPhone;
-    });
-  }
-  list = list.slice(0, 40);
-  box.innerHTML = list.length ? list.map(e=>
-    `<div class="mgr-row" onmousedown="repPick('${key}','${e.id}')">
-      <span class="avatar">${ini(e.full_name)}</span>
-      <div style="min-width:0;flex:1">
-        <div class="n">${esc(e.full_name||'')}</div>
-        <div class="s">отчётник</div>
-      </div>
-    </div>`).join('')
-    : `<div class="mgr-none">${dep?'В отделе «Отчётники» никого нет':'Заведите отдел «Отчётники»'}</div>`;
-  box.classList.add('on');
-}
-function repPick(key, empId){
-  const e = S.employees.find(x=>x.id===empId);
-  const inp = el(key);
-  if(inp) inp.value = e?.full_name || '';
-  mgrClose(key);
-  if(key==='rep_d'){ dSet('reporter_id', empId); drawDraft(); }
-  else {
-    const oid = +key.replace('rep_o_','');
-    setOrderField(oid, 'reporter_id', empId, 1);
-  }
 }
 function mgrSearch(key, q, showAll){
   const box = el(key+'_d'); if(!box) return;
@@ -3589,8 +3537,7 @@ function drawDraft(){
               <option value="">— не задан —</option>
               ${S.senders.map(x=>`<option value="${x.id}" ${x.id===d.sender_id?'selected':''}>${esc(x.name)}</option>`).join('')}
             </select></div>
-          <div class="field"><label>Отчётник</label>
-            ${repPicker({kind:'draft'}, d.reporter_id)}</div>
+
           <div class="field"><label>Статус посылки</label>
             <select onchange="dSet('parcel_status_id',this.value?+this.value:null)">
               <option value="">— не задан —</option>
@@ -3700,7 +3647,7 @@ async function saveDraft(){
   const patch = { number:'ORD-'+Date.now(), customer_id:cust.id, owner_id:d.owner_id||S.user.id,
     status_id:d.status_id, amount, comment:(d.comment||'').trim()||null,
     ext_id:(d.ext_id||'').trim()||null, payment_type_id:d.payment_type_id, parcel_status_id:d.parcel_status_id,
-    payment_kind_id:d.payment_kind_id||null, sender_id:d.sender_id||null, reporter_id:d.reporter_id||null,
+    payment_kind_id:d.payment_kind_id||null, sender_id:d.sender_id||null,
     delivery_type_id:d.delivery_type_id, bundle_id:d.bundle_id||null, bundle_option_id:d.bundle_option_id||null,
     addr_zip:d.addr.zip.trim()||null, addr_region:d.addr.region.trim()||null,
     addr_district:d.addr.district.trim()||null, addr_city:d.addr.city.trim()||null,

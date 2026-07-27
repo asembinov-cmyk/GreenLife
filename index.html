@@ -977,6 +977,12 @@ function vDash(){
   const mth = os.filter(o=>new Date(o.created_at)>=m0);
   const won = mth.filter(o=>o.statuses?.code==='won');
   const rev = won.reduce((s,o)=>s+ +o.amount,0);
+  const turnover = mth.reduce((s,o)=>s+ +o.amount,0);  // оборот всех заказов за месяц
+  const d0 = new Date(); d0.setHours(0,0,0,0);
+  const today = os.filter(o=>new Date(o.created_at)>=d0);
+  const todayTurnover = today.reduce((s,o)=>s+ +o.amount,0);
+  const todayWon = today.filter(o=>o.statuses?.code==='won');
+  const todayRev = todayWon.reduce((s,o)=>s+ +o.amount,0);
   const conv = mth.length ? (won.length/mth.length*100).toFixed(1) : '0.0';
   const avg = won.length ? rev/won.length : 0;
   const plan = S.me.plan_month || 0;
@@ -993,12 +999,14 @@ function vDash(){
     `<button class="btn" onclick="newOrder()">Новый заказ</button>`) +
   `<div class="grid kpis" style="margin-bottom:14px">
     <div class="card kpi"><div class="lbl">Выручка за месяц</div><div class="val up">${M(rev)}</div>
-      ${plan?`<div class="bar" style="margin-top:10px"><i style="width:${Math.min(100,rev/plan*100)}%"></i></div>
+      <div class="sub" style="margin-top:6px">Оборот всех заказов: <b style="color:var(--paper)">${M(turnover)}</b></div>
+      ${plan?`<div class="bar" style="margin-top:8px"><i style="width:${Math.min(100,rev/plan*100)}%"></i></div>
       <div class="sub">${(rev/plan*100).toFixed(0)}% от плана ${M(plan)}</div>`:'<div class="sub">План не задан</div>'}</div>
+    <div class="card kpi"><div class="lbl">За сегодня</div><div class="val up">${M(todayRev)}</div>
+      <div class="sub" style="margin-top:6px">Оборот сегодня: <b style="color:var(--paper)">${M(todayTurnover)}</b></div>
+      <div class="sub">${today.length} ${plural(today.length,'заказ','заказа','заказов')} · ${todayWon.length} оплачено</div></div>
     <div class="card kpi"><div class="lbl">Заказов в месяц</div><div class="val">${mth.length}</div>
-      <div class="sub">${won.length} оплачено</div></div>
-    <div class="card kpi"><div class="lbl">Конверсия</div><div class="val">${conv}%</div>
-      <div class="sub">из заказа в оплату</div></div>
+      <div class="sub">${won.length} оплачено · конверсия ${conv}%</div></div>
     <div class="card kpi"><div class="lbl">Средний чек</div><div class="val">${M(avg)}</div>
       <div class="sub">по оплаченным</div></div>
   </div>

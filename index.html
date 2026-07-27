@@ -972,6 +972,26 @@ async function reloadOrders(){
   alert('Загружено заказов: '+S.orders.length+'. Открываю раздел Заказы.');
   go('orders');
 }
+async function loadSoldStats(){
+  // qty проданных товаров по ОПЛАЧЕННЫМ заказам за сегодня и месяц
+  const m0 = new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
+  const d0 = new Date(); d0.setHours(0,0,0,0);
+  // id оплаченных заказов
+  const wonMonth = S.orders.filter(o=>o.statuses?.code==='won' && new Date(o.created_at)>=m0);
+  const wonToday = wonMonth.filter(o=>new Date(o.created_at)>=d0);
+  const idMonth = wonMonth.map(o=>o.id);
+  const idToday = wonToday.map(o=>o.id);
+  let qtyMonth=0, qtyToday=0;
+  try{
+    if(idMonth.length){
+      const { data } = await sb.from('order_items').select('order_id,qty').in('order_id', idMonth);
+      (data||[]).forEach(it=>{ const q=+it.qty||0; qtyMonth+=q; if(idToday.includes(it.order_id)) qtyToday+=q; });
+    }
+  }catch(e){ console.warn('sold stats:', e.message); }
+  const em = el('soldMonth'), et = el('soldToday');
+  if(em) em.textContent = qtyMonth + ' ' + plural(qtyMonth,'шт','шт','шт');
+  if(et) et.textContent = qtyToday + ' ' + plural(qtyToday,'шт','шт','шт');
+}
 function vDash(){
   const os = myOrders(), m0 = new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
   const mth = os.filter(o=>new Date(o.created_at)>=m0);
@@ -995,6 +1015,7 @@ function vDash(){
   });
   const mx = Math.max(1,...buckets.map(b=>b.n));
 
+  setTimeout(loadSoldStats, 50);
   el('view').innerHTML = H('Дашборд', `Сегодня ${new Date().toLocaleDateString('ru-RU',{day:'numeric',month:'long'})}`,
     `<button class="btn" onclick="newOrder()">Новый заказ</button>`) +
   `<div class="grid kpis" style="margin-bottom:14px">
@@ -1009,6 +1030,10 @@ function vDash(){
       <div class="sub">${won.length} оплачено · конверсия ${conv}%</div></div>
     <div class="card kpi"><div class="lbl">Средний чек</div><div class="val">${M(avg)}</div>
       <div class="sub">по оплаченным</div></div>
+    <div class="card kpi"><div class="lbl">Продано товаров за месяц</div>
+      <div class="val" id="soldMonth">…</div><div class="sub">штук по оплаченным заказам</div></div>
+    <div class="card kpi"><div class="lbl">Продано товаров сегодня</div>
+      <div class="val" id="soldToday">…</div><div class="sub">штук по оплаченным заказам</div></div>
   </div>
 
   <div class="grid" style="grid-template-columns:1.4fr 1fr">

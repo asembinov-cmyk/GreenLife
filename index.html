@@ -761,7 +761,7 @@ const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.c
 const S = { user:null, me:null, tab:'dash', statuses:[], deliveryTypes:[], employees:[], products:[],
             bundles:[], bundleOptions:[], bundleItems:[], bundleSlots:[], bOpen:null,
             scripts:[], scriptSteps:[], scr:null, draft:null, pick:null, cat:null,
-            orders:[], customers:[], paymentTypes:[], parcelStatuses:[], categories:[], departments:[], ai:[],
+            orders:[], customers:[], paymentTypes:[], parcelStatuses:[], paymentKinds:[], senders:[], categories:[], departments:[], ai:[],
             pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 }, pOpenCat:null,
             eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 }, eOpenDep:null,
             orderItems:[] };
@@ -840,10 +840,12 @@ async function loadAll(){
     sb.from('products').select('*').order('name'),
     sb.from('payment_types').select('*').order('sort'),
     sb.from('parcel_statuses').select('*').order('sort'),
+    sb.from('payment_kinds').select('*').order('sort'),
+    sb.from('senders').select('*').order('sort'),
     sb.from('categories').select('*'),
     sb.from('departments').select('*').order('name'),
     sb.from('customers').select('*').order('created_at',{ascending:false}).limit(500),
-    sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color), payment_types(name), parcel_statuses(name,color), bundles(price,name)')
+    sb.from('orders').select('*, customers(name,phone), employees!owner_id(full_name), statuses(code,name,color), payment_types(name), parcel_statuses(name,color), bundles(price,name)')
       .order('created_at',{ascending:false}).limit(600),
     sb.from('delivery_types').select('*').order('sort'),
     sb.from('bundles').select('*').order('price'),
@@ -854,10 +856,10 @@ async function loadAll(){
     sb.from('script_steps').select('*').order('sort'),
   ];
   const settled = await Promise.all(q.map(x=>x.then(r=>r, e=>({data:[],error:e}))));
-  const [st,em,pr,pt,ps,ca,dp,cu,or_,dtp,bn,bo,bi,bs,sc,ss] = settled;
+  const [st,em,pr,pt,ps,ca,dp,cu,or_,dtp,bn,bo,bi,bs,sc,ss,pk,sn] = settled;
   settled.forEach(r=>{ if(r && r.error) console.warn('CRM load:', r.error.message||r.error); });
   S.statuses=st.data||[]; S.employees=em.data||[]; S.products=pr.data||[];
-  S.paymentTypes=pt.data||[]; S.parcelStatuses=ps.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
+  S.paymentTypes=pt.data||[]; S.parcelStatuses=ps.data||[]; S.paymentKinds=pk.data||[]; S.senders=sn.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
   S.customers=cu.data||[]; S.orders=or_.data||[]; S.deliveryTypes=dtp.data||[];
   S.bundles=bn.data||[]; S.bundleOptions=bo.data||[]; S.bundleItems=bi.data||[]; S.bundleSlots=bs.data||[]; S.scripts=sc.data||[]; S.scriptSteps=ss.data||[];
   S.me = S.employees.find(e=>e.id===S.user.id) || { full_name:S.user.email, role:'sales' };
@@ -1306,10 +1308,20 @@ async function openOrder(id){
             <select onchange="setOrderField(${id},'payment_type_id',this.value)"><option value="">— не задан —</option>
               ${S.paymentTypes.map(x=>`<option value="${x.id}" ${x.id===o.payment_type_id?'selected':''}>${esc(x.name)}</option>`).join('')}
             </select></div>
+          <div class="field"><label>Вид платежа</label>
+            <select onchange="setOrderField(${id},'payment_kind_id',this.value)"><option value="">— не задан —</option>
+              ${S.paymentKinds.map(x=>`<option value="${x.id}" ${x.id===o.payment_kind_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+          <div class="field"><label>ИП отправитель</label>
+            <select onchange="setOrderField(${id},'sender_id',this.value)"><option value="">— не задан —</option>
+              ${S.senders.map(x=>`<option value="${x.id}" ${x.id===o.sender_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
           <div class="field"><label>Внешний ID</label>
             <input value="${esc(o.ext_id||'')}" onchange="setOrderText(${id},'ext_id',this.value)"></div>
           ${boss?`<div class="field"><label>Менеджер</label>
             ${mgrPicker({kind:'order',id:id}, o.owner_id)}</div>`:''}
+          <div class="field"><label>Отчётник</label>
+            ${repPicker({kind:'order',id:id}, o.reporter_id)}</div>
           <div class="field"><label>Сумма заказа, ₸</label>
             <input type="number" inputmode="numeric" value="${+o.amount||0}"
               onchange="setOrderField(${id},'amount',this.value)"></div>
@@ -1326,6 +1338,7 @@ async function openOrder(id){
             <div class="mgr-drop" id="a_cd"></div></div>
           <div class="field"><label>Улица</label><input id="a_street" value="${esc(o.addr_street||'')}"></div>
           <div class="field"><label>Дом</label><input id="a_house" value="${esc(o.addr_house||'')}"></div>
+          <div class="field"><label>Квартира</label><input id="a_flat" value="${esc(o.addr_flat||'')}"></div>
         </div>
         <div class="row" style="gap:8px;margin-top:8px">
           <button class="btn sm" onclick="saveAddress(${id})">Сохранить адрес</button>
@@ -1477,6 +1490,56 @@ function mgrPicker(mode, currentId){
     <div class="mgr-drop" id="${key}_d"></div>
   </div>`;
 }
+// ── выбор отчётника (сотрудник из отдела «Отчётники») ──
+function repPicker(mode, currentId){
+  const cur = S.employees.find(e=>e.id===currentId);
+  const key = mode.kind==='order' ? 'rep_o_'+mode.id : 'rep_d';
+  return `<div class="mgr" data-key="${key}">
+    <input class="mgr-in" id="${key}" value="${esc(cur?.full_name||'')}"
+      placeholder="Начните вводить имя" autocomplete="off"
+      oninput="repSearch('${key}',this.value)"
+      onfocus="repSearch('${key}',this.value,1)"
+      onblur="setTimeout(()=>mgrClose('${key}'),180)">
+    <div class="mgr-drop" id="${key}_d"></div>
+  </div>`;
+}
+function repSearch(key, q, showAll){
+  const box = el(key+'_d'); if(!box) return;
+  const term = (q||'').trim().toLowerCase();
+  // только отдел «Отчётники»
+  const dep = S.departments.find(d=>(d.name||'').toLowerCase().includes('отчётник') || (d.name||'').toLowerCase().includes('отчетник'));
+  let list = S.employees.filter(e=>e.active!==false && dep && e.department_id===dep.id);
+  if(term && !showAll){
+    list = list.filter(e=>{
+      const byName = (e.full_name||'').toLowerCase().includes(term);
+      const qd = term.replace(/\D/g,'');
+      const byPhone = qd && ((e.login_phone||'')+(e.phone||'')).includes(qd);
+      return byName || byPhone;
+    });
+  }
+  list = list.slice(0, 40);
+  box.innerHTML = list.length ? list.map(e=>
+    `<div class="mgr-row" onmousedown="repPick('${key}','${e.id}')">
+      <span class="avatar">${ini(e.full_name)}</span>
+      <div style="min-width:0;flex:1">
+        <div class="n">${esc(e.full_name||'')}</div>
+        <div class="s">отчётник</div>
+      </div>
+    </div>`).join('')
+    : `<div class="mgr-none">${dep?'В отделе «Отчётники» никого нет':'Заведите отдел «Отчётники»'}</div>`;
+  box.classList.add('on');
+}
+function repPick(key, empId){
+  const e = S.employees.find(x=>x.id===empId);
+  const inp = el(key);
+  if(inp) inp.value = e?.full_name || '';
+  mgrClose(key);
+  if(key==='rep_d'){ dSet('reporter_id', empId); drawDraft(); }
+  else {
+    const oid = +key.replace('rep_o_','');
+    setOrderField(oid, 'reporter_id', empId, 1);
+  }
+}
 function mgrSearch(key, q, showAll){
   const box = el(key+'_d'); if(!box) return;
   const term = (q||'').trim().toLowerCase();
@@ -1626,6 +1689,7 @@ async function saveAddress(id){
     addr_city:     el('a_city').value.trim()     || null,
     addr_street:   el('a_street').value.trim()   || null,
     addr_house:    el('a_house').value.trim()    || null,
+    addr_flat:     el('a_flat').value.trim()     || null,
   };
   const { error } = await sb.from('orders').update(patch).eq('id',id);
   if(error) return alert('Не удалось сохранить адрес: '+error.message);
@@ -3285,6 +3349,8 @@ function vRefs(){
     ${blk('Типы доставки', S.deliveryTypes, 'delivery_types')}
     ${blk('Типы оплаты', S.paymentTypes, 'payment_types')}
     ${blk('Статусы посылки', S.parcelStatuses, 'parcel_statuses')}
+    ${blk('Виды платежа', S.paymentKinds, 'payment_kinds')}
+    ${blk('ИП отправители', S.senders, 'senders')}
   </div>`;
 }
 const REF = {
@@ -3334,7 +3400,7 @@ async function delRefCard(kind, id, name){
   closeAll(); await loadAll(); go('refs');
 }
 async function addRef(t){
-  const titles = { statuses:'этапа воронки', delivery_types:'типа доставки', payment_types:'типа оплаты', parcel_statuses:'статуса посылки' };
+  const titles = { statuses:'этапа воронки', delivery_types:'типа доставки', payment_types:'типа оплаты', parcel_statuses:'статуса посылки', payment_kinds:'вида платежа', senders:'ИП отправителя' };
   const name = prompt('Название '+(titles[t]||'записи'));
   if(!name || !name.trim()) return;
   const v = { name: name.trim() };
@@ -3342,6 +3408,8 @@ async function addRef(t){
   if(t==='delivery_types'){ v.sort = (S.deliveryTypes.at(-1)?.sort || 0) + 1; }
   if(t==='payment_types'){ v.sort = (S.paymentTypes.at(-1)?.sort || 0) + 1; }
   if(t==='parcel_statuses'){ v.color = '#6f7687'; v.sort = (S.parcelStatuses.at(-1)?.sort || 0) + 1; }
+  if(t==='payment_kinds'){ v.sort = (S.paymentKinds.at(-1)?.sort || 0) + 1; }
+  if(t==='senders'){ v.sort = (S.senders.at(-1)?.sort || 0) + 1; }
   const { error } = await sb.from(t).insert(v);
   if(error) return alert('Не удалось сохранить: '+error.message);
   await loadAll(); go('refs');
@@ -3383,7 +3451,7 @@ function newOrder(){
   S.draft = { name:'', phone:'', ext_id:'', owner_id:S.user.id, status_id:S.statuses[0]?.id || null,
               payment_type_id:null, parcel_status_id:null,
               delivery_type_id:null, amount:0, comment:'',
-              items:[], addr:{ zip:'',region:'',district:'',city:'',street:'',house:'' } };
+              items:[], addr:{ zip:'',region:'',district:'',city:'',street:'',house:'',flat:'' } };
   S.orderItems = [];
   drawDraft();
 }
@@ -3511,6 +3579,18 @@ function drawDraft(){
               <option value="">— не задан —</option>
               ${S.paymentTypes.map(x=>`<option value="${x.id}" ${x.id===d.payment_type_id?'selected':''}>${esc(x.name)}</option>`).join('')}
             </select></div>
+          <div class="field"><label>Вид платежа</label>
+            <select onchange="dSet('payment_kind_id',this.value?+this.value:null)">
+              <option value="">— не задан —</option>
+              ${S.paymentKinds.map(x=>`<option value="${x.id}" ${x.id===d.payment_kind_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+          <div class="field"><label>ИП отправитель</label>
+            <select onchange="dSet('sender_id',this.value?+this.value:null)">
+              <option value="">— не задан —</option>
+              ${S.senders.map(x=>`<option value="${x.id}" ${x.id===d.sender_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+          <div class="field"><label>Отчётник</label>
+            ${repPicker({kind:'draft'}, d.reporter_id)}</div>
           <div class="field"><label>Статус посылки</label>
             <select onchange="dSet('parcel_status_id',this.value?+this.value:null)">
               <option value="">— не задан —</option>
@@ -3540,6 +3620,8 @@ function drawDraft(){
             <input value="${esc(d.addr.street)}" oninput="dSetAddr('street',this.value)"></div>
           <div class="field"><label>Дом</label>
             <input value="${esc(d.addr.house)}" oninput="dSetAddr('house',this.value)"></div>
+          <div class="field"><label>Квартира</label>
+            <input value="${esc(d.addr.flat||'')}" oninput="dSetAddr('flat',this.value)"></div>
         </div>
         <button class="btn sm ghost" style="margin-top:8px" onclick="findIndexDraft()">Найти индекс по адресу</button>
         <div id="idxResultD" style="margin-top:8px"></div>
@@ -3618,10 +3700,12 @@ async function saveDraft(){
   const patch = { number:'ORD-'+Date.now(), customer_id:cust.id, owner_id:d.owner_id||S.user.id,
     status_id:d.status_id, amount, comment:(d.comment||'').trim()||null,
     ext_id:(d.ext_id||'').trim()||null, payment_type_id:d.payment_type_id, parcel_status_id:d.parcel_status_id,
+    payment_kind_id:d.payment_kind_id||null, sender_id:d.sender_id||null, reporter_id:d.reporter_id||null,
     delivery_type_id:d.delivery_type_id, bundle_id:d.bundle_id||null, bundle_option_id:d.bundle_option_id||null,
     addr_zip:d.addr.zip.trim()||null, addr_region:d.addr.region.trim()||null,
     addr_district:d.addr.district.trim()||null, addr_city:d.addr.city.trim()||null,
-    addr_street:d.addr.street.trim()||null, addr_house:d.addr.house.trim()||null };
+    addr_street:d.addr.street.trim()||null, addr_house:d.addr.house.trim()||null,
+    addr_flat:(d.addr.flat||'').trim()||null };
 
   const { data:ord, error } = await sb.from('orders').insert(patch).select().single();
   if(error) return fail('Не удалось сохранить заказ: '+error.message);

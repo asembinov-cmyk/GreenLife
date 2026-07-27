@@ -296,6 +296,15 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .slot-cat input{display:none}
 .slot-cat i{width:7px;height:7px;border-radius:99px;flex:none}
 .slot-cat.on{font-weight:700}
+.flt-panel{background:var(--ink-2);border:1px solid var(--line);border-radius:14px;
+  padding:16px;margin-bottom:14px;animation:sl .18s cubic-bezier(.2,.8,.2,1)}
+.flt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.flt-grid .field{margin-bottom:0}
+.flt-foot{display:flex;align-items:center;gap:12px;margin-top:14px;padding-top:12px;
+  border-top:1px solid var(--line)}
+.flt-count{font-size:12px;color:var(--mute)}
+.btn.on{background:var(--tint-2);border-color:var(--signal);color:var(--signal)}
+@media(max-width:640px){ .flt-grid{grid-template-columns:1fr 1fr} }
 .scr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
 .scr-card{background:var(--ink-2);border:1px solid var(--line);border-radius:13px;padding:14px}
 .scr-card-h{display:flex;align-items:baseline;gap:9px;margin-bottom:5px}
@@ -1049,13 +1058,99 @@ function vOrders(){
   el('view').innerHTML = H('Заказы',
     `Всего заказов: ${os.length} · в работе: ${active} · закрыто: ${won}`,
     `<input id="q" placeholder="Поиск: имя, номер, внешний ID" style="width:250px" oninput="drawOrders()">
+     <button class="btn ghost" onclick="toggleFilters()" id="fltBtn">Фильтры</button>
      <button class="btn" onclick="newOrder()">Новый заказ</button>`) +
+  filtersPanelHtml() +
   `<div class="card" style="padding:14px"><div id="tbl"></div></div>`;
   drawOrders();
 }
+// ── фильтры грида заказов ──
+S.flt = S.flt || { open:false, status:'', owner:'', payment:'', parcel:'', kind:'', sender:'', delivery:'', sumMin:'', sumMax:'', dateFrom:'', dateTo:'' };
+
+function filtersPanelHtml(){
+  const f = S.flt;
+  const opt = (arr,val,label='name')=> arr.map(x=>`<option value="${x.id}" ${String(x.id)===String(val)?'selected':''}>${esc(x[label]||'')}</option>`).join('');
+  return `<div id="fltPanel" class="flt-panel" style="display:${f.open?'block':'none'}">
+    <div class="flt-grid">
+      <div class="field"><label>Этап</label>
+        <select onchange="setFlt('status',this.value)"><option value="">Все</option>
+          ${opt(S.statuses, f.status)}</select></div>
+      <div class="field"><label>Менеджер</label>
+        <select onchange="setFlt('owner',this.value)"><option value="">Все</option>
+          ${S.employees.filter(e=>e.active!==false).map(e=>`<option value="${e.id}" ${e.id===f.owner?'selected':''}>${esc(e.full_name||'')}</option>`).join('')}</select></div>
+      <div class="field"><label>Тип оплаты</label>
+        <select onchange="setFlt('payment',this.value)"><option value="">Все</option>
+          ${opt(S.paymentTypes, f.payment)}</select></div>
+      <div class="field"><label>Статус посылки</label>
+        <select onchange="setFlt('parcel',this.value)"><option value="">Все</option>
+          ${opt(S.parcelStatuses, f.parcel)}</select></div>
+      <div class="field"><label>Вид платежа</label>
+        <select onchange="setFlt('kind',this.value)"><option value="">Все</option>
+          ${opt(S.paymentKinds, f.kind)}</select></div>
+      <div class="field"><label>ИП отправитель</label>
+        <select onchange="setFlt('sender',this.value)"><option value="">Все</option>
+          ${opt(S.senders, f.sender)}</select></div>
+      <div class="field"><label>Тип доставки</label>
+        <select onchange="setFlt('delivery',this.value)"><option value="">Все</option>
+          ${opt(S.deliveryTypes, f.delivery)}</select></div>
+      <div class="field"><label>Сумма от</label>
+        <input type="number" inputmode="numeric" value="${f.sumMin}" placeholder="0" onchange="setFlt('sumMin',this.value)"></div>
+      <div class="field"><label>Сумма до</label>
+        <input type="number" inputmode="numeric" value="${f.sumMax}" placeholder="∞" onchange="setFlt('sumMax',this.value)"></div>
+      <div class="field"><label>Создан с</label>
+        <input type="date" value="${f.dateFrom}" onchange="setFlt('dateFrom',this.value)"></div>
+      <div class="field"><label>Создан по</label>
+        <input type="date" value="${f.dateTo}" onchange="setFlt('dateTo',this.value)"></div>
+    </div>
+    <div class="flt-foot">
+      <button class="btn sm ghost" onclick="resetFlt()">Сбросить всё</button>
+      <span class="flt-count" id="fltCount"></span>
+    </div>
+  </div>`;
+}
+function toggleFilters(){
+  S.flt.open = !S.flt.open;
+  const p = el('fltPanel'); if(p) p.style.display = S.flt.open?'block':'none';
+  const b = el('fltBtn'); if(b){ const n=activeFltCount(); b.textContent = n?`Фильтры · ${n}`:'Фильтры';
+    b.classList.toggle('on', S.flt.open); }
+}
+function setFlt(key,val){ S.flt[key]=val; drawOrders(); updateFltBtn(); }
+function resetFlt(){
+  Object.assign(S.flt, { status:'',owner:'',payment:'',parcel:'',kind:'',sender:'',delivery:'',sumMin:'',sumMax:'',dateFrom:'',dateTo:'' });
+  const open=S.flt.open; go('orders'); S.flt.open=open;
+  const p=el('fltPanel'); if(p) p.style.display=open?'block':'none';
+}
+function activeFltCount(){
+  const f=S.flt; let n=0;
+  ['status','owner','payment','parcel','kind','sender','delivery','sumMin','sumMax','dateFrom','dateTo'].forEach(k=>{ if(f[k]) n++; });
+  return n;
+}
+function updateFltBtn(){
+  const b=el('fltBtn'); if(b){ const n=activeFltCount(); b.textContent = n?`Фильтры · ${n}`:'Фильтры'; }
+  const c=el('fltCount'); if(c){ const n=activeFltCount(); c.textContent = n?`активно фильтров: ${n}`:''; }
+}
+function applyFilters(rows){
+  const f=S.flt;
+  return rows.filter(o=>{
+    if(f.status && String(o.status_id)!==String(f.status)) return false;
+    if(f.owner && o.owner_id!==f.owner) return false;
+    if(f.payment && String(o.payment_type_id)!==String(f.payment)) return false;
+    if(f.parcel && String(o.parcel_status_id)!==String(f.parcel)) return false;
+    if(f.kind && String(o.payment_kind_id)!==String(f.kind)) return false;
+    if(f.sender && String(o.sender_id)!==String(f.sender)) return false;
+    if(f.delivery && String(o.delivery_type_id)!==String(f.delivery)) return false;
+    if(f.sumMin && (+o.amount||0) < +f.sumMin) return false;
+    if(f.sumMax && (+o.amount||0) > +f.sumMax) return false;
+    if(f.dateFrom && new Date(o.created_at) < new Date(f.dateFrom)) return false;
+    if(f.dateTo){ const d=new Date(f.dateTo); d.setHours(23,59,59); if(new Date(o.created_at) > d) return false; }
+    return true;
+  });
+}
 function drawOrders(){
   const q = (el('q')?.value||'').toLowerCase();
-  const rows = myOrders().filter(o=>!q || (o.customers?.name||'').toLowerCase().includes(q) || (o.number||'').toLowerCase().includes(q) || (o.ext_id||'').toLowerCase().includes(q));
+  let rows = myOrders().filter(o=>!q || (o.customers?.name||'').toLowerCase().includes(q) || (o.number||'').toLowerCase().includes(q) || (o.ext_id||'').toLowerCase().includes(q));
+  rows = applyFilters(rows);
+  updateFltBtn();
   if(!rows.length){
     el('tbl').innerHTML = `<div class="empty"><b>Заказов пока нет</b>Создайте первый или подключите приём заявок по API</div>`;
     return;

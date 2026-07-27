@@ -845,8 +845,7 @@ async function loadAll(){
     sb.from('categories').select('*'),
     sb.from('departments').select('*').order('name'),
     sb.from('customers').select('*').order('created_at',{ascending:false}).limit(500),
-    sb.from('orders').select('*, customers(name,phone), statuses(code,name,color), payment_types(name), parcel_statuses(name,color), bundles(price,name)')
-      .order('created_at',{ascending:false}).limit(600),
+    sb.from('orders').select('*').order('created_at',{ascending:false}).limit(2000),
     sb.from('delivery_types').select('*').order('sort'),
     sb.from('bundles').select('*').order('price'),
     sb.from('bundle_options').select('*').order('sort'),
@@ -860,7 +859,16 @@ async function loadAll(){
   settled.forEach(r=>{ if(r && r.error) console.warn('CRM load:', r.error.message||r.error); });
   S.statuses=st.data||[]; S.employees=em.data||[]; S.products=pr.data||[];
   S.paymentTypes=pt.data||[]; S.parcelStatuses=ps.data||[]; S.paymentKinds=pk.data||[]; S.senders=sn.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
-  S.customers=cu.data||[]; S.orders=or_.data||[]; S.deliveryTypes=dtp.data||[];
+  S.customers=cu.data||[]; S.deliveryTypes=dtp.data||[];
+  // сырые заказы + подстановка связей из загруженных списков (без inner join, чтобы ни один заказ не выпал)
+  S.orders = (or_.data||[]).map(o=>({
+    ...o,
+    customers: S.customers.find(c=>c.id===o.customer_id) || null,
+    statuses: S.statuses.find(x=>x.id===o.status_id) || null,
+    payment_types: S.paymentTypes.find(x=>x.id===o.payment_type_id) || null,
+    parcel_statuses: S.parcelStatuses.find(x=>x.id===o.parcel_status_id) || null,
+    bundles: S.bundles.find(x=>x.id===o.bundle_id) || null,
+  }));
   S.bundles=bn.data||[]; S.bundleOptions=bo.data||[]; S.bundleItems=bi.data||[]; S.bundleSlots=bs.data||[]; S.scripts=sc.data||[]; S.scriptSteps=ss.data||[];
   S.me = S.employees.find(e=>e.id===S.user.id) || { full_name:S.user.email, role:'sales' };
   el('me').innerHTML = `<b>${esc(S.me.full_name)}</b>${({sales:'Менеджер',head:'Руководитель',admin:'Администратор'})[S.me.role]||S.me.role} ·

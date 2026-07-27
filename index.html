@@ -1010,7 +1010,7 @@ function vOrders(){
   const won = os.filter(o=>o.statuses?.code==='won').length;
   const active = os.filter(o=>!['won','lost'].includes(o.statuses?.code)).length;
   el('view').innerHTML = H('Заказы',
-    `Всего ${os.length} · в работе ${active} · закрыто ${won}`,
+    `Всего заказов: ${os.length} · в работе: ${active} · закрыто: ${won}`,
     `<input id="q" placeholder="Поиск: имя, номер, внешний ID" style="width:250px" oninput="drawOrders()">
      <button class="btn" onclick="newOrder()">Новый заказ</button>`) +
   `<div class="card" style="padding:14px"><div id="tbl"></div></div>`;

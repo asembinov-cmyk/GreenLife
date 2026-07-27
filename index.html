@@ -296,6 +296,11 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .slot-cat input{display:none}
 .slot-cat i{width:7px;height:7px;border-radius:99px;flex:none}
 .slot-cat.on{font-weight:700}
+.oc-prof{display:flex;flex-direction:column;gap:5px;margin-top:4px}
+.oc-prof-row{display:flex;justify-content:space-between;align-items:center;font-size:13px}
+.oc-prof-row.neg{color:var(--alert)}
+.oc-prof-row.total{border-top:1px solid var(--line);margin-top:4px;padding-top:7px;
+  font-weight:700;font-size:15px;color:var(--signal)}
 .sold-list{max-height:280px;overflow-y:auto}
 .sold-row{display:flex;align-items:center;justify-content:space-between;gap:10px;
   padding:8px 0;border-top:1px solid var(--line)}
@@ -776,7 +781,7 @@ const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.c
 const S = { user:null, me:null, tab:'dash', statuses:[], deliveryTypes:[], employees:[], products:[],
             bundles:[], bundleOptions:[], bundleItems:[], bundleSlots:[], bOpen:null,
             scripts:[], scriptSteps:[], scr:null, draft:null, pick:null, cat:null,
-            orders:[], customers:[], paymentTypes:[], parcelStatuses:[], paymentKinds:[], senders:[], categories:[], departments:[], ai:[],
+            orders:[], customers:[], paymentTypes:[], parcelStatuses:[], paymentKinds:[], senders:[], expenseRoles:[], bundleExpenses:[], categories:[], departments:[], ai:[],
             pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 }, pOpenCat:null,
             eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 }, eOpenDep:null,
             orderItems:[] };
@@ -857,6 +862,8 @@ async function loadAll(){
     sb.from('parcel_statuses').select('*').order('sort'),
     sb.from('payment_kinds').select('*').order('sort'),
     sb.from('senders').select('*').order('sort'),
+    sb.from('expense_roles').select('*').order('sort'),
+    sb.from('bundle_expenses').select('*'),
     sb.from('categories').select('*'),
     sb.from('departments').select('*').order('name'),
     sb.from('customers').select('*').order('created_at',{ascending:false}).limit(500),
@@ -870,10 +877,10 @@ async function loadAll(){
     sb.from('script_steps').select('*').order('sort'),
   ];
   const settled = await Promise.all(q.map(x=>x.then(r=>r, e=>({data:[],error:e}))));
-  const [st,em,pr,pt,ps,pk,sn,ca,dp,cu,or_,dtp,bn,bo,bi,bs,sc,ss] = settled;
+  const [st,em,pr,pt,ps,pk,sn,ca,dp,cu,or_,dtp,bn,bo,bi,bs,sc,ss,er,be] = settled;
   settled.forEach(r=>{ if(r && r.error) console.warn('CRM load:', r.error.message||r.error); });
   S.statuses=st.data||[]; S.employees=em.data||[]; S.products=pr.data||[];
-  S.paymentTypes=pt.data||[]; S.parcelStatuses=ps.data||[]; S.paymentKinds=pk.data||[]; S.senders=sn.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
+  S.paymentTypes=pt.data||[]; S.parcelStatuses=ps.data||[]; S.paymentKinds=pk.data||[]; S.senders=sn.data||[]; S.expenseRoles=er.data||[]; S.bundleExpenses=be.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
   S.customers=cu.data||[]; S.deliveryTypes=dtp.data||[];
   // сырые заказы + подстановка связей из загруженных списков (без inner join, чтобы ни один заказ не выпал)
   S.bundles=bn.data||[]; S.bundleOptions=bo.data||[]; S.bundleItems=bi.data||[]; S.bundleSlots=bs.data||[]; S.scripts=sc.data||[]; S.scriptSteps=ss.data||[];
@@ -1031,6 +1038,7 @@ function vDash(){
   const todayRev = todayWon.reduce((s,o)=>s+ +o.amount,0);
   const conv = mth.length ? (won.length/mth.length*100).toFixed(1) : '0.0';
   const avg = won.length ? rev/won.length : 0;
+  const profitMonth = won.reduce((s,o)=>s + orderProfit(o).profit, 0);
   const plan = S.me.plan_month || 0;
   const stale = os.filter(o=>!['won','lost'].includes(o.statuses?.code) && days(o.created_at)>3);
 
@@ -1056,6 +1064,8 @@ function vDash(){
       <div class="sub">${won.length} оплачено · конверсия ${conv}%</div></div>
     <div class="card kpi"><div class="lbl">Средний чек</div><div class="val">${M(avg)}</div>
       <div class="sub">по оплаченным</div></div>
+    <div class="card kpi"><div class="lbl">Прибыль за месяц</div><div class="val up">${M(profitMonth)}</div>
+      <div class="sub">сумма − расходы − себестоимость (оплаченные)</div></div>
   </div>
 
   <div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
@@ -1309,6 +1319,16 @@ function repeatHint(customerId){
   return { name: top.products?.name || 'товар', days: d };
 }
 // ближайший уровень прайса выше текущей суммы
+// расчёт прибыли по заказу: сумма − расходы по ролям (из набора) − себестоимость набора
+function orderProfit(o){
+  const amount = +o.amount||0;
+  const bundle = o.bundle_id ? S.bundles.find(b=>b.id===o.bundle_id) : null;
+  const cost = bundle ? (+bundle.cost||0) : 0;
+  const exp = o.bundle_id ? S.bundleExpenses.filter(x=>x.bundle_id===o.bundle_id) : [];
+  const expByRole = exp.map(x=>({ role: S.expenseRoles.find(r=>r.id===x.role_id)?.name || '—', amount:+x.amount||0 }));
+  const expTotal = expByRole.reduce((s,x)=>s+x.amount,0);
+  return { amount, cost, expByRole, expTotal, profit: amount - cost - expTotal };
+}
 function nextLevel(amount){
   const lv = S.bundles.map(b=>+b.price||0).filter(p=>p>amount).sort((a,b)=>a-b);
   if(!lv.length) return null;
@@ -1504,6 +1524,16 @@ async function openOrder(id){
           <div style="font-size:14px;color:#085041;line-height:1.45;font-weight:700">
             +${money(nx.gap)} → ${money(nx.price)}${nx.name?' · '+esc(nx.name):''}</div>
         </div>`:''}
+
+        ${o.bundle_id ? (()=>{ const pf=orderProfit(o); return `<div class="oc-box">
+          <div class="oc-lbl">Прибыль по заказу</div>
+          <div class="oc-prof">
+            <div class="oc-prof-row"><span>Сумма заказа</span><span class="mono">${money(pf.amount)}</span></div>
+            ${pf.cost?`<div class="oc-prof-row neg"><span>− Себестоимость</span><span class="mono">−${money(pf.cost)}</span></div>`:''}
+            ${pf.expByRole.map(e=>`<div class="oc-prof-row neg"><span>− ${esc(e.role)}</span><span class="mono">−${money(e.amount)}</span></div>`).join('')}
+            <div class="oc-prof-row total"><span>Прибыль</span><span class="mono">${money(pf.profit)}</span></div>
+          </div>
+        </div>` })() : ''}
 
         <div class="oc-box">
           <div class="oc-btns col">
@@ -2986,6 +3016,16 @@ function editBundle(id){
       <textarea id="b_pitch" rows="2" placeholder="Короткая фраза, чем этот набор хорош">${b?esc(b.pitch||''):''}</textarea></div>
     <div class="field"><label>Цвет акцента</label>
       <input id="b_accent" value="${b?esc(b.accent||''):''}" placeholder="#c9a227 — необязательно"></div>
+    ${S.expenseRoles.length ? `<div style="border-top:1px solid var(--line);margin:14px 0 10px;padding-top:12px">
+      <label style="display:block;margin-bottom:8px">Расходы по ролям, ₸ <span style="text-transform:none;font-weight:400;color:var(--mute)">— вычитаются из прибыли</span></label>
+      <div class="oc-grid">
+        ${S.expenseRoles.map(r=>{
+          const ex = b ? S.bundleExpenses.find(x=>x.bundle_id===b.id && x.role_id===r.id) : null;
+          return `<div class="field"><label>${esc(r.name)}</label>
+            <input class="b_exp" data-role="${r.id}" type="number" inputmode="numeric" value="${ex?ex.amount:0}"></div>`;
+        }).join('')}
+      </div>
+    </div>` : `<div class="sub" style="margin-top:10px">Роли расходов не заведены — добавьте в Справочниках, чтобы задавать суммы.</div>`}
     ${b?`<button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert)"
       onclick="delBundle(${b.id})">Удалить набор</button>`:''}`,
   async()=>{
@@ -2993,9 +3033,25 @@ function editBundle(id){
     if(!price) return el('formErr').textContent='Укажите цену набора';
     const patch = { price, cost:+el('b_cost').value||0, name:el('b_name').value.trim()||null,
       pitch:el('b_pitch').value.trim()||null, accent:el('b_accent').value.trim()||null };
-    const { error } = b ? await sb.from('bundles').update(patch).eq('id',b.id)
-                        : await sb.from('bundles').insert(patch);
-    if(error) return el('formErr').textContent='Не удалось сохранить: '+error.message;
+    let bundleId = b?.id;
+    if(b){
+      const { error } = await sb.from('bundles').update(patch).eq('id',b.id);
+      if(error) return el('formErr').textContent='Не удалось сохранить: '+error.message;
+    } else {
+      const { data, error } = await sb.from('bundles').insert(patch).select('id').single();
+      if(error) return el('formErr').textContent='Не удалось сохранить: '+error.message;
+      bundleId = data.id;
+    }
+    // сохранить расходы по ролям
+    if(bundleId && S.expenseRoles.length){
+      const inputs = [...document.querySelectorAll('.b_exp')];
+      for(const inp of inputs){
+        const roleId = +inp.dataset.role, amount = +inp.value||0;
+        const ex = S.bundleExpenses.find(x=>x.bundle_id===bundleId && x.role_id===roleId);
+        if(ex){ await sb.from('bundle_expenses').update({amount}).eq('id',ex.id); }
+        else if(amount){ await sb.from('bundle_expenses').insert({bundle_id:bundleId, role_id:roleId, amount}); }
+      }
+    }
     closeAll(); await loadAll(); go('bundles');
   });
 }
@@ -3533,6 +3589,7 @@ function vRefs(){
     ${blk('Статусы посылки', S.parcelStatuses, 'parcel_statuses')}
     ${blk('Виды платежа', S.paymentKinds, 'payment_kinds')}
     ${blk('ИП отправители', S.senders, 'senders')}
+    ${blk('Роли расходов', S.expenseRoles, 'expense_roles')}
   </div>`;
 }
 const REF = {
@@ -3582,7 +3639,7 @@ async function delRefCard(kind, id, name){
   closeAll(); await loadAll(); go('refs');
 }
 async function addRef(t){
-  const titles = { statuses:'этапа воронки', delivery_types:'типа доставки', payment_types:'типа оплаты', parcel_statuses:'статуса посылки', payment_kinds:'вида платежа', senders:'ИП отправителя' };
+  const titles = { statuses:'этапа воронки', delivery_types:'типа доставки', payment_types:'типа оплаты', parcel_statuses:'статуса посылки', payment_kinds:'вида платежа', senders:'ИП отправителя', expense_roles:'роли расходов' };
   const name = prompt('Название '+(titles[t]||'записи'));
   if(!name || !name.trim()) return;
   const v = { name: name.trim() };
@@ -3592,6 +3649,7 @@ async function addRef(t){
   if(t==='parcel_statuses'){ v.color = '#6f7687'; v.sort = (S.parcelStatuses.at(-1)?.sort || 0) + 1; }
   if(t==='payment_kinds'){ v.sort = (S.paymentKinds.at(-1)?.sort || 0) + 1; }
   if(t==='senders'){ v.sort = (S.senders.at(-1)?.sort || 0) + 1; }
+  if(t==='expense_roles'){ v.sort = (S.expenseRoles.at(-1)?.sort || 0) + 1; }
   const { error } = await sb.from(t).insert(v);
   if(error) return alert('Не удалось сохранить: '+error.message);
   await loadAll(); go('refs');

@@ -1025,9 +1025,10 @@ function drawOrders(){
   }
   el('tbl').innerHTML = `
   <div class="tw"><table><thead><tr>
-    <th>Номер</th><th>Внеш. ID</th><th>Клиент</th><th>Сумма</th><th>Этап</th>
+    <th class="num">№</th><th>Номер</th><th>Внеш. ID</th><th>Клиент</th><th>Сумма</th><th>Этап</th>
     <th>Оплата</th><th>Посылка</th><th>Менеджер</th><th>Создан</th></tr></thead><tbody>
-    ${rows.map(o=>`<tr onclick="openOrder(${o.id})">
+    ${rows.map((o,i)=>`<tr onclick="openOrder(${o.id})">
+      <td class="num">${i+1}</td>
       <td class="mono" style="color:var(--mute)">${esc(o.number||o.id)}</td>
       <td class="mono" style="color:var(--mute);font-size:12px">${esc(o.ext_id||'—')}</td>
       <td><div style="font-weight:600">${esc(o.customers?.name||'Без имени')}</div>

@@ -939,13 +939,29 @@ const H = (t,s,r='') => `<div class="head"><div><h1>${t}</h1><p>${s}</p></div><d
 
 function myOrders(){ return S.orders; }
 async function diagOrders(){
+  const box = el('diagBox'); if(!box) return;
   try{
     const { data, error, count } = await sb.from('orders').select('*', {count:'exact'});
-    const box = el('diagBox');
-    if(!box) return;
     if(error){ box.innerHTML = '<b style=\'color:#c00\'>ОШИБКА базы:</b> '+esc(error.message); return; }
-    box.innerHTML = `<b>Диагностика:</b> прямой запрос к базе вернул <b style=\'font-size:18px\'>${data.length}</b> заказов (count: ${count}). В памяти приложения (S.orders): <b>${S.orders.length}</b>.`;
-  }catch(e){ const box=el('diagBox'); if(box) box.innerHTML='<b style=\'color:#c00\'>Сбой:</b> '+esc(String(e.message||e)); }
+    // пробуем обработать заказы ровно как loadAll, ловим где падает
+    let processed = 0, failAt = '';
+    try {
+      const _f = (arr,id)=> (Array.isArray(arr)?arr:[]).find(x=>x.id===id)||null;
+      const test = (data||[]).map(o=>{ processed++; return {...o, c:_f(S.customers,o.customer_id), s:_f(S.statuses,o.status_id)}; });
+      processed = test.length;
+    } catch(pe){ failAt = ' | ОБРАБОТКА УПАЛА на '+processed+'-м: '+esc(pe.message); }
+    box.innerHTML = `<b>Диагностика:</b> база вернула <b style=\'font-size:18px\'>${data.length}</b> заказов. Обработано в тесте: <b>${processed}</b>. В S.orders: <b>${S.orders.length}</b>.${failAt}<br><button onclick='reloadOrders()' style=\'margin-top:8px;padding:6px 14px;background:#111;color:#fff;border:none;border-radius:8px;cursor:pointer\'>Перезагрузить заказы принудительно</button>`;
+  }catch(e){ box.innerHTML='<b style=\'color:#c00\'>Сбой:</b> '+esc(String(e.message||e)); }
+}
+async function reloadOrders(){
+  const { data } = await sb.from('orders').select('*').order('created_at',{ascending:false}).limit(2000);
+  const _f = (arr,id)=> (Array.isArray(arr)?arr:[]).find(x=>x.id===id)||null;
+  S.orders = (data||[]).map(o=>({ ...o,
+    customers:_f(S.customers,o.customer_id), statuses:_f(S.statuses,o.status_id),
+    payment_types:_f(S.paymentTypes,o.payment_type_id), parcel_statuses:_f(S.parcelStatuses,o.parcel_status_id),
+    bundles:_f(S.bundles,o.bundle_id) }));
+  alert('Загружено заказов: '+S.orders.length+'. Открываю раздел Заказы.');
+  go('orders');
 }
 function vDash(){
   const os = myOrders(), m0 = new Date(); m0.setDate(1); m0.setHours(0,0,0,0);

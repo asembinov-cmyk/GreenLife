@@ -877,7 +877,7 @@ async function loadAll(){
     sb.from('script_steps').select('*').order('sort'),
   ];
   const settled = await Promise.all(q.map(x=>x.then(r=>r, e=>({data:[],error:e}))));
-  const [st,em,pr,pt,ps,pk,sn,ca,dp,cu,or_,dtp,bn,bo,bi,bs,sc,ss,er,be] = settled;
+  const [st,em,pr,pt,ps,pk,sn,er,be,ca,dp,cu,or_,dtp,bn,bo,bi,bs,sc,ss] = settled;
   settled.forEach(r=>{ if(r && r.error) console.warn('CRM load:', r.error.message||r.error); });
   S.statuses=st.data||[]; S.employees=em.data||[]; S.products=pr.data||[];
   S.paymentTypes=pt.data||[]; S.parcelStatuses=ps.data||[]; S.paymentKinds=pk.data||[]; S.senders=sn.data||[]; S.expenseRoles=er.data||[]; S.bundleExpenses=be.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];

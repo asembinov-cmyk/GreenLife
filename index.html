@@ -1075,9 +1075,13 @@ function filtersPanelHtml(){
       <div class="field"><label>Этап</label>
         <select onchange="setFlt('status',this.value)"><option value="">Все</option>
           ${opt(S.statuses, f.status)}</select></div>
-      <div class="field"><label>Менеджер</label>
-        <select onchange="setFlt('owner',this.value)"><option value="">Все</option>
-          ${S.employees.filter(e=>e.active!==false).map(e=>`<option value="${e.id}" ${e.id===f.owner?'selected':''}>${esc(e.full_name||'')}</option>`).join('')}</select></div>
+      <div class="field mgr" style="position:relative"><label>Менеджер</label>
+        <input class="mgr-in" id="flt_owner" autocomplete="off"
+          value="${f.owner ? esc(S.employees.find(e=>e.id===f.owner)?.full_name||'') : ''}"
+          placeholder="Все · введите имя"
+          oninput="fltOwnerSearch(this.value)" onfocus="fltOwnerSearch(this.value,1)"
+          onblur="setTimeout(()=>mgrClose('flt_owner'),180)">
+        <div class="mgr-drop" id="flt_owner_d"></div></div>
       <div class="field"><label>Тип оплаты</label>
         <select onchange="setFlt('payment',this.value)"><option value="">Все</option>
           ${opt(S.paymentTypes, f.payment)}</select></div>
@@ -1115,6 +1119,38 @@ function toggleFilters(){
     b.classList.toggle('on', S.flt.open); }
 }
 function setFlt(key,val){ S.flt[key]=val; drawOrders(); updateFltBtn(); }
+function fltOwnerSearch(q, showAll){
+  const box = el('flt_owner_d'); if(!box) return;
+  const term = (q||'').trim().toLowerCase();
+  let list = S.employees.filter(e=>e.active!==false);
+  if(term && !showAll){
+    list = list.filter(e=>{
+      const byName = (e.full_name||'').toLowerCase().includes(term);
+      const qd = term.replace(/\D/g,'');
+      const byPhone = qd && ((e.login_phone||'')+(e.phone||'')).includes(qd);
+      return byName || byPhone;
+    });
+  }
+  list = list.slice(0,40);
+  box.innerHTML = `<div class="mgr-row" onmousedown="fltOwnerPick('','Все')">
+      <div style="min-width:0;flex:1"><div class="n" style="color:var(--mute)">Все менеджеры</div></div></div>` +
+    list.map(e=>{
+    const dep = S.departments.find(d=>d.id===e.department_id);
+    return `<div class="mgr-row" onmousedown="fltOwnerPick('${e.id}','${esc(e.full_name||'')}')">
+      <span class="avatar">${ini(e.full_name)}</span>
+      <div style="min-width:0;flex:1">
+        <div class="n">${esc(e.full_name||'')}</div>
+        <div class="s">${esc(ROLE_NAME[e.role]||e.role||'')}${dep?' · '+esc(dep.name):''}</div>
+      </div>
+    </div>`;}).join('');
+  box.classList.add('on');
+}
+function fltOwnerPick(id, name){
+  const inp = el('flt_owner');
+  if(inp) inp.value = id ? name : '';
+  mgrClose('flt_owner');
+  setFlt('owner', id);
+}
 function resetFlt(){
   Object.assign(S.flt, { status:'',owner:'',payment:'',parcel:'',kind:'',sender:'',delivery:'',sumMin:'',sumMax:'',dateFrom:'',dateTo:'' });
   const open=S.flt.open; go('orders'); S.flt.open=open;

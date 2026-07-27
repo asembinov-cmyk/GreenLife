@@ -761,7 +761,7 @@ const sb = supabase.createClient(SUPABASE_URL || 'https://placeholder.supabase.c
 const S = { user:null, me:null, tab:'dash', statuses:[], deliveryTypes:[], employees:[], products:[],
             bundles:[], bundleOptions:[], bundleItems:[], bundleSlots:[], bOpen:null,
             scripts:[], scriptSteps:[], scr:null, draft:null, pick:null, cat:null,
-            orders:[], customers:[], paymentTypes:[], parcelStatuses:[], categories:[], departments:[], ai:[],
+            orders:[], customers:[], paymentTypes:[], parcelStatuses:[], paymentKinds:[], senders:[], categories:[], departments:[], ai:[],
             pFilter:{ cat:'', q:'', hidden:false }, pSort:{ by:'name', dir:1 }, pOpenCat:null,
             eFilter:{ dep:'', role:'', q:'', off:false }, eSort:{ by:'rev', dir:-1 }, eOpenDep:null,
             orderItems:[] };
@@ -840,10 +840,12 @@ async function loadAll(){
     sb.from('products').select('*').order('name'),
     sb.from('payment_types').select('*').order('sort'),
     sb.from('parcel_statuses').select('*').order('sort'),
+    sb.from('payment_kinds').select('*').order('sort'),
+    sb.from('senders').select('*').order('sort'),
     sb.from('categories').select('*'),
     sb.from('departments').select('*').order('name'),
     sb.from('customers').select('*').order('created_at',{ascending:false}).limit(500),
-    sb.from('orders').select('*, customers(name,phone), employees(full_name), statuses(code,name,color), payment_types(name), parcel_statuses(name,color), bundles(price,name)')
+    sb.from('orders').select('*, customers(name,phone), owner:employees!owner_id(full_name), statuses(code,name,color), payment_types(name), parcel_statuses(name,color), bundles(price,name)')
       .order('created_at',{ascending:false}).limit(600),
     sb.from('delivery_types').select('*').order('sort'),
     sb.from('bundles').select('*').order('price'),
@@ -854,10 +856,10 @@ async function loadAll(){
     sb.from('script_steps').select('*').order('sort'),
   ];
   const settled = await Promise.all(q.map(x=>x.then(r=>r, e=>({data:[],error:e}))));
-  const [st,em,pr,pt,ps,ca,dp,cu,or_,dtp,bn,bo,bi,bs,sc,ss] = settled;
+  const [st,em,pr,pt,ps,ca,dp,cu,or_,dtp,bn,bo,bi,bs,sc,ss,pk,sn] = settled;
   settled.forEach(r=>{ if(r && r.error) console.warn('CRM load:', r.error.message||r.error); });
   S.statuses=st.data||[]; S.employees=em.data||[]; S.products=pr.data||[];
-  S.paymentTypes=pt.data||[]; S.parcelStatuses=ps.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
+  S.paymentTypes=pt.data||[]; S.parcelStatuses=ps.data||[]; S.paymentKinds=pk.data||[]; S.senders=sn.data||[]; S.categories=ca.data||[]; S.departments=dp.data||[];
   S.customers=cu.data||[]; S.orders=or_.data||[]; S.deliveryTypes=dtp.data||[];
   S.bundles=bn.data||[]; S.bundleOptions=bo.data||[]; S.bundleItems=bi.data||[]; S.bundleSlots=bs.data||[]; S.scripts=sc.data||[]; S.scriptSteps=ss.data||[];
   S.me = S.employees.find(e=>e.id===S.user.id) || { full_name:S.user.email, role:'sales' };
@@ -925,7 +927,7 @@ function go(k){
 }
 const H = (t,s,r='') => `<div class="head"><div><h1>${t}</h1><p>${s}</p></div><div class="row">${r}</div></div>`;
 
-function myOrders(){ return S.me.role==='sales' ? S.orders.filter(o=>o.owner_id===S.user.id) : S.orders; }
+function myOrders(){ return S.orders; }
 function vDash(){
   const os = myOrders(), m0 = new Date(); m0.setDate(1); m0.setHours(0,0,0,0);
   const mth = os.filter(o=>new Date(o.created_at)>=m0);
@@ -992,7 +994,7 @@ function vPipe(){
           onclick="openOrder(${o.id})" style="border-left-color:${st.color}">
         <div class="nm">${esc(o.customers?.name||'Без имени')}</div>
         <div class="amt">${M(o.amount)}</div>
-        <div class="meta"><span>${esc(o.employees?.full_name||'—')}</span><span>${days(o.created_at)} дн.</span></div>
+        <div class="meta"><span>${esc(o.owner?.full_name||'—')}</span><span>${days(o.created_at)} дн.</span></div>
       </div>`).join('') : `<div style="color:var(--mute);font-size:13px;padding:6px 2px">Пусто</div>`}
     </div>`;}).join('')}</div>`;
 }
@@ -1025,9 +1027,10 @@ function drawOrders(){
   }
   el('tbl').innerHTML = `
   <div class="tw"><table><thead><tr>
-    <th>Номер</th><th>Внеш. ID</th><th>Клиент</th><th>Сумма</th><th>Этап</th>
+    <th class="num">№</th><th>Номер</th><th>Внеш. ID</th><th>Клиент</th><th>Сумма</th><th>Этап</th>
     <th>Оплата</th><th>Посылка</th><th>Менеджер</th><th>Создан</th></tr></thead><tbody>
-    ${rows.map(o=>`<tr onclick="openOrder(${o.id})">
+    ${rows.map((o,i)=>`<tr onclick="openOrder(${o.id})">
+      <td class="num">${i+1}</td>
       <td class="mono" style="color:var(--mute)">${esc(o.number||o.id)}</td>
       <td class="mono" style="color:var(--mute);font-size:12px">${esc(o.ext_id||'—')}</td>
       <td><div style="font-weight:600">${esc(o.customers?.name||'Без имени')}</div>
@@ -1036,7 +1039,7 @@ function drawOrders(){
       <td><span class="tag" style="background:${o.statuses?.color}22;color:${o.statuses?.color}">${esc(o.statuses?.name||'—')}</span></td>
       <td style="font-size:13px">${esc(o.payment_types?.name||'—')}</td>
       <td>${o.parcel_statuses?.name?`<span class="tag" style="background:${o.parcel_statuses.color||'#6f7687'}22;color:${o.parcel_statuses.color||'#6f7687'}">${esc(o.parcel_statuses.name)}</span>`:'<span style="color:var(--mute)">—</span>'}</td>
-      <td><span class="avatar">${ini(o.employees?.full_name)}</span></td>
+      <td><span class="avatar">${ini(o.owner?.full_name)}</span></td>
       <td style="color:var(--mute);font-size:13px">${dt(o.created_at)}</td></tr>`).join('')}
     </tbody></table></div>
   <div class="clist">${rows.map(o=>`
@@ -1051,7 +1054,7 @@ function drawOrders(){
       </div>
       <div class="right">
         <div class="mono" style="font-weight:700;font-size:15px">${moneyShort(o.amount)}</div>
-        <span class="avatar">${ini(o.employees?.full_name)}</span>
+        <span class="avatar">${ini(o.owner?.full_name)}</span>
       </div>
     </div>`).join('')}</div>`;
 }
@@ -1090,32 +1093,39 @@ function custStats(customerId){
 // [город, область, индекс]
 const KZ_CITIES = [
   ['Алматы','Алматы','050000'],['Астана','Астана','010000'],['Шымкент','Шымкент','160000'],
-  ['Актобе','Актюбинская область','030000'],['Караганда','Карагандинская область','100000'],
-  ['Тараз','Жамбылская область','080000'],['Павлодар','Павлодарская область','140000'],
-  ['Усть-Каменогорск','Восточно-Казахстанская область','070000'],
-  ['Семей','Абайская область','071400'],['Атырау','Атырауская область','060000'],
-  ['Костанай','Костанайская область','110000'],['Кызылорда','Кызылординская область','120000'],
-  ['Уральск','Западно-Казахстанская область','090000'],['Петропавловск','Северо-Казахстанская область','150000'],
-  ['Актау','Мангистауская область','130000'],['Темиртау','Карагандинская область','101400'],
-  ['Туркестан','Туркестанская область','161200'],['Кокшетау','Акмолинская область','020000'],
-  ['Талдыкорган','Жетысуская область','040000'],['Экибастуз','Павлодарская область','141200'],
-  ['Рудный','Костанайская область','111500'],['Жезказган','Улытауская область','100600'],
-  ['Жанаозен','Мангистауская область','130200'],['Балхаш','Карагандинская область','100300'],
-  ['Кентау','Туркестанская область','161500'],['Сатпаев','Улытауская область','101300'],
-  ['Кокшетау','Акмолинская область','020000'],['Риддер','Восточно-Казахстанская область','071300'],
-  ['Степногорск','Акмолинская область','021500'],['Щучинск','Акмолинская область','021700'],
-  ['Аксай','Западно-Казахстанская область','090300'],['Капшагай','Алматинская область','040800'],
-  ['Каскелен','Алматинская область','040900'],['Талгар','Алматинская область','041600'],
-  ['Есик','Алматинская область','040400'],['Жаркент','Жетысуская область','041200'],
-  ['Аягоз','Абайская область','071700'],['Зайсан','Восточно-Казахстанская область','070900'],
-  ['Аральск','Кызылординская область','120200'],['Шу','Жамбылская область','080400'],
-  ['Каратау','Жамбылская область','080600'],['Сарыагаш','Туркестанская область','160900'],
-  ['Арыс','Туркестанская область','160300'],['Ленгер','Туркестанская область','160600'],
-  ['Житикара','Костанайская область','111700'],['Лисаковск','Костанайская область','111200'],
-  ['Аркалык','Костанайская область','110300'],['Кульсары','Атырауская область','060100'],
-  ['Форт-Шевченко','Мангистауская область','130400'],['Байконур','Кызылординская область','120700'],
-  ['Шахтинск','Карагандинская область','101600'],['Абай','Карагандинская область','100100'],
-  ['Каражал','Улытауская область','100800'],['Приозёрск','Карагандинская область','101000'],
+  ['Кокшетау','Акмолинская область','020000'],['Степногорск','Акмолинская область','021500'],['Щучинск','Акмолинская область','021700'],
+  ['Атбасар','Акмолинская область','020400'],['Макинск','Акмолинская область','020900'],['Ерейментау','Акмолинская область','020600'],
+  ['Есиль','Акмолинская область','021000'],['Акколь','Акмолинская область','020100'],['Державинск','Акмолинская область','020800'],
+  ['Косшы','Акмолинская область','020300'],['Актобе','Актюбинская область','030000'],['Кандыагаш','Актюбинская область','030700'],
+  ['Хромтау','Актюбинская область','031300'],['Алга','Актюбинская область','030300'],['Эмба','Актюбинская область','031000'],
+  ['Шалкар','Актюбинская область','031200'],['Темир','Актюбинская область','030900'],['Конаев','Алматинская область','040800'],
+  ['Талгар','Алматинская область','041600'],['Есик','Алматинская область','040400'],['Каскелен','Алматинская область','040900'],
+  ['Узынагаш','Алматинская область','040300'],['Ушарал','Жетысуская область','041200'],['Атырау','Атырауская область','060000'],
+  ['Кульсары','Атырауская область','060100'],['Индерборский','Атырауская область','060200'],['Макат','Атырауская область','060300'],
+  ['Усть-Каменогорск','Восточно-Казахстанская область','070000'],['Риддер','Восточно-Казахстанская область','071300'],['Зыряновск','Восточно-Казахстанская область','070900'],
+  ['Зайсан','Восточно-Казахстанская область','070900'],['Шемонаиха','Восточно-Казахстанская область','071500'],['Серебрянск','Восточно-Казахстанская область','071100'],
+  ['Курчатов','Абайская область','071100'],['Алтай','Восточно-Казахстанская область','071200'],['Семей','Абайская область','071400'],
+  ['Аягоз','Абайская область','071700'],['Чарск','Абайская область','071900'],['Тараз','Жамбылская область','080000'],
+  ['Каратау','Жамбылская область','080600'],['Шу','Жамбылская область','080400'],['Жанатас','Жамбылская область','080500'],
+  ['Мерке','Жамбылская область','080700'],['Кордай','Жамбылская область','080800'],['Талдыкорган','Жетысуская область','040000'],
+  ['Текели','Жетысуская область','041000'],['Сарканд','Жетысуская область','041300'],['Жаркент','Жетысуская область','041200'],
+  ['Уральск','Западно-Казахстанская область','090000'],['Аксай','Западно-Казахстанская область','090300'],['Чапаев','Западно-Казахстанская область','090500'],
+  ['Казталовка','Западно-Казахстанская область','090600'],['Караганда','Карагандинская область','100000'],['Темиртау','Карагандинская область','101400'],
+  ['Балхаш','Карагандинская область','100300'],['Сарань','Карагандинская область','101200'],['Шахтинск','Карагандинская область','101600'],
+  ['Абай','Карагандинская область','100100'],['Каркаралинск','Карагандинская область','100800'],['Приозёрск','Карагандинская область','101000'],
+  ['Жезказган','Улытауская область','100600'],['Сатпаев','Улытауская область','101300'],['Каражал','Улытауская область','100800'],
+  ['Жанаарка','Улытауская область','100700'],['Костанай','Костанайская область','110000'],['Рудный','Костанайская область','111500'],
+  ['Лисаковск','Костанайская область','111200'],['Житикара','Костанайская область','111700'],['Аркалык','Костанайская область','110300'],
+  ['Тобол','Костанайская область','111600'],['Федоровка','Костанайская область','111000'],['Кызылорда','Кызылординская область','120000'],
+  ['Аральск','Кызылординская область','120200'],['Казалинск','Кызылординская область','120300'],['Байконур','Кызылординская область','120700'],
+  ['Шиели','Кызылординская область','120500'],['Жосалы','Кызылординская область','120400'],['Актау','Мангистауская область','130000'],
+  ['Жанаозен','Мангистауская область','130200'],['Форт-Шевченко','Мангистауская область','130400'],['Бейнеу','Мангистауская область','130500'],
+  ['Шетпе','Мангистауская область','130300'],['Павлодар','Павлодарская область','140000'],['Экибастуз','Павлодарская область','141200'],
+  ['Аксу','Павлодарская область','140100'],['Ертис','Павлодарская область','140800'],['Петропавловск','Северо-Казахстанская область','150000'],
+  ['Булаево','Северо-Казахстанская область','150600'],['Мамлютка','Северо-Казахстанская область','150800'],['Тайынша','Северо-Казахстанская область','151100'],
+  ['Сергеевка','Северо-Казахстанская область','150900'],['Туркестан','Туркестанская область','161200'],['Кентау','Туркестанская область','161500'],
+  ['Арыс','Туркестанская область','160300'],['Сарыагаш','Туркестанская область','160900'],['Ленгер','Туркестанская область','160600'],
+  ['Шардара','Туркестанская область','161000'],['Жетысай','Туркестанская область','160400'],['Сайрам','Туркестанская область','160800'],
 ];
 function citySearch(key, q){
   const box = el(key+'_cd'); if(!box) return;
@@ -1298,6 +1308,14 @@ async function openOrder(id){
             <select onchange="setOrderField(${id},'payment_type_id',this.value)"><option value="">— не задан —</option>
               ${S.paymentTypes.map(x=>`<option value="${x.id}" ${x.id===o.payment_type_id?'selected':''}>${esc(x.name)}</option>`).join('')}
             </select></div>
+          <div class="field"><label>Вид платежа</label>
+            <select onchange="setOrderField(${id},'payment_kind_id',this.value)"><option value="">— не задан —</option>
+              ${S.paymentKinds.map(x=>`<option value="${x.id}" ${x.id===o.payment_kind_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+          <div class="field"><label>ИП отправитель</label>
+            <select onchange="setOrderField(${id},'sender_id',this.value)"><option value="">— не задан —</option>
+              ${S.senders.map(x=>`<option value="${x.id}" ${x.id===o.sender_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
           <div class="field"><label>Внешний ID</label>
             <input value="${esc(o.ext_id||'')}" onchange="setOrderText(${id},'ext_id',this.value)"></div>
           ${boss?`<div class="field"><label>Менеджер</label>
@@ -1318,8 +1336,13 @@ async function openOrder(id){
             <div class="mgr-drop" id="a_cd"></div></div>
           <div class="field"><label>Улица</label><input id="a_street" value="${esc(o.addr_street||'')}"></div>
           <div class="field"><label>Дом</label><input id="a_house" value="${esc(o.addr_house||'')}"></div>
+          <div class="field"><label>Квартира</label><input id="a_flat" value="${esc(o.addr_flat||'')}"></div>
         </div>
-        <button class="btn sm" style="margin-top:8px" onclick="saveAddress(${id})">Сохранить адрес</button>
+        <div class="row" style="gap:8px;margin-top:8px">
+          <button class="btn sm" onclick="saveAddress(${id})">Сохранить адрес</button>
+          <button class="btn sm ghost" onclick="findIndex()">Найти индекс по адресу</button>
+        </div>
+        <div id="idxResult" style="margin-top:8px"></div>
 
         ${isAdmin?`<div style="border-top:1px solid var(--line);margin-top:16px;padding-top:14px">
           <button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert)"
@@ -1533,6 +1556,79 @@ async function saveCustomer(orderId){
   if(error) return alert('Не удалось сохранить клиента: '+error.message);
   await loadAll(); openOrder(orderId);
 }
+async function findIndex(){
+  const region = (el('a_region')?.value||'').trim();
+  const city   = (el('a_city')?.value||'').trim();
+  const street = (el('a_street')?.value||'').trim();
+  const house  = (el('a_house')?.value||'').trim();
+  if(!city && !street){
+    el('idxResult').innerHTML = '<span style="color:var(--alert);font-size:13px">Заполните хотя бы город и улицу</span>';
+    return;
+  }
+  const q = [city, street, house].filter(Boolean).join(' ');
+  el('idxResult').innerHTML = '<span style="color:var(--mute);font-size:13px">Ищу индекс…</span>';
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    const r = await fetch(SUPABASE_URL + '/functions/v1/find-index?q=' + encodeURIComponent(q), {
+      headers: { 'Authorization':'Bearer '+session.access_token, 'apikey':SUPABASE_ANON } });
+    const d = await r.json();
+    if(!r.ok || d.error){ throw new Error(d.error || 'Сервис недоступен'); }
+    const res = d.results || [];
+    if(!res.length){
+      el('idxResult').innerHTML = '<span style="color:var(--amber);font-size:13px">Адрес не найден в базе Казпочты. Впишите индекс вручную.</span>';
+      return;
+    }
+    // если один результат — подставляем сразу, если несколько — даём выбрать
+    if(res.length===1 && res[0].index){
+      el('a_zip').value = res[0].index;
+      el('idxResult').innerHTML = '<span style="color:var(--signal);font-size:13px">Индекс подставлен: '+esc(res[0].index)+'</span>';
+      return;
+    }
+    el('idxResult').innerHTML = '<div style="font-size:12px;color:var(--mute);margin-bottom:6px">Выберите точный адрес:</div>' +
+      res.map(x=>`<div class="mgr-row" style="cursor:pointer" onmousedown="pickIndex('${esc(x.index)}')">
+        <span class="mono" style="font-weight:700;flex:none">${esc(x.index||'—')}</span>
+        <span style="font-size:12px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.address||'')}</span>
+      </div>`).join('');
+  }catch(e){
+    el('idxResult').innerHTML = '<span style="color:var(--alert);font-size:13px">Не удалось найти: '+esc(e.message)+'</span>';
+  }
+}
+async function findIndexDraft(){
+  const d = S.draft.addr;
+  if(!d.city && !d.street){
+    el('idxResultD').innerHTML = '<span style="color:var(--alert);font-size:13px">Заполните хотя бы город и улицу</span>';
+    return;
+  }
+  const q = [d.city, d.street, d.house].filter(Boolean).join(' ');
+  el('idxResultD').innerHTML = '<span style="color:var(--mute);font-size:13px">Ищу индекс…</span>';
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    const r = await fetch(SUPABASE_URL + '/functions/v1/find-index?q=' + encodeURIComponent(q), {
+      headers: { 'Authorization':'Bearer '+session.access_token, 'apikey':SUPABASE_ANON } });
+    const res = (await r.json());
+    if(!r.ok || res.error) throw new Error(res.error || 'Сервис недоступен');
+    const list = res.results || [];
+    if(!list.length){
+      el('idxResultD').innerHTML = '<span style="color:var(--amber);font-size:13px">Адрес не найден в базе Казпочты. Впишите индекс вручную.</span>';
+      return;
+    }
+    if(list.length===1 && list[0].index){
+      S.draft.addr.zip = list[0].index; drawDraft(); return;
+    }
+    el('idxResultD').innerHTML = '<div style="font-size:12px;color:var(--mute);margin-bottom:6px">Выберите точный адрес:</div>' +
+      list.map(x=>`<div class="mgr-row" style="cursor:pointer" onmousedown="pickIndexDraft('${esc(x.index)}')">
+        <span class="mono" style="font-weight:700;flex:none">${esc(x.index||'—')}</span>
+        <span style="font-size:12px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(x.address||'')}</span>
+      </div>`).join('');
+  }catch(e){
+    el('idxResultD').innerHTML = '<span style="color:var(--alert);font-size:13px">Не удалось найти: '+esc(e.message)+'</span>';
+  }
+}
+function pickIndexDraft(idx){ S.draft.addr.zip = idx; drawDraft(); }
+function pickIndex(idx){
+  if(el('a_zip')) el('a_zip').value = idx;
+  el('idxResult').innerHTML = '<span style="color:var(--signal);font-size:13px">Индекс подставлен: '+esc(idx)+'</span>';
+}
 async function saveAddress(id){
   const patch = {
     addr_zip:      el('a_zip').value.trim()      || null,
@@ -1541,6 +1637,7 @@ async function saveAddress(id){
     addr_city:     el('a_city').value.trim()     || null,
     addr_street:   el('a_street').value.trim()   || null,
     addr_house:    el('a_house').value.trim()    || null,
+    addr_flat:     el('a_flat').value.trim()     || null,
   };
   const { error } = await sb.from('orders').update(patch).eq('id',id);
   if(error) return alert('Не удалось сохранить адрес: '+error.message);
@@ -2197,6 +2294,9 @@ function editEmployee(id){
       <div style="font-size:12px;color:var(--mute);margin-top:4px">Номер входа менять нельзя</div></div>
     <div class="field"><label>Отдел</label><select id="e_dep">${depOptions(e.department_id)}</select></div>
     <div class="field"><label>План на месяц, ₸</label><input id="e_plan" type="number" inputmode="numeric" value="${e.plan_month||0}"></div>
+    <div class="field"><label>Внешний логин (ID из другой системы)
+        <span style="text-transform:none;font-weight:400">— для приёма заказов по API</span></label>
+      <input id="e_ext" value="${esc(e.ext_login||'')}" placeholder="например, 102"></div>
     <div class="field"><label>Доступ в систему</label>
       <select id="e_active" ${self?'disabled':''}>
         <option value="1" ${e.active!==false?'selected':''}>Открыт</option>
@@ -2213,7 +2313,8 @@ function editEmployee(id){
     const pw = el('e_pw').value;
     if(pw && pw.length < 6) return el('formErr').textContent = 'Пароль должен быть от 6 символов';
     const patch = { full_name:el('e_name').value.trim(),
-                    department_id:+el('e_dep').value||null, plan_month:+el('e_plan').value||0 };
+                    department_id:+el('e_dep').value||null, plan_month:+el('e_plan').value||0,
+                    ext_login:(el('e_ext').value||'').trim()||null };
     if(!self){ patch.role = el('e_role').value; patch.active = el('e_active').value==='1'; }
     el('saveBtn').textContent = 'Сохраняю…'; el('saveBtn').disabled = true;
     const done = m => { el('saveBtn').textContent='Сохранить'; el('saveBtn').disabled=false;
@@ -3196,6 +3297,8 @@ function vRefs(){
     ${blk('Типы доставки', S.deliveryTypes, 'delivery_types')}
     ${blk('Типы оплаты', S.paymentTypes, 'payment_types')}
     ${blk('Статусы посылки', S.parcelStatuses, 'parcel_statuses')}
+    ${blk('Виды платежа', S.paymentKinds, 'payment_kinds')}
+    ${blk('ИП отправители', S.senders, 'senders')}
   </div>`;
 }
 const REF = {
@@ -3245,7 +3348,7 @@ async function delRefCard(kind, id, name){
   closeAll(); await loadAll(); go('refs');
 }
 async function addRef(t){
-  const titles = { statuses:'этапа воронки', delivery_types:'типа доставки', payment_types:'типа оплаты', parcel_statuses:'статуса посылки' };
+  const titles = { statuses:'этапа воронки', delivery_types:'типа доставки', payment_types:'типа оплаты', parcel_statuses:'статуса посылки', payment_kinds:'вида платежа', senders:'ИП отправителя' };
   const name = prompt('Название '+(titles[t]||'записи'));
   if(!name || !name.trim()) return;
   const v = { name: name.trim() };
@@ -3253,6 +3356,8 @@ async function addRef(t){
   if(t==='delivery_types'){ v.sort = (S.deliveryTypes.at(-1)?.sort || 0) + 1; }
   if(t==='payment_types'){ v.sort = (S.paymentTypes.at(-1)?.sort || 0) + 1; }
   if(t==='parcel_statuses'){ v.color = '#6f7687'; v.sort = (S.parcelStatuses.at(-1)?.sort || 0) + 1; }
+  if(t==='payment_kinds'){ v.sort = (S.paymentKinds.at(-1)?.sort || 0) + 1; }
+  if(t==='senders'){ v.sort = (S.senders.at(-1)?.sort || 0) + 1; }
   const { error } = await sb.from(t).insert(v);
   if(error) return alert('Не удалось сохранить: '+error.message);
   await loadAll(); go('refs');
@@ -3294,7 +3399,7 @@ function newOrder(){
   S.draft = { name:'', phone:'', ext_id:'', owner_id:S.user.id, status_id:S.statuses[0]?.id || null,
               payment_type_id:null, parcel_status_id:null,
               delivery_type_id:null, amount:0, comment:'',
-              items:[], addr:{ zip:'',region:'',district:'',city:'',street:'',house:'' } };
+              items:[], addr:{ zip:'',region:'',district:'',city:'',street:'',house:'',flat:'' } };
   S.orderItems = [];
   drawDraft();
 }
@@ -3320,8 +3425,8 @@ function drawDraft(){
         <input id="d_name" class="oc-name" value="${esc(d.name)}" placeholder="Имя клиента"
           oninput="dSet('name',this.value)">
         <div class="oc-sub">
-          <span class="mono">НОВЫЙ ЗАКАЗ · черновик</span>
-          <span class="tag" style="background:var(--tint-2);color:var(--paper)">не сохранён</span>
+          <span class="mono">Новый заказ</span>
+          <span class="tag" style="background:var(--tint-2);color:var(--paper)">${S.statuses.find(x=>x.id===d.status_id)?.name || 'Новый'}</span>
         </div>
       </div>
       <div class="oc-amt mono">${money(amount)}</div>
@@ -3422,6 +3527,17 @@ function drawDraft(){
               <option value="">— не задан —</option>
               ${S.paymentTypes.map(x=>`<option value="${x.id}" ${x.id===d.payment_type_id?'selected':''}>${esc(x.name)}</option>`).join('')}
             </select></div>
+          <div class="field"><label>Вид платежа</label>
+            <select onchange="dSet('payment_kind_id',this.value?+this.value:null)">
+              <option value="">— не задан —</option>
+              ${S.paymentKinds.map(x=>`<option value="${x.id}" ${x.id===d.payment_kind_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+          <div class="field"><label>ИП отправитель</label>
+            <select onchange="dSet('sender_id',this.value?+this.value:null)">
+              <option value="">— не задан —</option>
+              ${S.senders.map(x=>`<option value="${x.id}" ${x.id===d.sender_id?'selected':''}>${esc(x.name)}</option>`).join('')}
+            </select></div>
+
           <div class="field"><label>Статус посылки</label>
             <select onchange="dSet('parcel_status_id',this.value?+this.value:null)">
               <option value="">— не задан —</option>
@@ -3451,7 +3567,11 @@ function drawDraft(){
             <input value="${esc(d.addr.street)}" oninput="dSetAddr('street',this.value)"></div>
           <div class="field"><label>Дом</label>
             <input value="${esc(d.addr.house)}" oninput="dSetAddr('house',this.value)"></div>
+          <div class="field"><label>Квартира</label>
+            <input value="${esc(d.addr.flat||'')}" oninput="dSetAddr('flat',this.value)"></div>
         </div>
+        <button class="btn sm ghost" style="margin-top:8px" onclick="findIndexDraft()">Найти индекс по адресу</button>
+        <div id="idxResultD" style="margin-top:8px"></div>
 
         <div class="field" style="margin-top:14px"><label>Комментарий</label>
           <textarea id="d_comment" rows="2" oninput="dSet('comment',this.value)">${esc(d.comment)}</textarea></div>
@@ -3499,7 +3619,7 @@ function fromShowcase(bid, oid){
 function cancelDraft(){
   const d = S.draft;
   const touched = d && (d.name || d.phone || S.orderItems.length || d.amount || d.comment);
-  if(touched && !confirm('Закрыть черновик? Введённые данные не сохранятся.')) return;
+  if(touched && !confirm('Закрыть карточку? Заказ ещё не создан, введённые данные не сохранятся.')) return;
   S.draft = null; S.orderItems = [];
   closeAll();
 }
@@ -3527,10 +3647,12 @@ async function saveDraft(){
   const patch = { number:'ORD-'+Date.now(), customer_id:cust.id, owner_id:d.owner_id||S.user.id,
     status_id:d.status_id, amount, comment:(d.comment||'').trim()||null,
     ext_id:(d.ext_id||'').trim()||null, payment_type_id:d.payment_type_id, parcel_status_id:d.parcel_status_id,
+    payment_kind_id:d.payment_kind_id||null, sender_id:d.sender_id||null,
     delivery_type_id:d.delivery_type_id, bundle_id:d.bundle_id||null, bundle_option_id:d.bundle_option_id||null,
     addr_zip:d.addr.zip.trim()||null, addr_region:d.addr.region.trim()||null,
     addr_district:d.addr.district.trim()||null, addr_city:d.addr.city.trim()||null,
-    addr_street:d.addr.street.trim()||null, addr_house:d.addr.house.trim()||null };
+    addr_street:d.addr.street.trim()||null, addr_house:d.addr.house.trim()||null,
+    addr_flat:(d.addr.flat||'').trim()||null };
 
   const { data:ord, error } = await sb.from('orders').insert(patch).select().single();
   if(error) return fail('Не удалось сохранить заказ: '+error.message);

@@ -1018,9 +1018,10 @@ function managerCashHtml(){
   });
   // все менеджеры (активные), включая нулевиков
   const mgrs = S.employees.filter(e=>e.active!==false);
-  // группировка по отделам
-  const deps = S.departments.slice().sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-  const noDep = mgrs.filter(m=>!m.department_id);
+  // только отделы продаж (ОП Астана, ОП Кызылорда, ОП Шымкент)
+  const deps = S.departments
+    .filter(d=>/^оп\s/i.test((d.name||'').trim()))
+    .sort((a,b)=>(a.name||'').localeCompare(b.name||''));
 
   const rowHtml = (m)=>{
     const c = cash[m.id] || {month:0,today:0,cntM:0,cntT:0};
@@ -1054,7 +1055,6 @@ function managerCashHtml(){
       <span class="mc-val">За месяц</span>
     </div>
     ${deps.map(d=>depBlock(d.name, mgrs.filter(m=>m.department_id===d.id))).join('')}
-    ${depBlock('Без отдела', noDep)}
   </div>`;
 }
 async function loadSoldStats(){

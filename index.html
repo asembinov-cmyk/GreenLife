@@ -1067,33 +1067,31 @@ async function loadSoldStats(){
   const paidMonth = S.orders.filter(o=> payId && o.payment_type_id===payId && new Date(o.created_at)>=m0);
   const paidToday = paidMonth.filter(o=>new Date(o.created_at)>=d0);
   const idMonth = paidMonth.map(o=>o.id);
-  const todaySet = new Set(paidToday.map(o=>String(o.id)));  // строковые ключи — надёжно к типам
+  const idToday = paidToday.map(o=>o.id);
   const aggMonth = {}, aggToday = {};
-  try{
-    if(idMonth.length){
-      const { data } = await sb.from('order_items').select('order_id,product_id,qty').in('order_id', idMonth);
-      (data||[]).forEach(it=>{
-        const p = S.products.find(x=>x.id===it.product_id);
-        const name = p ? p.name : ('Товар #'+it.product_id);
-        const q = +it.qty||0;
-        aggMonth[name] = (aggMonth[name]||0) + q;
-        if(todaySet.has(String(it.order_id))) aggToday[name] = (aggToday[name]||0) + q;
-      });
+  const pname = pid => { const p = S.products.find(x=>x.id===pid); return p ? p.name : ('Товар #'+pid); };
+  // грузим позиции пачками по 200 id (обходим лимит .in и лимит строк ответа)
+  async function fetchItems(ids){
+    const out = [];
+    for(let i=0;i<ids.length;i+=200){
+      const chunk = ids.slice(i,i+200);
+      const { data, error } = await sb.from('order_items').select('order_id,product_id,qty')
+        .in('order_id', chunk).limit(10000);
+      if(error){ console.warn('items:', error.message); continue; }
+      out.push(...(data||[]));
     }
+    return out;
+  }
+  try{
+    // месяц
+    const itemsMonth = await fetchItems(idMonth);
+    itemsMonth.forEach(it=>{ aggMonth[pname(it.product_id)] = (aggMonth[pname(it.product_id)]||0) + (+it.qty||0); });
+    // сегодня — отдельным коротким запросом, чтобы точно всё вернулось
+    const itemsToday = await fetchItems(idToday);
+    itemsToday.forEach(it=>{ aggToday[pname(it.product_id)] = (aggToday[pname(it.product_id)]||0) + (+it.qty||0); });
   }catch(e){ console.warn('sold stats:', e.message); }
   renderSoldList('soldMonthList', aggMonth);
   renderSoldList('soldTodayList', aggToday);
-  // диагностика
-  const dbg = el('soldTodayList');
-  if(dbg && Object.keys(aggToday).length===0){
-    const sample = paidMonth.slice(0,3).map(o=>o.created_at).join(' | ');
-    dbg.innerHTML = `<div style="font-size:11px;color:var(--mute);line-height:1.6">
-      Заказов за месяц (оплач.): ${paidMonth.length}<br>
-      Заказов сегодня (оплач.): ${paidToday.length}<br>
-      Граница дня d0: ${d0.toString().slice(0,24)}<br>
-      Примеры дат заказов: ${esc(sample)}<br>
-      todaySet размер: ${todaySet.size}</div>`;
-  }
 }
 function renderSoldList(elId, agg){
   const box = el(elId); if(!box) return;

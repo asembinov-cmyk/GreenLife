@@ -3706,7 +3706,7 @@ function vRefs(){
     ${blk('Типы оплаты', S.paymentTypes, 'payment_types')}
     ${blk('Статусы посылки', S.parcelStatuses, 'parcel_statuses')}
     ${blk('Виды платежа', S.paymentKinds, 'payment_kinds')}
-    ${blk('ИП отправители', S.senders, 'senders')}
+    ${sendersBlk()}
     ${blk('Роли расходов', S.expenseRoles, 'expense_roles')}
   </div>`;
 }
@@ -3755,6 +3755,40 @@ async function delRefCard(kind, id, name){
   const { error } = await sb.from(c.table).delete().eq('id',id);
   if(error) return el('formErr').textContent = 'Не удалось удалить: '+error.message;
   closeAll(); await loadAll(); go('refs');
+}
+function sendersBlk(){
+  const isAdmin = S.me.role==='admin' || S.me.role==='boss';
+  return `<div class="card">
+    <div class="row" style="justify-content:space-between;margin-bottom:12px">
+      <h3 style="font-size:16px">ИП отправители</h3>
+      ${isAdmin?`<button class="btn sm" onclick="editSender()">Добавить</button>`:''}</div>
+    ${S.senders.length ? S.senders.map(r=>`<div class="row" style="justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);flex-wrap:nowrap;gap:10px">
+      <div style="min-width:0">
+        <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.name)}</div>
+        <div style="font-size:12px;color:var(--mute)">${r.ext_login?'логин: '+esc(r.ext_login):'логин не задан'}</div>
+      </div>
+      ${isAdmin?`<button class="btn sm ghost" onclick="editSender(${r.id})">Изменить</button>`:''}</div>`).join('')
+      :'<div style="color:var(--mute);font-size:13px;padding:8px 0">Пусто</div>'}</div>`;
+}
+function editSender(id){
+  const r = id ? S.senders.find(x=>x.id===id) : null;
+  formModal(r ? 'ИП: '+esc(r.name) : 'Новый ИП отправитель', `
+    <div class="field"><label>Название</label>
+      <input id="s_name" value="${r?esc(r.name):''}" placeholder="ИП Сембинов"></div>
+    <div class="field"><label>Внешний логин <span style="text-transform:none;font-weight:400;color:var(--mute)">— для приёма по API</span></label>
+      <input id="s_login" value="${r?esc(r.ext_login||''):''}" placeholder="например, ip-01"></div>
+    ${r?`<button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert)"
+      onclick="delRef('senders',${r.id})">Удалить</button>`:''}`,
+  async()=>{
+    const name = el('s_name').value.trim();
+    if(!name) return el('formErr').textContent='Укажите название';
+    const patch = { name, ext_login:(el('s_login').value||'').trim()||null };
+    if(!r) patch.sort = (S.senders.at(-1)?.sort||0)+1;
+    const { error } = r ? await sb.from('senders').update(patch).eq('id',r.id)
+                        : await sb.from('senders').insert(patch);
+    if(error) return el('formErr').textContent='Не удалось сохранить: '+error.message;
+    closeAll(); await loadAll(); go('refs');
+  });
 }
 async function addRef(t){
   const titles = { statuses:'этапа воронки', delivery_types:'типа доставки', payment_types:'типа оплаты', parcel_statuses:'статуса посылки', payment_kinds:'вида платежа', senders:'ИП отправителя', expense_roles:'роли расходов' };

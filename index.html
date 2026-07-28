@@ -1658,6 +1658,8 @@ async function openOrder(id){
             <input value="${esc(o.ext_id||'')}" onchange="setOrderText(${id},'ext_id',this.value)"></div>
           ${boss?`<div class="field"><label>Менеджер</label>
             ${mgrPicker({kind:'order',id:id}, o.owner_id)}</div>`:''}
+          <div class="field"><label>Отчётник</label>
+            ${repPicker(id, o.reporter_id)}</div>
           <div class="field"><label>Сумма заказа, ₸</label>
             <input type="number" inputmode="numeric" value="${+o.amount||0}"
               onchange="setOrderField(${id},'amount',this.value)"></div>
@@ -1852,6 +1854,48 @@ function mgrSearch(key, q, showAll){
   box.classList.add('on');
 }
 function mgrClose(key){ el(key+'_d')?.classList.remove('on'); }
+// ── выбор отчётника (сотрудник из отдела 7) ──
+function repPicker(orderId, currentId){
+  const cur = S.employees.find(e=>e.id===currentId);
+  const key = 'rep_'+orderId;
+  return `<div class="mgr" style="position:relative">
+    <input class="mgr-in" id="${key}" autocomplete="off" value="${esc(cur?.full_name||'')}"
+      placeholder="Начните вводить имя"
+      oninput="repSearch('${orderId}',this.value)" onfocus="repSearch('${orderId}',this.value,1)"
+      onblur="setTimeout(()=>mgrClose('${key}'),180)">
+    <div class="mgr-drop" id="${key}_d"></div>
+  </div>`;
+}
+function repSearch(orderId, q, showAll){
+  const key = 'rep_'+orderId;
+  const box = el(key+'_d'); if(!box) return;
+  const term = (q||'').trim().toLowerCase();
+  // строго отдел 7
+  let list = S.employees.filter(e=>e.active!==false && e.department_id===7);
+  if(term && !showAll){
+    list = list.filter(e=>{
+      const byName = (e.full_name||'').toLowerCase().includes(term);
+      const qd = term.replace(/\D/g,'');
+      const byPhone = qd && ((e.login_phone||'')+(e.phone||'')).includes(qd);
+      return byName || byPhone;
+    });
+  }
+  list = list.slice(0,40);
+  box.innerHTML = list.length ? list.map(e=>
+    `<div class="mgr-row" onmousedown="repPick('${orderId}','${e.id}','${esc(e.full_name||'')}')">
+      <span class="avatar">${ini(e.full_name)}</span>
+      <div style="min-width:0;flex:1"><div class="n">${esc(e.full_name||'')}</div>
+        <div class="s">отчётник</div></div>
+    </div>`).join('')
+    : `<div class="mgr-none">В отделе «Отчётники» никого нет</div>`;
+  box.classList.add('on');
+}
+function repPick(orderId, empId, name){
+  const inp = el('rep_'+orderId);
+  if(inp) inp.value = name;
+  mgrClose('rep_'+orderId);
+  setOrderField(orderId, 'reporter_id', empId, 1);
+}
 function mgrPick(key, empId){
   const e = S.employees.find(x=>x.id===empId);
   const inp = el(key);

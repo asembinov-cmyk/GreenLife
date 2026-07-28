@@ -1083,6 +1083,17 @@ async function loadSoldStats(){
   }catch(e){ console.warn('sold stats:', e.message); }
   renderSoldList('soldMonthList', aggMonth);
   renderSoldList('soldTodayList', aggToday);
+  // диагностика
+  const dbg = el('soldTodayList');
+  if(dbg && Object.keys(aggToday).length===0){
+    const sample = paidMonth.slice(0,3).map(o=>o.created_at).join(' | ');
+    dbg.innerHTML = `<div style="font-size:11px;color:var(--mute);line-height:1.6">
+      Заказов за месяц (оплач.): ${paidMonth.length}<br>
+      Заказов сегодня (оплач.): ${paidToday.length}<br>
+      Граница дня d0: ${d0.toString().slice(0,24)}<br>
+      Примеры дат заказов: ${esc(sample)}<br>
+      todaySet размер: ${todaySet.size}</div>`;
+  }
 }
 function renderSoldList(elId, agg){
   const box = el(elId); if(!box) return;

@@ -1067,7 +1067,7 @@ async function loadSoldStats(){
   const paidMonth = S.orders.filter(o=> payId && o.payment_type_id===payId && new Date(o.created_at)>=m0);
   const paidToday = paidMonth.filter(o=>new Date(o.created_at)>=d0);
   const idMonth = paidMonth.map(o=>o.id);
-  const idToday = paidToday.map(o=>o.id);
+  const todaySet = new Set(paidToday.map(o=>String(o.id)));  // строковые ключи — надёжно к типам
   const aggMonth = {}, aggToday = {};
   try{
     if(idMonth.length){
@@ -1077,7 +1077,7 @@ async function loadSoldStats(){
         const name = p ? p.name : ('Товар #'+it.product_id);
         const q = +it.qty||0;
         aggMonth[name] = (aggMonth[name]||0) + q;
-        if(idToday.includes(it.order_id)) aggToday[name] = (aggToday[name]||0) + q;
+        if(todaySet.has(String(it.order_id))) aggToday[name] = (aggToday[name]||0) + q;
       });
     }
   }catch(e){ console.warn('sold stats:', e.message); }

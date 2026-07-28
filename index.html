@@ -778,7 +778,7 @@ if(window.CSS && CSS.supports && CSS.supports('height','100dvh')){
 }
 
 const TAB_THEME = { dash:'#f6f7f4', pipe:'#f4f7f5', orders:'#f7f6f2', ai:'#f6f5f9',
-  customers:'#f4f6f8', products:'#f8f6f3', bundles:'#f7f4f0', scripts:'#f5f7f7', team:'#f7f5f6', analytics:'#f4f6f9', refs:'#f6f6f6' };
+  customers:'#f4f6f8', products:'#f8f6f3', bundles:'#f7f4f0', scripts:'#f5f7f7', team:'#f7f5f6', stats:'#f4f7f6', analytics:'#f4f6f9', refs:'#f6f6f6' };
 
 const CFG = window.CRM_CONFIG || {};
 const SUPABASE_URL  = CFG.url  || '';
@@ -925,7 +925,7 @@ function live(){
 const TABS = [
   ['Работа',[['dash','Дашборд','◧'],['pipe','Воронка','▤'],['orders','Заказы','▦'],['ai','AI-помощник','✦']]],
   ['База',  [['customers','Клиенты','◉'],['products','Товары','▩'],['bundles','Наборы','◈'],['scripts','Скрипты','❝'],['team','Сотрудники','◍']]],
-  ['Ещё',   [['analytics','Аналитика','◪'],['refs','Справочники','⚙']]],
+  ['Ещё',   [['stats','Статистика','◨'],['analytics','Аналитика','◪'],['refs','Справочники','⚙']]],
 ];
 const ALL_TABS = TABS.flatMap(([,items])=>items);
 const TAB_NAME = Object.fromEntries(ALL_TABS.map(([k,n])=>[k,n]));
@@ -968,7 +968,7 @@ function go(k){
   const th = document.querySelector('meta[name=theme-color]');
   if(th && TAB_THEME[k]) th.setAttribute('content', TAB_THEME[k]);
   ({dash:vDash,pipe:vPipe,orders:vOrders,customers:vCustomers,products:vProducts,
-    bundles:vBundles,scripts:vScripts,team:vTeam,analytics:vAnalytics,refs:vRefs,ai:vAI})[k]();
+    bundles:vBundles,scripts:vScripts,team:vTeam,stats:vStats,analytics:vAnalytics,refs:vRefs,ai:vAI})[k]();
   markNav();
   window.scrollTo(0,0);
 }
@@ -3670,6 +3670,162 @@ function renderOpts(sid){
     </div>`).join('')
     : `<div style="color:var(--mute);font-size:13px;padding:4px 0 8px">
         Ответов нет — шаг завершит разговор.</div>`;
+}
+
+// ═══════════ МОДУЛЬ СТАТИСТИКА ═══════════
+S.stat = S.stat || { from:'', to:'', preset:'month', group:'day' };
+
+function statSetPreset(p){
+  S.stat.preset = p;
+  const now = new Date(), d0 = new Date(); d0.setHours(0,0,0,0);
+  if(p==='today'){ S.stat.from = fmtD(d0); S.stat.to = fmtD(now); }
+  else if(p==='week'){ const w = new Date(d0); w.setDate(w.getDate()-6); S.stat.from = fmtD(w); S.stat.to = fmtD(now); }
+  else if(p==='month'){ const m = new Date(); m.setDate(1); m.setHours(0,0,0,0); S.stat.from = fmtD(m); S.stat.to = fmtD(now); }
+  else if(p==='year'){ const y = new Date(now.getFullYear(),0,1); S.stat.from = fmtD(y); S.stat.to = fmtD(now); }
+  vStats();
+}
+function statSetDate(k,v){ S.stat[k]=v; S.stat.preset=''; vStats(); }
+function statSetGroup(g){ S.stat.group=g; vStats(); }
+function fmtD(d){ const x=new Date(d); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); }
+
+function statPaidOrders(){
+  const payFull = S.paymentTypes.find(p=>(p.name||'').toLowerCase().includes('полная предоплата'));
+  const payId = payFull ? payFull.id : null;
+  let from = S.stat.from ? new Date(S.stat.from+'T00:00:00') : null;
+  let to = S.stat.to ? new Date(S.stat.to+'T23:59:59') : null;
+  return S.orders.filter(o=>{
+    if(!(payId && o.payment_type_id===payId)) return false;
+    const d = new Date(o.created_at);
+    if(from && d<from) return false;
+    if(to && d>to) return false;
+    return true;
+  });
+}
+
+async function vStats(){
+  if(!S.stat.from){ statSetPreset('month'); return; }
+  const paid = statPaidOrders();
+  // общие цифры
+  const revenue = paid.reduce((s,o)=>s+ +o.amount,0);
+  const profit = paid.reduce((s,o)=>s+ orderProfit(o).profit,0);
+  const cnt = paid.length;
+  const avg = cnt ? revenue/cnt : 0;
+  // все заказы периода для оборота
+  let from = S.stat.from ? new Date(S.stat.from+'T00:00:00') : null;
+  let to = S.stat.to ? new Date(S.stat.to+'T23:59:59') : null;
+  const allInPeriod = S.orders.filter(o=>{ const d=new Date(o.created_at);
+    return (!from||d>=from) && (!to||d<=to); });
+  const turnover = allInPeriod.reduce((s,o)=>s+ +o.amount,0);
+
+  el('view').innerHTML = H('Статистика', `${S.stat.from} — ${S.stat.to}`, statFilterBar()) +
+  `<div class="grid kpis" style="margin-bottom:14px">
+    <div class="card kpi"><div class="lbl">Выручка</div><div class="val up">${M(revenue)}</div>
+      <div class="sub">оплаченные · оборот ${M(turnover)}</div></div>
+    <div class="card kpi"><div class="lbl">Прибыль</div><div class="val up">${M(profit)}</div>
+      <div class="sub">− расходы − себестоимость</div></div>
+    <div class="card kpi"><div class="lbl">Заказов оплачено</div><div class="val">${cnt}</div>
+      <div class="sub">из ${allInPeriod.length} за период</div></div>
+    <div class="card kpi"><div class="lbl">Средний чек</div><div class="val">${M(avg)}</div>
+      <div class="sub">по оплаченным</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:14px">
+    <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h3 style="font-size:16px">Динамика по ${S.stat.group==='day'?'дням':'месяцам'}</h3>
+      <div class="row" style="gap:6px">
+        <button class="btn sm ${S.stat.group==='day'?'':'ghost'}" onclick="statSetGroup('day')">По дням</button>
+        <button class="btn sm ${S.stat.group==='month'?'':'ghost'}" onclick="statSetGroup('month')">По месяцам</button>
+      </div>
+    </div>
+    ${statTimeTable(paid)}
+  </div>
+
+  ${managerCashHtml()}
+
+  <div class="grid" style="grid-template-columns:1fr 1fr;margin-bottom:14px">
+    <div class="card">
+      <h3 style="font-size:16px;margin-bottom:12px">Продано товаров за период</h3>
+      <div id="statSold" class="sold-list">…</div>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px;margin-bottom:12px">Расходы по ролям за период</h3>
+      <div id="statExp">${statExpenses(paid)}</div>
+    </div>
+  </div>`;
+
+  loadStatSold(paid);
+}
+
+function statFilterBar(){
+  const p = S.stat.preset;
+  const btn = (k,l)=>`<button class="btn sm ${p===k?'':'ghost'}" onclick="statSetPreset('${k}')">${l}</button>`;
+  return `<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center">
+    ${btn('today','Сегодня')}${btn('week','Неделя')}${btn('month','Месяц')}${btn('year','Год')}
+    <input type="date" value="${S.stat.from}" onchange="statSetDate('from',this.value)" style="width:150px">
+    <span style="color:var(--mute)">—</span>
+    <input type="date" value="${S.stat.to}" onchange="statSetDate('to',this.value)" style="width:150px">
+  </div>`;
+}
+
+function statTimeTable(paid){
+  const payFull = S.paymentTypes.find(p=>(p.name||'').toLowerCase().includes('полная предоплата'));
+  const agg = {};
+  paid.forEach(o=>{
+    const d = new Date(o.created_at);
+    const key = S.stat.group==='day' ? fmtD(d) : d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    agg[key] = agg[key] || {rev:0, profit:0, cnt:0};
+    agg[key].rev += +o.amount; agg[key].profit += orderProfit(o).profit; agg[key].cnt++;
+  });
+  const rows = Object.entries(agg).sort((a,b)=>b[0].localeCompare(a[0]));
+  if(!rows.length) return '<div style="color:var(--mute);font-size:13px;padding:8px 0">Нет оплаченных заказов за период</div>';
+  const fmtKey = k => S.stat.group==='day'
+    ? new Date(k).toLocaleDateString('ru-RU',{day:'numeric',month:'short',weekday:'short'})
+    : new Date(k+'-01').toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
+  return `<div class="tw"><table><thead><tr>
+    <th>${S.stat.group==='day'?'День':'Месяц'}</th><th style="text-align:right">Заказов</th>
+    <th style="text-align:right">Выручка</th><th style="text-align:right">Прибыль</th></tr></thead><tbody>
+    ${rows.map(([k,v])=>`<tr>
+      <td>${esc(fmtKey(k))}</td>
+      <td class="mono" style="text-align:right">${v.cnt}</td>
+      <td class="mono" style="text-align:right;font-weight:700">${money(v.rev)}</td>
+      <td class="mono" style="text-align:right;color:var(--signal)">${money(v.profit)}</td></tr>`).join('')}
+  </tbody></table></div>`;
+}
+
+async function loadStatSold(paid){
+  const ids = paid.map(o=>o.id);
+  const agg = {};
+  try{
+    if(ids.length){
+      const { data } = await sb.from('order_items').select('order_id,product_id,qty').in('order_id', ids);
+      (data||[]).forEach(it=>{
+        const p = S.products.find(x=>x.id===it.product_id);
+        const name = p ? p.name : ('Товар #'+it.product_id);
+        agg[name] = (agg[name]||0) + (+it.qty||0);
+      });
+    }
+  }catch(e){ console.warn(e); }
+  renderSoldList('statSold', agg);
+}
+
+function statExpenses(paid){
+  const agg = {};
+  paid.forEach(o=>{
+    if(!o.bundle_id) return;
+    S.bundleExpenses.filter(x=>x.bundle_id===o.bundle_id).forEach(x=>{
+      const role = S.expenseRoles.find(r=>r.id===x.role_id)?.name || '—';
+      agg[role] = (agg[role]||0) + (+x.amount||0);
+    });
+  });
+  const rows = Object.entries(agg).sort((a,b)=>b[1]-a[1]);
+  const total = rows.reduce((s,[,v])=>s+v,0);
+  if(!rows.length) return '<div style="color:var(--mute);font-size:13px;padding:8px 0">Нет расходов за период</div>';
+  return rows.map(([role,sum])=>`<div class="sold-row">
+    <span class="sold-name">${esc(role)}</span>
+    <span class="sold-qty mono" style="color:var(--alert)">${money(sum)}</span>
+  </div>`).join('') + `<div class="sold-row" style="border-top:2px solid var(--line);margin-top:4px">
+    <span class="sold-name" style="font-weight:700">Итого расходов</span>
+    <span class="sold-qty mono" style="font-weight:700;color:var(--alert)">${money(total)}</span></div>`;
 }
 
 function vAnalytics(){

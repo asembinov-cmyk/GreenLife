@@ -1334,6 +1334,38 @@ function applyFilters(rows){
     return true;
   });
 }
+S.sel = S.sel || new Set();
+function isBoss2(){ return S.me.role==='admin' || S.me.role==='boss'; }
+function toggleSel(id, ev){ ev.stopPropagation(); if(S.sel.has(id)) S.sel.delete(id); else S.sel.add(id); updateBulkBar(); }
+function toggleSelAll(ids){ const all = ids.every(id=>S.sel.has(id)); if(all) ids.forEach(id=>S.sel.delete(id)); else ids.forEach(id=>S.sel.add(id)); drawOrders(); }
+function updateBulkBar(){
+  const bar = el('bulkBar'); if(!bar) return;
+  const n = S.sel.size;
+  bar.style.display = n ? 'flex' : 'none';
+  const c = el('bulkCount'); if(c) c.textContent = n;
+}
+async function delSelected(){
+  const ids = [...S.sel];
+  if(!ids.length) return;
+  if(!confirm(`Удалить ${ids.length} ${plural(ids.length,'заказ','заказа','заказов')}? Действие необратимо.`)) return;
+  const { error } = await sb.from('orders').delete().in('id', ids);
+  if(error) return alert('Не удалось удалить: '+error.message);
+  S.sel.clear();
+  await loadAll(); go('orders');
+}
+async function delAllFiltered(){
+  const q = (el('q')?.value||'').toLowerCase();
+  let rows = myOrders().filter(o=>!q || (o.customers?.name||'').toLowerCase().includes(q) || (o.number||'').toLowerCase().includes(q) || (o.ext_id||'').toLowerCase().includes(q));
+  rows = applyFilters(rows);
+  const ids = rows.map(o=>o.id);
+  if(!ids.length) return alert('Нет заказов для удаления');
+  if(!confirm(`Удалить ВСЕ отфильтрованные заказы: ${ids.length} ${plural(ids.length,'заказ','заказа','заказов')}? Действие необратимо.`)) return;
+  if(!confirm(`Точно удалить ${ids.length}? Это нельзя отменить.`)) return;
+  const { error } = await sb.from('orders').delete().in('id', ids);
+  if(error) return alert('Не удалось удалить: '+error.message);
+  S.sel.clear();
+  await loadAll(); go('orders');
+}
 function drawOrders(){
   const q = (el('q')?.value||'').toLowerCase();
   let rows = myOrders().filter(o=>!q || (o.customers?.name||'').toLowerCase().includes(q) || (o.number||'').toLowerCase().includes(q) || (o.ext_id||'').toLowerCase().includes(q));
@@ -1344,10 +1376,19 @@ function drawOrders(){
     return;
   }
   el('tbl').innerHTML = `
+  ${isBoss2()?`<div id="bulkBar" style="display:${S.sel.size?'flex':'none'};align-items:center;gap:12px;background:var(--ink-2);border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:12px">
+    <span style="font-size:14px">Выбрано: <b id="bulkCount">${S.sel.size}</b></span>
+    <button class="btn sm" style="background:var(--alert);border-color:var(--alert)" onclick="delSelected()">Удалить выбранные</button>
+    <button class="btn sm ghost" onclick="S.sel.clear();drawOrders()">Снять выделение</button>
+    <span style="flex:1"></span>
+    <button class="btn sm ghost" style="color:var(--alert);border-color:var(--alert)" onclick="delAllFiltered()">Удалить все по фильтру</button>
+  </div>`:''}
   <div class="tw"><table><thead><tr>
+    ${isBoss2()?`<th style="width:36px"><input type="checkbox" ${rows.length&&rows.every(o=>S.sel.has(o.id))?'checked':''} onclick="event.stopPropagation();toggleSelAll([${rows.map(o=>o.id).join(',')}])"></th>`:''}
     <th class="num">№</th><th>Номер</th><th>Внеш. ID</th><th>Клиент</th><th>Сумма</th><th>Этап</th>
     <th>Оплата</th><th>Посылка</th><th>Менеджер</th><th>Создан</th></tr></thead><tbody>
     ${rows.map((o,i)=>`<tr onclick="openOrder(${o.id})">
+      ${isBoss2()?`<td onclick="toggleSel(${o.id},event)" style="text-align:center"><input type="checkbox" ${S.sel.has(o.id)?'checked':''} onclick="toggleSel(${o.id},event)"></td>`:''}
       <td class="num">${i+1}</td>
       <td class="mono" style="color:var(--mute)">${esc(o.number||o.id)}</td>
       <td class="mono" style="color:var(--mute);font-size:12px">${esc(o.ext_id||'—')}</td>

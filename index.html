@@ -296,6 +296,21 @@ label{display:block;font-size:12px;color:var(--mute);margin:0 0 5px;font-weight:
 .slot-cat input{display:none}
 .slot-cat i{width:7px;height:7px;border-radius:99px;flex:none}
 .slot-cat.on{font-weight:700}
+.tabstrip{display:none;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:16px;
+  padding-bottom:14px;border-bottom:1px solid var(--line)}
+.tabchip{display:inline-flex;align-items:center;gap:6px;padding:7px 10px 7px 14px;
+  background:var(--ink-2);border:1px solid var(--line);border-radius:10px;cursor:pointer;
+  font-size:13px;font-weight:600;transition:all .12s;white-space:nowrap}
+.tabchip:hover{border-color:var(--mute)}
+.tabchip.on{background:var(--paper);color:var(--ink);border-color:var(--paper)}
+.tabchip .tabx{border:none;background:none;color:inherit;opacity:.5;cursor:pointer;
+  font-size:16px;line-height:1;padding:0 2px;border-radius:4px}
+.tabchip .tabx:hover{opacity:1;background:rgba(0,0,0,.1)}
+.tab-refresh{margin-left:auto;border:1px solid var(--line);background:var(--ink-2);
+  color:var(--paper);border-radius:10px;padding:7px 12px;cursor:pointer;font-size:13px;
+  font-weight:600;white-space:nowrap}
+.tab-refresh:hover{border-color:var(--signal);color:var(--signal)}
+.tab-refresh:disabled{opacity:.6;cursor:default}
 .mc-row{display:grid;grid-template-columns:1fr auto auto;gap:14px;align-items:center;
   padding:7px 0;border-top:1px solid var(--line)}
 .mc-row.mc-hd{border-top:none;font-size:11px;letter-spacing:.05em;text-transform:uppercase;
@@ -759,6 +774,7 @@ tbody tr:hover td{background:var(--tint)}
         <button class="avatar" id="mavatar" onclick="moreMenu()"></button>
       </div>
     </header>
+    <div id="tabstrip" class="tabstrip"></div>
     <main id="view"></main>
   </div>
   <nav class="tabbar" id="tabbar"></nav>
@@ -961,16 +977,50 @@ function moreMenu(){
     <button onclick="signOut()" style="color:var(--alert)"><span style="width:20px">⏻</span>Выйти</button>
   </div>`);
 }
+S.openTabs = S.openTabs || [];
+const VIEW_FN = {dash:vDash,pipe:vPipe,orders:vOrders,customers:vCustomers,products:vProducts,
+    bundles:vBundles,scripts:vScripts,team:vTeam,stats:vStats,analytics:vAnalytics,refs:vRefs,ai:vAI};
 function go(k){
   closeAll();
+  // открыть вкладку, если ещё не открыта
+  if(!S.openTabs.includes(k)) S.openTabs.push(k);
   S.tab=k;
   document.body.dataset.tab = k;
   const th = document.querySelector('meta[name=theme-color]');
   if(th && TAB_THEME[k]) th.setAttribute('content', TAB_THEME[k]);
-  ({dash:vDash,pipe:vPipe,orders:vOrders,customers:vCustomers,products:vProducts,
-    bundles:vBundles,scripts:vScripts,team:vTeam,stats:vStats,analytics:vAnalytics,refs:vRefs,ai:vAI})[k]();
+  renderTabstrip();
+  (VIEW_FN[k])();
   markNav();
   window.scrollTo(0,0);
+}
+function renderTabstrip(){
+  const strip = el('tabstrip'); if(!strip) return;
+  if(S.openTabs.length<=1){ strip.innerHTML=''; strip.style.display='none'; return; }
+  strip.style.display='flex';
+  strip.innerHTML = S.openTabs.map(k=>`
+    <div class="tabchip ${k===S.tab?'on':''}" onclick="go('${k}')">
+      <span>${esc(TAB_NAME[k]||k)}</span>
+      <button class="tabx" onclick="event.stopPropagation();closeTab('${k}')" title="Закрыть">×</button>
+    </div>`).join('') +
+    `<button class="tab-refresh" onclick="refreshTab()" title="Обновить данные">⟳ Обновить</button>`;
+}
+function closeTab(k){
+  const i = S.openTabs.indexOf(k);
+  if(i<0) return;
+  S.openTabs.splice(i,1);
+  if(S.tab===k){
+    const next = S.openTabs[i] || S.openTabs[i-1] || S.openTabs[0] || 'dash';
+    go(next);
+  } else {
+    renderTabstrip();
+  }
+}
+async function refreshTab(){
+  const btn = document.querySelector('.tab-refresh');
+  if(btn){ btn.textContent='⟳ Обновляю…'; btn.disabled=true; }
+  await loadAll();
+  (VIEW_FN[S.tab])();
+  markNav();
 }
 const H = (t,s,r='') => `<div class="head"><div><h1>${t}</h1><p>${s}</p></div><div class="row">${r}</div></div>`;
 

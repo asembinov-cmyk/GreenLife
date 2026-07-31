@@ -2069,7 +2069,7 @@ function waFullPayId(){
   return p ? p.id : null;
 }
 
-async function waStatusText(o){
+async function waStatusText(o, changed){
   const { data:items } = await sb.from('order_items')
     .select('qty, products(name)').eq('order_id', o.id);
   const goods = (items||[]).map(i=>{
@@ -2080,11 +2080,15 @@ async function waStatusText(o){
   const dtp = S.deliveryTypes.find(x=>x.id===o.delivery_type_id);
   const num = o.ext_id || o.number || o.id;
 
+  // строка, из-за которой ушло сообщение, выделяется жирным
+  // (в WhatsApp жирный текст оформляется звёздочками)
+  const mark = (key, line) => key===changed ? `*${line}*` : line;
+
   const L = [];
   L.push(`Заказ ${num}`);
   L.push(`Клиент - ${o.customers?.name || 'не указан'}`);
-  L.push(`Статус посылки - ${o.parcel_statuses?.name || 'Не задан'}`);
-  L.push(`Тип оплаты - ${o.payment_types?.name || 'Не задан'}`);
+  L.push(mark('parcel', `Статус посылки - ${o.parcel_statuses?.name || 'Не задан'}`));
+  L.push(mark('pay',    `Тип оплаты - ${o.payment_types?.name || 'Не задан'}`));
   L.push(`Тип доставки - ${dtp?.name || 'Не задан'}`);
   L.push(`Товары - ${goods.length ? goods.join('; ')+';' : 'не указаны'}`);
   L.push('');
@@ -2092,14 +2096,14 @@ async function waStatusText(o){
   return L.join('\n');
 }
 
-async function waNotifyStatus(orderId){
+async function waNotifyStatus(orderId, changed){
   if(!WA_NOTIFY) return;
   const o = S.orders.find(x=>x.id===orderId); if(!o) return;
   const phone = o.customers?.phone;
   if(!phone){ console.warn('waNotify: у заказа нет телефона'); return; }
 
   let text;
-  try{ text = await waStatusText(o); }
+  try{ text = await waStatusText(o, changed); }
   catch(e){ console.warn('waNotify: не собрался текст', e); return; }
 
   try{
@@ -2138,9 +2142,10 @@ async function setOrderField(id, field, val, isText){
   // 1) статус посылки сменился на непустой
   // 2) типу оплаты присвоили «Полная предоплата» (раньше было другое)
   let notify = false;
-  if(field==='parcel_status_id' && v && String(wasParcel||'')!==String(v)) notify = true;
-  if(field==='payment_type_id' && v === waFullPayId() && String(wasPay||'')!==String(v)) notify = true;
-  if(notify) await waNotifyStatus(id);
+  let changed = null;
+  if(field==='parcel_status_id' && v && String(wasParcel||'')!==String(v)){ notify = true; changed = 'parcel'; }
+  if(field==='payment_type_id' && v === waFullPayId() && String(wasPay||'')!==String(v)){ notify = true; changed = 'pay'; }
+  if(notify) await waNotifyStatus(id, changed);
 
   openOrder(id);
 }

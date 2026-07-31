@@ -2050,8 +2050,81 @@ function mgrPick(key, empId){
     setOrderField(oid, 'owner_id', empId, 1);
   }
 }
+/* ─── УВЕДОМЛЕНИЕ КЛИЕНТУ ПРИ СМЕНЕ СТАТУСА ───
+   Чтобы выключить автоотправку — поставьте false. */
+const WA_NOTIFY = true;
+
+/* Прощание в конце сообщения. Варианты — в комментарии ниже,
+   меняйте текст в кавычках на любой из них. */
+const WA_BYE = 'Благодарим вас за покупку и доверие к Green Life! Если появятся вопросы по заказу — просто ответьте на это сообщение, мы всегда на связи.';
+// Другие варианты:
+// 'Спасибо за покупку! Желаем здоровья и хорошего настроения. По любым вопросам пишите сюда.'
+// 'Благодарим за заказ! Нам приятно, что вы выбрали нас. Будем рады видеть вас снова.'
+// 'Спасибо, что доверяете Green Life. Если что-то понадобится — напишите, ответим быстро.'
+// 'Благодарим за покупку! Берегите себя и будьте здоровы.'
+
+/* тип оплаты «Полная предоплата» — так же, как в аналитике, по названию */
+function waFullPayId(){
+  const p = S.paymentTypes.find(x=>(x.name||'').toLowerCase().includes('полная предоплата'));
+  return p ? p.id : null;
+}
+
+async function waStatusText(o){
+  const { data:items } = await sb.from('order_items')
+    .select('qty, products(name)').eq('order_id', o.id);
+  const goods = (items||[]).map(i=>{
+    const n = i.products?.name; if(!n) return null;
+    return `${n}, кол-во ${+i.qty||1}`;
+  }).filter(Boolean);
+
+  const dtp = S.deliveryTypes.find(x=>x.id===o.delivery_type_id);
+  const num = o.ext_id || o.number || o.id;
+
+  const L = [];
+  L.push(`Заказ ${num}`);
+  L.push(`Клиент - ${o.customers?.name || 'не указан'}`);
+  L.push(`Статус посылки - ${o.parcel_statuses?.name || 'Не задан'}`);
+  L.push(`Тип оплаты - ${o.payment_types?.name || 'Не задан'}`);
+  L.push(`Тип доставки - ${dtp?.name || 'Не задан'}`);
+  L.push(`Товары - ${goods.length ? goods.join('; ')+';' : 'не указаны'}`);
+  L.push('');
+  L.push(WA_BYE);
+  return L.join('\n');
+}
+
+async function waNotifyStatus(orderId){
+  if(!WA_NOTIFY) return;
+  const o = S.orders.find(x=>x.id===orderId); if(!o) return;
+  const phone = o.customers?.phone;
+  if(!phone){ console.warn('waNotify: у заказа нет телефона'); return; }
+
+  let text;
+  try{ text = await waStatusText(o); }
+  catch(e){ console.warn('waNotify: не собрался текст', e); return; }
+
+  try{
+    const { data:{ session } } = await sb.auth.getSession();
+    const r = await fetch(SUPABASE_URL + FN.whatsappSend, { method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,
+               'apikey': SUPABASE_ANON},
+      body: JSON.stringify({ phone, text, order_id:orderId }) });
+    let rd = {}; try{ rd = await r.json(); }catch{}
+    if(!r.ok) throw new Error(rd.error || 'wa-send недоступна');
+    await sb.from('activities').insert({ order_id:orderId, employee_id:S.user.id,
+      type:'whatsapp', direction:'out', body:text });
+  }catch(e){
+    // не мешаем работе менеджера — просто оставляем след в истории заказа
+    console.warn('waNotify:', e.message);
+    await sb.from('activities').insert({ order_id:orderId, employee_id:S.user.id,
+      type:'note', body:'Не удалось отправить клиенту уведомление о статусе: '+e.message });
+  }
+}
+
 async function setOrderField(id, field, val, isText){
   const v = val==='' ? null : (isText ? val : +val);
+  const prev = S.orders.find(x=>x.id===id);
+  const wasParcel = prev?.parcel_status_id;
+  const wasPay = prev?.payment_type_id;
   const { error } = await sb.from('orders').update({ [field]: v }).eq('id', id);
   if(error) return alert('Не удалось сохранить: '+error.message);
   if(field==='owner_id'){
@@ -2059,7 +2132,17 @@ async function setOrderField(id, field, val, isText){
     await sb.from('activities').insert({ order_id:id, employee_id:S.user.id, type:'status',
       body:'Менеджер: '+(emp?emp.full_name:'не назначен') });
   }
-  await loadAll(); openOrder(id);
+  await loadAll();
+
+  // ── когда пишем клиенту ──
+  // 1) статус посылки сменился на непустой
+  // 2) типу оплаты присвоили «Полная предоплата» (раньше было другое)
+  let notify = false;
+  if(field==='parcel_status_id' && v && String(wasParcel||'')!==String(v)) notify = true;
+  if(field==='payment_type_id' && v === waFullPayId() && String(wasPay||'')!==String(v)) notify = true;
+  if(notify) await waNotifyStatus(id);
+
+  openOrder(id);
 }
 async function setOrderText(id, field, val){
   const { error } = await sb.from('orders').update({ [field]: val.trim()||null }).eq('id', id);
